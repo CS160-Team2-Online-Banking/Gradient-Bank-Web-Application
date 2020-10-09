@@ -1,0 +1,14 @@
+*.sqlite3
+__pycache__/
+**/migrations/**
+!**/migrations
+!**/migrations/__init__.py
+*.py[cod]
+*$py.class
+*.log
+local_settings.py
+myenv/*
+venv/*
+.vscode/
+.idea/
+.DS_Store
