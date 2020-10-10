@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+
+{% load bootstrap4 %}
+{% bootstrap_css %}
+{% bootstrap_javascript jquery='slim' %}
+{% load static %}
+
+<html lang="ja">
+<head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" type='text/css' href="{% static 'css/style.css'%}">
+    <link rel="stylesheet"
+          href="https://cccabinet.jpn.org/bootstrap4/css/style.css">
+    <title> Online Banking </title>
+
+    {% block extra_css %}{% endblock %}
+
+</head>
+
+<body>
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <nav class="navbar navbar-expand-lg fixed-top navbar-dark bs-navbar"
+                 style='background-color:cadetblue;' id="bs-navbar">
+                <a class="navbar-brand mr-md-2" href="/app_folder/top_page">
+                    Online Banking Service
+                </a>
+                <ul class="navbar-nav mr-auto">
+                    <li class="nav-item"><a class="nav-link" href="#"> </a></li>
+                    <li class="nav-item"><a class="nav-link" href="#"> </a></li>
+                </ul>
+                <ul class="navbar-nav">
+                    <li class="nav-item"><a class="nav-link" href="/#">Sample Page 1</a>
+                    </li>
+                    <li class="nav-item"><a class="nav-link" href="/#">Sample Page 2</a>
+                    </li>
+                    <li class="nav-item"><a class="nav-link" href="/#">Sample Page 3</a>
+                    </li>
+                    <li class="nav-item"><a class="nav-link"
+                                            href="/accounts/login">Login</a></li>
+                    <li class="nav-item"><a class="nav-link"
+                                            href="/accounts/logout">Logout</a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+
+<!-- sidebar and contents -->
+<div id="content" class="container-fluid">
+    <div class="row flex-xl-nowrap">
+
+        <!-- ↓↓ sidebar ↓↓ -->
+        <div id="sidemenu"
+             class="col-2 d-none d-md-block bg-light sidebar align-self-start">
+            <div class="sidebar-sticky">
+                <ul class="nav flex-column">
+
+                    <li class="nav-item">
+                        <nav class="navbar navbar-light bg-light">
+                            <a class="navbar-brand" href="/#">
+                                <span data-feather="">Top page</span>
+                            </a>
+                        </nav>
+                    </li>
+                    <li class="nav-item">
+                        <nav class="navbar navbar-light bg-light">
+                            <a class='navbar-brand' href='/#'>
+                                <span data-feather="">sidebar 1</span>
+                            </a>
+                        </nav>
+                    </li>
+                    <li class="nav-item">
+                        <nav class="navbar navbar-light bg-light">
+                            <a class='navbar-brand' href='/#'>
+                                <span data-feather="">sidebar 2</span>
+                            </a>
+                        </nav>
+                    </li>
+                    <li class="nav-item">
+                        <nav class="navbar navbar-light bg-light">
+                            <a class='navbar-brand' href='/#'>
+                                <span data-feather="">sidebar 3</span>
+                            </a>
+                        </nav>
+                    </li>
+                    <li class="nav-item">
+                        <nav class="navbar navbar-light bg-light">
+                            <a class='navbar-brand' href='/#'>
+                                <span data-feather="">sidebar 4</span>
+                            </a>
+                        </nav>
+                    </li>
+                    <li class="nav-item">
+                        <nav class="navbar navbar-light bg-light">
+                            <a class='navbar-brand' href='/#'>
+                                <span data-feather="">sidebar 5</span>
+                            </a>
+                        </nav>
+                    </li>
+                </ul>
+            </div>
+        </div id="sidemenu">
+        <!-- ↑↑ sidebar end↑↑ -->
+
+        <!-- ↓↓ contetns ↓↓ -->
+        <div class="col-10">
+            {% block contents %}
+            {% endblock %}
+        </div>
+        <!-- ↑↑ contents end↑↑ -->
+    </div>
+</div>
+</div>
+</body>
+</html>
