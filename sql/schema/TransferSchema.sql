@@ -15,7 +15,7 @@ CREATE TABLE transfers (
 	from_account_id INT NOT NULL,
 	transfer_type ENUM ('U_TO_U', 'A_TO_A', 'EXTERN') NOT NULL,
 	amount DECIMAL(18,2) NOT NULL,
-	time_stamp DATETIME NOT NULL
+	time_stamp DATETIME NOT NULL,
 	PRIMARY KEY (transfer_id)
 );
 
