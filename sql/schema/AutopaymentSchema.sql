@@ -15,7 +15,7 @@ CREATE TABLE autopayment_objects (
 	payment_schedule_id INT NOT NULL,
 	from_account_id INT NOT NULL, -- this should be owned by the autopayment owner
 	to_account_id INT NOT NULL,
-	transfer_amount DECIMAL(18,2) NOT_NULL,
+	transfer_amount DECIMAL(18,2) NOT NULL,
 	PRIMARY KEY (owner_user_id, autopayment_id)
 );
 
