@@ -1,4 +1,4 @@
-USE online_banking_playground_1;
+USE online_banking;
 
 /*
 	Below is an example transaction for transfering money between two internal accounts.

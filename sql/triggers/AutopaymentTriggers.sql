@@ -1,4 +1,4 @@
-USE online_banking_playground_1;
+USE online_banking;
 
 /*
 	What this trigger does is automatically increment the auto_payment id for w/e the max id is 
