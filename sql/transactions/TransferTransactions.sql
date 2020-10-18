@@ -9,7 +9,7 @@ USE online_banking_playground_1;
     
     I've wrapped the transaction in a procedure for the sake of convenience
 */
-
+DROP PROCEDURE IF EXISTS exec_internal_transfer; -- clear any existing definitions of this procedure
 DELIMITER //
 CREATE PROCEDURE exec_internal_transfer (IN _transfer_id INT)
 BEGIN
@@ -24,15 +24,15 @@ BEGIN
     SELECT to_account_id INTO _to_account_id FROM transfers WHERE transfer_id = _transfer_id;
     SELECT amount INTO _amount FROM transfers WHERE transfer_id = _transfer_id;
     SELECT
-		ISNULL(balance, 0) INTO _from_account_balance
+		IFNULL(balance, 0) INTO _from_account_balance
     FROM bank_accounts
     WHERE account_id = _from_account_id;
-
+	
 	-- attempt to transfer the money --
-	UPDATE bank_accounts SET balance = balance - amount WHERE account_id = from_account_id;
-	UPDATE bank_accounts SET balance = balance + amount WHERE account_id = to_account_id;
+	UPDATE bank_accounts SET balance = balance - _amount WHERE account_id = _from_account_id;
+	UPDATE bank_accounts SET balance = balance + _amount WHERE account_id = _to_account_id;
     
-	IF ((SELECT balance FROM bank_accounts WHERE account_id = from_account_id) < 0) THEN -- if the from account's balance is now negative
+	IF ((SELECT balance FROM bank_accounts WHERE account_id = _from_account_id) < 0) THEN -- if the from account's balance is now negative
 		ROLLBACK; -- roll back the transaction, you cannot transfer money you do not have
 	ELSE
 		COMMIT;
