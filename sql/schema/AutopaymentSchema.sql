@@ -1,4 +1,4 @@
-USE BankDatabase;
+USE online_banking_playground_1;
 
 /*-------------------------------------------------------------------------------------------------
  +	Autopayment Objects
@@ -11,13 +11,14 @@ USE BankDatabase;
  *-------------------------------------------------------------------------------------------------*/
 CREATE TABLE autopayment_objects (
 	owner_user_id INT NOT NULL,
-	autopayment_id INT NOT NULL AUTO_INCREMENT,
+	autopayment_id INT NOT NULL,
 	payment_schedule_id INT NOT NULL,
 	from_account_id INT NOT NULL, -- this should be owned by the autopayment owner
 	to_account_id INT NOT NULL,
-	transfer_amount DECIMAL(18,2) NOT_NULL,
+	transfer_amount DECIMAL(18,2) NOT NULL,
 	PRIMARY KEY (owner_user_id, autopayment_id)
 );
+
 
 /*-------------------------------------------------------------------------------------------------
  +	Payment Schedules
