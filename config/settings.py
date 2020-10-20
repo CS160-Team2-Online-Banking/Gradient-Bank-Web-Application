@@ -25,7 +25,7 @@ SECRET_KEY = 'y3c@y_28b7%7(00&a#$ivu(j+r2#&^ms*%!-v6z_m9r89)p6-^'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -38,8 +38,16 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'bootstrap4',
-    'app_folder.apps.AppFolderConfig',
+    'landing.apps.LandingConfig',
+    'transaction.apps.TransactionConfig',
+    'atm.apps.AtmConfig',
+    'accounts.apps.AccountsConfig',
+    'django.contrib.sites',
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount'
 ]
+SITE_ID = 1
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -143,3 +151,17 @@ STATIC_ROOT = '/var/www/{}/static'.format(PROJECT_NAME)
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
+# django-Settings required to use allauth
+SITE_ID = 1
+# ACCOUNT_EMAIL_REQUIRED = True
+# URL for Login Page
+LOGIN_URL = '/accounts/login/'
+# Redirected URL after Login
+LOGIN_REDIRECT_URL = 'landing:landing'
+# Redirected URL after Logout
+ACCOUNT_LOGOUT_REDIRECT_URL = '/accounts/login/'
+# User CustomUser
+AUTH_USER_MODEL = 'accounts.CustomUser'
+
+# EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+ACCOUNT_EMAIL_VERIFICATION = "none"

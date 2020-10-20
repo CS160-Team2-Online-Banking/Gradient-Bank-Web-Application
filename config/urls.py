@@ -6,11 +6,11 @@ from . import views
 
 # URLの全体設計
 urlpatterns = [
-    # 今回作成するアプリ「app_folder」にアクセスするURL
-    path('app_folder/', include('app_folder.urls')),
-    # 何もURLを指定しない場合（app_config/views.pyで、自動的に「app_folder」にアクセスするよう設定済み）
+    path('landing/', include('landing.urls')),
+    path('accounts/', include('allauth.urls')),
+    path('transaction/', include('transaction.urls')),
+    path('atm/', include('atm.urls')),
     path('', views.index, name='index'),
-    # 管理サイトにアクセスするURL
     path('admin/', admin.site.urls),
 ]
 
