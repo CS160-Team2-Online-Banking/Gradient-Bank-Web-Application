@@ -1,4 +1,4 @@
-from lib.transfer.transfer_process import TransferProcess
+from api.transfer.transfer_process import TransferProcess
 from django.db import transaction
 
 class InternalTransfer(TransferProcess):
