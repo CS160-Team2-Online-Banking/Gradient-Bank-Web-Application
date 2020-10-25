@@ -7,9 +7,8 @@
 # Feel free to rename the models, but don't rename db_table values or field names.
 from django.db import models
 
-
 class Accounts(models.Model):
-    using = 'bank_data'
+    use_db = 'bank_data'
     account_id = models.AutoField(primary_key=True)
     balance = models.DecimalField(max_digits=18, decimal_places=2)
     account_number = models.IntegerField(unique=True)
@@ -21,7 +20,7 @@ class Accounts(models.Model):
 
 
 class BankManager(models.Model):
-    using = 'online_banking_playground_1'
+    use_db = 'online_banking_playground_1'
     bank_manager_id = models.AutoField(primary_key=True)
     hashed_pass = models.CharField(max_length=100)
     manager_email = models.CharField(unique=True, max_length=255)
@@ -32,7 +31,7 @@ class BankManager(models.Model):
 
 
 class Customer(models.Model):
-    using = 'bank_data'
+    use_db = 'bank_data'
     customer_id = models.IntegerField(primary_key=True)
     event_id = models.IntegerField(blank=True, null=True)
     autopayment_id = models.IntegerField(blank=True, null=True)
@@ -49,7 +48,7 @@ class Customer(models.Model):
 
 
 class AutopaymentObjects(models.Model):
-    using = 'bank_data'
+    use_db = 'bank_data'
     owner_user_id = models.IntegerField(primary_key=True)
     autopayment_id = models.IntegerField()
     payment_schedule_id = models.IntegerField()
@@ -65,7 +64,7 @@ class AutopaymentObjects(models.Model):
 
 
 class CompletedTransactionsLog(models.Model):
-    using = 'bank_data'
+    use_db = 'bank_data'
     transaction_id = models.IntegerField(primary_key=True)
     started = models.DateTimeField()
     completed = models.DateTimeField()
@@ -76,7 +75,7 @@ class CompletedTransactionsLog(models.Model):
 
 
 class CompletedTransfersLog(models.Model):
-    using = 'bank_data'
+    use_db = 'bank_data'
     transfer_id = models.IntegerField(primary_key=True)
     completed = models.DateTimeField()
     started = models.DateTimeField()
@@ -86,7 +85,7 @@ class CompletedTransfersLog(models.Model):
         db_table = 'completed_transfers_log'
 
 class EventLog(models.Model):
-    using = 'bank_data'
+    use_db = 'bank_data'
     event_id = models.AutoField(primary_key=True)
     intiator_user_id = models.IntegerField()
     ip6_address = models.CharField(max_length=16, blank=True, null=True)
@@ -100,7 +99,7 @@ class EventLog(models.Model):
 
 
 class EventTypes(models.Model):
-    using = 'bank_data'
+    use_db = 'bank_data'
     event_type_id = models.AutoField(primary_key=True)
     name = models.CharField(unique=True, max_length=32)
     descrp = models.CharField(max_length=128, blank=True, null=True)
@@ -111,7 +110,7 @@ class EventTypes(models.Model):
 
 
 class PaymentSchedules(models.Model):
-    using = 'bank_data'
+    use_db = 'bank_data'
     schedule_id = models.AutoField(primary_key=True)
     start_date = models.DateField()
     end_date = models.DateField()
@@ -123,7 +122,7 @@ class PaymentSchedules(models.Model):
 
 
 class PendingTransactionsQueue(models.Model):
-    using = 'bank_data'
+    use_db = 'bank_data'
     transaction_id = models.IntegerField(primary_key=True)
     added = models.DateTimeField()
 
@@ -133,7 +132,7 @@ class PendingTransactionsQueue(models.Model):
 
 
 class PendingTransfersQueue(models.Model):
-    using = 'bank_data'
+    use_db = 'bank_data'
     transfer_id = models.IntegerField(primary_key=True)
     added = models.DateTimeField()
 
@@ -143,7 +142,7 @@ class PendingTransfersQueue(models.Model):
 
 
 class Transactions(models.Model):
-    using = 'bank_data'
+    use_db = 'bank_data'
     transaction_id = models.AutoField(primary_key=True)
     card_account_id = models.IntegerField()
     merchant_id = models.IntegerField()
@@ -157,7 +156,7 @@ class Transactions(models.Model):
 
 
 class Transfers(models.Model):
-    using = 'bank_data'
+    use_db = 'bank_data'
     transfer_id = models.AutoField(primary_key=True)
     create_event_id = models.IntegerField()
     to_account_id = models.IntegerField()

@@ -63,6 +63,8 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'config.urls'
 
+DATABASE_ROUTERS = ['bankapi.dbrouter.CustomRouter']
+
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
