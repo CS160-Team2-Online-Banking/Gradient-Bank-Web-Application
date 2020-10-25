@@ -1,6 +1,6 @@
 
 class TransferProcess:
-    def process_transfer(self, id):
+    def process_transfer(self, transfer_id):
         # called from the list of transfer requests
         # contains all business logic needed to validate the request
         pass

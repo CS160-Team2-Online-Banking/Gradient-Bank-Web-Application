@@ -49,7 +49,6 @@ class InternalTransfer(TransferProcess):
                                                             added=Now())
             queue_ticket.save()
 
-
     def get_transfer_info(self):
         data = dict()
         data["to_account"] = self.to_account
@@ -58,8 +57,8 @@ class InternalTransfer(TransferProcess):
         return data
 
     @transaction.atomic
-    def process_transfer(self, id):
-        transfer = bankmodels.Transfers.objects.get(pk=id)
+    def process_transfer(self, transfer_id):
+        transfer = bankmodels.Transfers.objects.get(pk=transfer_id)
         from_account = bankmodels.Accounts.objects.get(pk=transfer.from_account_id)
         to_account = bankmodels.Accounts.objects.get(pk=transfer.to_account_id)
         amount = transfer.amount
