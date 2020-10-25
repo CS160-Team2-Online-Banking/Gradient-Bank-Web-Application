@@ -21,7 +21,7 @@ class Accounts(models.Model):
 
 
 class BankManager(models.Model):
-    using = 'bank_data'
+    using = 'online_banking_playground_1'
     bank_manager_id = models.AutoField(primary_key=True)
     hashed_pass = models.CharField(max_length=100)
     manager_email = models.CharField(unique=True, max_length=255)

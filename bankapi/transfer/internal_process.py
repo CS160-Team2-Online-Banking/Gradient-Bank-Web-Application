@@ -1,5 +1,5 @@
-from api.transfer.transfer_process import TransferProcess
-from django.db import transaction
+from bankapi.transfer.transfer_process import TransferProcess
+
 
 class InternalTransfer(TransferProcess):
     def __init__(self, data):

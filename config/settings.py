@@ -25,7 +25,7 @@ SECRET_KEY = 'y3c@y_28b7%7(00&a#$ivu(j+r2#&^ms*%!-v6z_m9r89)p6-^'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = ['159.89.148.172', 'localhost', '127.0.0.1']
 
 
 # Application definition
@@ -45,7 +45,9 @@ INSTALLED_APPS = [
     'django.contrib.sites',
     'allauth',
     'allauth.account',
-    'allauth.socialaccount'
+    'allauth.socialaccount',
+    'bankapi',
+    'rest_framework'
 ]
 SITE_ID = 1
 
@@ -84,24 +86,32 @@ WSGI_APPLICATION = 'config.wsgi.application'
 # https://docs.djangoproject.com/en/3.0/ref/settings/#databases
 
 # default database configuration (SQLite)
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
-    }
-}
-
-# DATABASE for MySQL Configuration
 # DATABASES = {
 #     'default': {
-#         'ENGINE':'django.db.backends.mysql',
-#         'NAME':'●●(Database Name)',
-#         'USER':'●●（User name for the database）',
-#         'PASSWORD':'●●（Password for the database）',
-#         'HOST':'localhost',
-#         'PORT':'',
-#     }
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+#     },
 # }
+
+# DATABASE for MySQL Configuration
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'online_django_playground_1',
+        'USER': 'zackf',
+        'PASSWORD': 'cs160Dev',
+        'HOST': '159.89.148.172',
+        'PORT': '3306',
+     },
+    'bank_data': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'online_banking_playground_1',
+        'USER': 'zackf',
+        'PASSWORD': 'cs160Dev',
+        'HOST': '159.89.148.172',
+        'PORT': '3306',
+    }
+}
 
 
 # Password validation
