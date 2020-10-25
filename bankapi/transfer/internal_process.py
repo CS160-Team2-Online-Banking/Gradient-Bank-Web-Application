@@ -1,4 +1,11 @@
 from bankapi.transfer.transfer_process import TransferProcess
+import bankapi.models as bankmodels
+from django.db import transaction
+from django.db.models import F
+from django.db.models.functions import Now
+
+TRANSFER_QUEUE_EVENT_ID = bankmodels.EventTypes.objects.get(name="TRANSFER QUEUED")
+TRANSFER_CANCEL_EVENT_ID = bankmodels.EventTypes.objects.get(name="TRANSFER CANCELED")
 
 
 class InternalTransfer(TransferProcess):
@@ -6,14 +13,42 @@ class InternalTransfer(TransferProcess):
         self.to_account = data["to_account_id"]
         self.from_account = data["from_account_id"]
         self.amount = data["amount"]
+        self.eventInfo = data["event_info"]
         # ip information should also be collected here
 
-    def queue_transfer(self, auth_token):
-        # check for validity and authenticity
+    @transaction.atomic
+    def queue_transfer(self, decrypted_auth_token):
+        requesting_user_id = decrypted_auth_token.user_id
+        request_ip4 = self.eventInfo["request_ip4"]
+        request_ip6 = self.eventInfo["request_ip6"]
+        request_time = self.eventInfo["request_time"]
+
+        from_owner_id = bankmodels.Accounts.objects.get(pk=self.from_Account)
+        to_owner_id = bankmodels.Accounts.objects.get(pk=self.to_account)
+        transfer_type = "A_TO_A" if from_owner_id == to_owner_id else "U_TO_U"
+
+        # check for authenticity
         # add the transfer to the queue, otherwise don't add it
         # beyond this point, it will be considered an authentic request
-        # add the transfer to the transfers table, and queue it's id to the
-        pass
+        if requesting_user_id == from_owner_id:
+            # add the transfer to the transfers table, and queue it's id to the
+            new_event = bankmodels.EventLog(intiator_user_id=requesting_user_id,
+                                            ip6_address=request_ip6,
+                                            ip4_address=request_ip4,
+                                            event_type=TRANSFER_QUEUE_EVENT_ID,
+                                            event_time=request_time)
+            new_event.save()
+            new_transfer = bankmodels.Transfers(to_account_id=self.to_account,
+                                                from_account_id=self.from_account,
+                                                transfer_type=transfer_type,
+                                                amount=self.amount,
+                                                create_event_id=new_event.pk,
+                                                time_stamp=Now())
+            new_transfer.save()
+            queue_ticket = bankmodels.PendingTransfersQueue(transfer_id=new_transfer.pk,
+                                                            added=Now())
+            queue_ticket.save()
+
 
     def get_transfer_info(self):
         data = dict()
@@ -22,12 +57,23 @@ class InternalTransfer(TransferProcess):
         data["amount"] = self.amount
         return data
 
-    def process_transfer(self):
-        # open the sql connection
-        # start a transaction where:
-            # you subract the amount from one account
-            # add it to another
-            # commit only if the balance of the from account isn't negative
-        # commit or revert the transaction
-        # remove the transfer from the pending log and move to completed if we commit
-        pass
+    @transaction.atomic
+    def process_transfer(self, id):
+        transfer = bankmodels.Transfers.objects.get(pk=id)
+        from_account = bankmodels.Accounts.objects.get(pk=transfer.from_account_id)
+        to_account = bankmodels.Accounts.objects.get(pk=transfer.to_account_id)
+        amount = transfer.amount
+
+        if transfer.amount <= from_account.balance:
+            from_account.update(balance=F('balance')-amount)
+            to_account.update(balance=F('balance')+amount)
+            from_account.save()
+            to_account.save()
+
+            pending_transfer = bankmodels.PendingTransfersQueue.objects.get(pk=transfer.pk)
+            new_completed_record = bankmodels.CompletedTransfersLog(transfer_id=pending_transfer.pk,
+                                                                    completed=Now(),
+                                                                    started=pending_transfer.added)
+            pending_transfer.delete()
+            new_completed_record.save()
+
