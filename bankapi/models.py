@@ -88,8 +88,8 @@ class EventLog(models.Model):
     use_db = 'bank_data'
     event_id = models.AutoField(primary_key=True)
     intiator_user_id = models.IntegerField()
-    ip6_address = models.CharField(max_length=16, blank=True, null=True)
-    ip4_address = models.CharField(max_length=4, blank=True, null=True)
+    ip6_address = models.BinaryField(max_length=16, blank=True, null=True)
+    ip4_address = models.BinaryField(max_length=4, blank=True, null=True)
     event_type = models.IntegerField()
     event_time = models.DateTimeField()
 

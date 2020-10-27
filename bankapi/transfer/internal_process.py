@@ -10,11 +10,12 @@ TRANSFER_CANCEL_EVENT_ID = bankmodels.EventTypes.objects.get(name="TRANSFER CANC
 
 
 class InternalTransfer(TransferProcess):
-    def __init__(self, data):
-        self.to_account = data["to_account_id"]
-        self.from_account = data["from_account_id"]
-        self.amount = data["amount"]
-        self.eventInfo = data["event_info"]
+    def __init__(self, data=None):
+        if data is not None:
+            self.to_account = data["to_account_id"]
+            self.from_account = data["from_account_id"]
+            self.amount = data["amount"]
+            self.eventInfo = data["event_info"]
         # ip information should also be collected here
 
     @transaction.atomic
@@ -60,15 +61,14 @@ class InternalTransfer(TransferProcess):
         return data
 
     @transaction.atomic
-    def process_transfer(self, transfer_id):
+    def process_transfer(self, transfer_id=None):
         transfer = bankmodels.Transfers.objects.get(pk=transfer_id)
         from_account = bankmodels.Accounts.objects.get(pk=transfer.from_account_id)
         to_account = bankmodels.Accounts.objects.get(pk=transfer.to_account_id)
         amount = transfer.amount
-
         if transfer.amount <= from_account.balance:
-            from_account.update(balance=F('balance')-amount)
-            to_account.update(balance=F('balance')+amount)
+            from_account.balance = from_account.balance-amount
+            to_account.balance = to_account.balance+amount
             from_account.save()
             to_account.save()
 
@@ -78,5 +78,6 @@ class InternalTransfer(TransferProcess):
                                                                     started=pending_transfer.added)
             pending_transfer.delete()
             new_completed_record.save()
+
 
 

@@ -8,12 +8,13 @@ from django.db.models.functions import Now
 TRANSFER_QUEUE_EVENT_ID = bankmodels.EventTypes.objects.get(name="TRANSFER QUEUED").pk
 TRANSFER_CANCEL_EVENT_ID = bankmodels.EventTypes.objects.get(name="TRANSFER CANCELED").pk
 
-class ExternalTransferProcess(TransferProcess):
-    def __init__(self, data):
-        self.to_account = data["to_account_id"]
-        self.from_account = data["from_account_id"]
-        self.amount = data["amount"]
-        self.eventInfo = data["event_info"]
+class ExternalTransfer(TransferProcess):
+    def __init__(self, data=None):
+        if data is not None:
+            self.to_account = data["to_account_id"]
+            self.from_account = data["from_account_id"]
+            self.amount = data["amount"]
+            self.eventInfo = data["event_info"]
         # ip information should also be collected here
 
     @transaction.atomic
