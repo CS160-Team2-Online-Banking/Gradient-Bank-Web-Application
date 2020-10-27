@@ -1,11 +1,12 @@
 from bankapi.transfer.transfer_process import TransferProcess
 import bankapi.models as bankmodels
+from decimal import *
 from django.db import transaction
 from django.db.models import F
 from django.db.models.functions import Now
 
-TRANSFER_QUEUE_EVENT_ID = bankmodels.EventTypes.objects.get(name="TRANSFER QUEUED")
-TRANSFER_CANCEL_EVENT_ID = bankmodels.EventTypes.objects.get(name="TRANSFER CANCELED")
+TRANSFER_QUEUE_EVENT_ID = bankmodels.EventTypes.objects.get(name="TRANSFER QUEUED").pk
+TRANSFER_CANCEL_EVENT_ID = bankmodels.EventTypes.objects.get(name="TRANSFER CANCELED").pk
 
 
 class InternalTransfer(TransferProcess):
@@ -18,13 +19,12 @@ class InternalTransfer(TransferProcess):
 
     @transaction.atomic
     def queue_transfer(self, decrypted_auth_token):
-        requesting_user_id = decrypted_auth_token.user_id
+        requesting_user_id = decrypted_auth_token["user_id"]
         request_ip4 = self.eventInfo["request_ip4"]
         request_ip6 = self.eventInfo["request_ip6"]
         request_time = self.eventInfo["request_time"]
-
-        from_owner_id = bankmodels.Accounts.objects.get(pk=self.from_Account)
-        to_owner_id = bankmodels.Accounts.objects.get(pk=self.to_account)
+        from_owner_id = bankmodels.Accounts.objects.get(pk=self.from_account).owner_id
+        to_owner_id = bankmodels.Accounts.objects.get(pk=self.to_account).owner_id
         transfer_type = "A_TO_A" if from_owner_id == to_owner_id else "U_TO_U"
 
         # check for authenticity
@@ -38,6 +38,7 @@ class InternalTransfer(TransferProcess):
                                             event_type=TRANSFER_QUEUE_EVENT_ID,
                                             event_time=request_time)
             new_event.save()
+
             new_transfer = bankmodels.Transfers(to_account_id=self.to_account,
                                                 from_account_id=self.from_account,
                                                 transfer_type=transfer_type,
@@ -48,6 +49,8 @@ class InternalTransfer(TransferProcess):
             queue_ticket = bankmodels.PendingTransfersQueue(transfer_id=new_transfer.pk,
                                                             added=Now())
             queue_ticket.save()
+
+
 
     def get_transfer_info(self):
         data = dict()
