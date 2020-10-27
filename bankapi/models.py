@@ -47,57 +47,6 @@ class Customer(models.Model):
         db_table = 'Customer'
 
 
-class AutopaymentObjects(models.Model):
-    use_db = 'bank_data'
-    owner_user_id = models.IntegerField(primary_key=True)
-    autopayment_id = models.IntegerField()
-    payment_schedule_id = models.IntegerField()
-    from_account_id = models.IntegerField()
-    to_account_id = models.IntegerField()
-    transfer_amount = models.DecimalField(max_digits=18, decimal_places=2)
-
-    class Meta:
-        managed = False
-        db_table = 'autopayment_objects'
-        unique_together = (('owner_user_id', 'autopayment_id'),)
-
-
-
-class CompletedTransactionsLog(models.Model):
-    use_db = 'bank_data'
-    transaction_id = models.IntegerField(primary_key=True)
-    started = models.DateTimeField()
-    completed = models.DateTimeField()
-
-    class Meta:
-        managed = False
-        db_table = 'completed_transactions_log'
-
-
-class CompletedTransfersLog(models.Model):
-    use_db = 'bank_data'
-    transfer_id = models.IntegerField(primary_key=True)
-    completed = models.DateTimeField()
-    started = models.DateTimeField()
-
-    class Meta:
-        managed = False
-        db_table = 'completed_transfers_log'
-
-class EventLog(models.Model):
-    use_db = 'bank_data'
-    event_id = models.AutoField(primary_key=True)
-    intiator_user_id = models.IntegerField()
-    ip6_address = models.BinaryField(max_length=16, blank=True, null=True)
-    ip4_address = models.BinaryField(max_length=4, blank=True, null=True)
-    event_type = models.IntegerField()
-    event_time = models.DateTimeField()
-
-    class Meta:
-        managed = False
-        db_table = 'event_log'
-
-
 class EventTypes(models.Model):
     use_db = 'bank_data'
     event_type_id = models.AutoField(primary_key=True)
@@ -107,6 +56,19 @@ class EventTypes(models.Model):
     class Meta:
         managed = False
         db_table = 'event_types'
+
+class EventLog(models.Model):
+    use_db = 'bank_data'
+    event_id = models.AutoField(primary_key=True)
+    intiator_user_id = models.ForeignKey(Customer, on_delete=models.RESTRICT)
+    ip6_address = models.BinaryField(max_length=16, blank=True, null=True)
+    ip4_address = models.BinaryField(max_length=4, blank=True, null=True)
+    event_type = models.ForeignKey(EventTypes, on_delete=models.RESTRICT)
+    event_time = models.DateTimeField()
+
+    class Meta:
+        managed = False
+        db_table = 'event_log'
 
 
 class PaymentSchedules(models.Model):
@@ -121,30 +83,25 @@ class PaymentSchedules(models.Model):
         db_table = 'payment_schedules'
 
 
-class PendingTransactionsQueue(models.Model):
+class AutopaymentObjects(models.Model):
     use_db = 'bank_data'
-    transaction_id = models.IntegerField(primary_key=True)
-    added = models.DateTimeField()
+    owner_user_id = models.ForeignKey(Customer, primary_key=True, on_delete=models.RESTRICT)
+    autopayment_id = models.IntegerField()
+    payment_schedule_id = models.OneToOneField(PaymentSchedules, on_delete=models.SET_NULL)
+    from_account_id = models.ForeignKey(Accounts, on_delete=models.RESTRICT)
+    to_account_id = models.ForeignKey(Accounts, on_delete=models.RESTRICT)
+    transfer_amount = models.DecimalField(max_digits=18, decimal_places=2)
 
     class Meta:
         managed = False
-        db_table = 'pending_transactions_queue'
-
-
-class PendingTransfersQueue(models.Model):
-    use_db = 'bank_data'
-    transfer_id = models.IntegerField(primary_key=True)
-    added = models.DateTimeField()
-
-    class Meta:
-        managed = False
-        db_table = 'pending_transfers_queue'
+        db_table = 'autopayment_objects'
+        unique_together = (('owner_user_id', 'autopayment_id'),)
 
 
 class Transactions(models.Model):
     use_db = 'bank_data'
     transaction_id = models.AutoField(primary_key=True)
-    card_account_id = models.IntegerField()
+    card_account_id = models.ForeignKey(Accounts, on_delete=models.RESTRICT)
     merchant_id = models.IntegerField()
     card_network_id = models.IntegerField()
     amount = models.DecimalField(max_digits=18, decimal_places=2)
@@ -158,9 +115,9 @@ class Transactions(models.Model):
 class Transfers(models.Model):
     use_db = 'bank_data'
     transfer_id = models.AutoField(primary_key=True)
-    create_event_id = models.IntegerField()
-    to_account_id = models.IntegerField()
-    from_account_id = models.IntegerField()
+    create_event_id = models.ForeignKey(EventLog, on_delete=models.RESTRICT)
+    to_account_id = models.ForeignKey(Accounts, on_delete=models.RESTRICT)
+    from_account_id = models.ForeignKey(Accounts, on_delete=models.RESTRICT)
     transfer_type = models.CharField(max_length=6)
     amount = models.DecimalField(max_digits=18, decimal_places=2)
     time_stamp = models.DateTimeField()
@@ -168,3 +125,45 @@ class Transfers(models.Model):
     class Meta:
         managed = False
         db_table = 'transfers'
+
+
+class PendingTransactionsQueue(models.Model):
+    use_db = 'bank_data'
+    transaction_id = models.OneToOneField(Transactions, primary_key=True, on_delete=models.CASCADE)
+    added = models.DateTimeField()
+
+    class Meta:
+        managed = False
+        db_table = 'pending_transactions_queue'
+
+
+class PendingTransfersQueue(models.Model):
+    use_db = 'bank_data'
+    transfer_id = models.OneToOneField(Transfers, primary_key=True, on_delete=models.CASCADE)
+    added = models.DateTimeField()
+
+    class Meta:
+        managed = False
+        db_table = 'pending_transfers_queue'
+
+
+class CompletedTransactionsLog(models.Model):
+    use_db = 'bank_data'
+    transaction_id = models.OneToOneField(Transactions, primary_key=True, on_delete=models.CASCADE)
+    started = models.DateTimeField()
+    completed = models.DateTimeField()
+
+    class Meta:
+        managed = False
+        db_table = 'completed_transactions_log'
+
+
+class CompletedTransfersLog(models.Model):
+    use_db = 'bank_data'
+    transfer_id = models.OneToOneField(Transfers, primary_key=True, on_delete=models.CASCADE)
+    completed = models.DateTimeField()
+    started = models.DateTimeField()
+
+    class Meta:
+        managed = False
+        db_table = 'completed_transfers_log'
