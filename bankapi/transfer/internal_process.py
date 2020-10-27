@@ -31,12 +31,13 @@ class InternalTransfer(TransferProcess):
         # check for authenticity
         # add the transfer to the queue, otherwise don't add it
         # beyond this point, it will be considered an authentic request
+        print(requesting_user_id)
         if requesting_user_id == from_owner_id:
             # add the transfer to the transfers table, and queue it's id to the
             new_event = bankmodels.EventLog(intiator_user_id=requesting_user_id,
-                                            ip6_address=request_ip6,
-                                            ip4_address=request_ip4,
-                                            event_type=TRANSFER_QUEUE_EVENT_ID,
+                                            ip6_address=0,
+                                            ip4_address=0,
+                                            event_type_id=TRANSFER_QUEUE_EVENT_ID,
                                             event_time=request_time)
             new_event.save()
 

@@ -60,10 +60,10 @@ class EventTypes(models.Model):
 class EventLog(models.Model):
     use_db = 'bank_data'
     event_id = models.AutoField(primary_key=True)
-    intiator_user_id = models.ForeignKey(Customer, on_delete=models.RESTRICT)
+    intiator_user = models.ForeignKey(Customer, related_name="evnt_to_custmr",  db_column="intiator_user_id", on_delete=models.RESTRICT)
     ip6_address = models.BinaryField(max_length=16, blank=True, null=True)
     ip4_address = models.BinaryField(max_length=4, blank=True, null=True)
-    event_type = models.ForeignKey(EventTypes, on_delete=models.RESTRICT)
+    event_type = models.ForeignKey(EventTypes, related_name="event_type", db_column="event_type", on_delete=models.RESTRICT)
     event_time = models.DateTimeField()
 
     class Meta:
@@ -85,11 +85,11 @@ class PaymentSchedules(models.Model):
 
 class AutopaymentObjects(models.Model):
     use_db = 'bank_data'
-    owner_user_id = models.ForeignKey(Customer, primary_key=True, on_delete=models.RESTRICT)
+    owner_user = models.ForeignKey(Customer, related_name="autop_to_custmr", db_column="owner_user_id", on_delete=models.RESTRICT)
     autopayment_id = models.IntegerField()
-    payment_schedule_id = models.OneToOneField(PaymentSchedules, on_delete=models.SET_NULL)
-    from_account_id = models.ForeignKey(Accounts, on_delete=models.RESTRICT)
-    to_account_id = models.ForeignKey(Accounts, on_delete=models.RESTRICT)
+    payment_schedule = models.OneToOneField(PaymentSchedules, related_name="autop_pymnt_schedule", db_column="payment_schedule_id", on_delete=models.CASCADE)
+    from_account = models.ForeignKey(Accounts, related_name="autop_from_to_acct", db_column="from_account_id", on_delete=models.RESTRICT)
+    to_account = models.ForeignKey(Accounts, related_name="autop_to_to_acct", db_column="to_account_id", on_delete=models.RESTRICT)
     transfer_amount = models.DecimalField(max_digits=18, decimal_places=2)
 
     class Meta:
@@ -101,7 +101,7 @@ class AutopaymentObjects(models.Model):
 class Transactions(models.Model):
     use_db = 'bank_data'
     transaction_id = models.AutoField(primary_key=True)
-    card_account_id = models.ForeignKey(Accounts, on_delete=models.RESTRICT)
+    card_account = models.ForeignKey(Accounts, related_name="trrnsct_from_to_acct", db_column="card_account_id",  on_delete=models.RESTRICT)
     merchant_id = models.IntegerField()
     card_network_id = models.IntegerField()
     amount = models.DecimalField(max_digits=18, decimal_places=2)
@@ -115,9 +115,9 @@ class Transactions(models.Model):
 class Transfers(models.Model):
     use_db = 'bank_data'
     transfer_id = models.AutoField(primary_key=True)
-    create_event_id = models.ForeignKey(EventLog, on_delete=models.RESTRICT)
-    to_account_id = models.ForeignKey(Accounts, on_delete=models.RESTRICT)
-    from_account_id = models.ForeignKey(Accounts, on_delete=models.RESTRICT)
+    create_event = models.ForeignKey(EventLog, related_name="trnsfr_to_evnt", db_column="create_event_id", on_delete=models.RESTRICT)
+    to_account = models.ForeignKey(Accounts, related_name="trnsfr_from_to_acct", db_column="to_account_id", on_delete=models.RESTRICT)
+    from_account = models.ForeignKey(Accounts, related_name="trnsfr_to_to_acct", db_column="from_account_id", on_delete=models.RESTRICT)
     transfer_type = models.CharField(max_length=6)
     amount = models.DecimalField(max_digits=18, decimal_places=2)
     time_stamp = models.DateTimeField()
@@ -129,7 +129,7 @@ class Transfers(models.Model):
 
 class PendingTransactionsQueue(models.Model):
     use_db = 'bank_data'
-    transaction_id = models.OneToOneField(Transactions, primary_key=True, on_delete=models.CASCADE)
+    transaction = models.OneToOneField(Transactions, related_name="p_trnsct_to_trnsct",  primary_key=True, db_column="transaction_id", on_delete=models.CASCADE)
     added = models.DateTimeField()
 
     class Meta:
@@ -139,7 +139,7 @@ class PendingTransactionsQueue(models.Model):
 
 class PendingTransfersQueue(models.Model):
     use_db = 'bank_data'
-    transfer_id = models.OneToOneField(Transfers, primary_key=True, on_delete=models.CASCADE)
+    transfer = models.OneToOneField(Transfers, related_name="p_trnsfr_to_trnsfr", primary_key=True, db_column="transfer_id", on_delete=models.CASCADE)
     added = models.DateTimeField()
 
     class Meta:
@@ -149,7 +149,7 @@ class PendingTransfersQueue(models.Model):
 
 class CompletedTransactionsLog(models.Model):
     use_db = 'bank_data'
-    transaction_id = models.OneToOneField(Transactions, primary_key=True, on_delete=models.CASCADE)
+    transaction = models.OneToOneField(Transactions, related_name="c_trnsct_to_trnsct", primary_key=True, db_column="transaction_id", on_delete=models.CASCADE)
     started = models.DateTimeField()
     completed = models.DateTimeField()
 
@@ -160,7 +160,7 @@ class CompletedTransactionsLog(models.Model):
 
 class CompletedTransfersLog(models.Model):
     use_db = 'bank_data'
-    transfer_id = models.OneToOneField(Transfers, primary_key=True, on_delete=models.CASCADE)
+    transfer = models.OneToOneField(Transfers, related_name="c_trnsfr_to_trnsfr", primary_key=True, db_column="transfer_id", on_delete=models.CASCADE)
     completed = models.DateTimeField()
     started = models.DateTimeField()
 
