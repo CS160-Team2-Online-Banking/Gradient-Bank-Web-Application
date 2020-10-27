@@ -10,6 +10,7 @@ urlpatterns = [
     path('accounts/', include('allauth.urls')),
     path('transaction/', include('transaction.urls')),
     path('atm/', include('atm.urls')),
+    path('api/', include('bankapi.urls')),
     path('', views.index, name='index'),
     path('admin/', admin.site.urls),
 ]

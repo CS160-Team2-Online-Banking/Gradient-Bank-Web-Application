@@ -76,3 +76,4 @@ class InternalTransfer(TransferProcess):
             pending_transfer.delete()
             new_completed_record.save()
 
+
