@@ -6,6 +6,7 @@
 #   * Remove `managed = False` lines if you wish to allow Django to create, modify, and delete the table
 # Feel free to rename the models, but don't rename db_table values or field names.
 from django.db import models
+import re
 
 class BankManager(models.Model):
     use_db = 'bank_data'
@@ -108,6 +109,22 @@ class PaymentSchedules(models.Model):
         db_table = 'payment_schedules'
 
 
+class PaymentFrequencies:
+    YEARLY = 'YEARLY'
+    MONTHLY = 'MONTHLY'
+    WEEKLY = 'WEEKLY'
+    DAILY = 'DAILY'
+    REGEX = '({y})|({m})|({w})|({d})'.format(y=YEARLY, m=MONTHLY, w=WEEKLY, d=DAILY)
+
+    @staticmethod
+    def validate_string(str):
+        result = re.findall(PaymentFrequencies.REGEX, str)
+        if len(result) == 1:
+            return result[0] == str
+        return False
+
+
+
 class AutopaymentObjects(models.Model):
     use_db = 'bank_data'
     owner_user = models.ForeignKey(Customer, related_name="autop_to_custmr", db_column="owner_user_id", on_delete=models.RESTRICT)
@@ -116,6 +133,7 @@ class AutopaymentObjects(models.Model):
     from_account = models.ForeignKey(Accounts, related_name="autop_from_to_acct", db_column="from_account_id", on_delete=models.RESTRICT)
     to_account = models.ForeignKey(Accounts, related_name="autop_to_to_acct", db_column="to_account_id", on_delete=models.RESTRICT)
     transfer_amount = models.DecimalField(max_digits=18, decimal_places=2)
+    transfer_type = models.CharField(max_length=6)
 
     class Meta:
         managed = True
@@ -152,6 +170,10 @@ class Transfers(models.Model):
         managed = True
         db_table = 'transfers'
 
+class TransferTypes:
+    U_TO_U = 'U_TO_U'
+    A_TO_A = 'A_TO_A'
+    EXTERN = 'EXTERN'
 
 class PendingTransactionsQueue(models.Model):
     use_db = 'bank_data'
