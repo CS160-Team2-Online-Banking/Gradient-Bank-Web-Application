@@ -7,18 +7,6 @@
 # Feel free to rename the models, but don't rename db_table values or field names.
 from django.db import models
 
-class Accounts(models.Model):
-    use_db = 'bank_data'
-    account_id = models.AutoField(primary_key=True)
-    balance = models.DecimalField(max_digits=18, decimal_places=2)
-    account_number = models.IntegerField(unique=True)
-    owner_id = models.IntegerField()
-
-    class Meta:
-        managed = False
-        db_table = 'Accounts'
-
-
 class BankManager(models.Model):
     use_db = 'bank_data'
     bank_manager_id = models.AutoField(primary_key=True)
@@ -26,7 +14,7 @@ class BankManager(models.Model):
     manager_email = models.CharField(unique=True, max_length=255)
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'Bank_Manager'
 
 
@@ -43,8 +31,45 @@ class Customer(models.Model):
     customer_routingnumber = models.IntegerField(db_column='customer_routingNumber')  # Field name made lowercase.
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'Customer'
+
+
+class Accounts(models.Model):
+    use_db = 'bank_data'
+    account_id = models.AutoField(primary_key=True)
+    balance = models.DecimalField(max_digits=18, decimal_places=2)
+    account_number = models.IntegerField(unique=True)
+    owner = models.ForeignKey(Customer, db_column="owner_id", on_delete=models.RESTRICT)
+
+    class Meta:
+        managed = True
+        db_table = 'Accounts'
+
+
+class ExternalAccount(models.Model):
+    use_db = 'bank_data'
+    external_account_id = models.AutoField(primary_key=True)
+    owner_user = models.ForeignKey(Customer, related_name="exa_to_cstmr", db_column="owner_user_id", on_delete=models.RESTRICT)
+    routing_number = models.IntegerField()
+    account_number = models.BigIntegerField()
+
+    class Meta:
+        managed = True
+        db_table = 'external_accounts'
+
+
+class ExternalTransferPool(models.Model):
+    use_db = 'bank_data'
+    pending_extern_id = models.AutoField(primary_key=True)
+    internal_account = models.ForeignKey(Accounts, related_name="etp_to_acc", db_column="internal_account_id", on_delete=models.RESTRICT)
+    external_account = models.ForeignKey(ExternalAccount, related_name="etp_to_exa", db_column="external_account_id", on_delete=models.RESTRICT)
+    amount = models.DecimalField(max_digits=18, decimal_places=2)
+    inbound = models.BooleanField()
+
+    class Meta:
+        managed = True
+        db_table = 'external_transfer_pool'
 
 
 class EventTypes(models.Model):
@@ -54,7 +79,7 @@ class EventTypes(models.Model):
     descrp = models.CharField(max_length=128, blank=True, null=True)
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'event_types'
 
 class EventLog(models.Model):
@@ -67,7 +92,7 @@ class EventLog(models.Model):
     event_time = models.DateTimeField()
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'event_log'
 
 
@@ -79,7 +104,7 @@ class PaymentSchedules(models.Model):
     payment_frequency = models.CharField(max_length=7)
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'payment_schedules'
 
 
@@ -93,7 +118,7 @@ class AutopaymentObjects(models.Model):
     transfer_amount = models.DecimalField(max_digits=18, decimal_places=2)
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'autopayment_objects'
         unique_together = (('owner_user_id', 'autopayment_id'),)
 
@@ -108,7 +133,7 @@ class Transactions(models.Model):
     time_stamp = models.DateTimeField()
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'transactions'
 
 
@@ -123,7 +148,7 @@ class Transfers(models.Model):
     time_stamp = models.DateTimeField()
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'transfers'
 
 
@@ -133,7 +158,7 @@ class PendingTransactionsQueue(models.Model):
     added = models.DateTimeField()
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'pending_transactions_queue'
 
 
@@ -143,7 +168,7 @@ class PendingTransfersQueue(models.Model):
     added = models.DateTimeField()
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'pending_transfers_queue'
 
 
@@ -154,7 +179,7 @@ class CompletedTransactionsLog(models.Model):
     completed = models.DateTimeField()
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'completed_transactions_log'
 
 
@@ -165,5 +190,5 @@ class CompletedTransfersLog(models.Model):
     started = models.DateTimeField()
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'completed_transfers_log'

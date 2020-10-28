@@ -7,6 +7,7 @@ import json
 from bankapi.authentication.auth import decrypt_auth_token, encrpyt_auth_token
 from bankapi.utils.network_utils import get_requestor_ip, get_utc_now_str
 from bankapi.transfer.internal_process import InternalTransfer
+from bankapi.transfer.external_process import ExternalTransfer
 
 
 from django.db.models.functions import Now
@@ -38,6 +39,8 @@ class TransferView(View):
         except ValueError:
             return JsonResponse({"success": False, "msg": "Error: Invalid parameter type"}, status=400)
 
+
+
         request_info = {
             "to_account_id": to_account_id,
             "from_account_id": from_account_id,
@@ -48,7 +51,17 @@ class TransferView(View):
                 "request_time": get_utc_now_str()
             }
         }
-        InternalTransfer(request_info).queue_transfer(auth_token)  # attempt to queue the transfer
+
+        # attempt to queue the transfer
+        if "transfer_type" in data:
+            transfer_type = data["transfer_type"]
+            if transfer_type=="internal":
+                InternalTransfer(request_info).queue_transfer(auth_token)
+            elif transfer_type=="external":
+                ExternalTransfer(request_info).queue_transfer(auth_token)
+        else:
+            InternalTransfer(request_info).queue_transfer(auth_token)
+
         return JsonResponse(request_info)
 
 
