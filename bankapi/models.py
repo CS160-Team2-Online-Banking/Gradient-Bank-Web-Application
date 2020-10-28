@@ -141,7 +141,8 @@ class Transfers(models.Model):
     use_db = 'bank_data'
     transfer_id = models.AutoField(primary_key=True)
     create_event = models.ForeignKey(EventLog, related_name="trnsfr_to_evnt", db_column="create_event_id", on_delete=models.RESTRICT)
-    to_account = models.ForeignKey(Accounts, related_name="trnsfr_from_to_acct", db_column="to_account_id", on_delete=models.RESTRICT)
+    to_account = models.IntegerField()
+    #to_account = models.ForeignKey(Accounts, related_name="trnsfr_from_to_acct", db_column="to_account_id", on_delete=models.RESTRICT)
     from_account = models.ForeignKey(Accounts, related_name="trnsfr_to_to_acct", db_column="from_account_id", on_delete=models.RESTRICT)
     transfer_type = models.CharField(max_length=6)
     amount = models.DecimalField(max_digits=18, decimal_places=2)
@@ -192,3 +193,7 @@ class CompletedTransfersLog(models.Model):
     class Meta:
         managed = True
         db_table = 'completed_transfers_log'
+
+
+TRANSFER_QUEUE_EVENT_ID = EventTypes.objects.get(name="TRANSFER QUEUED").pk
+TRANSFER_CANCEL_EVENT_ID = EventTypes.objects.get(name="TRANSFER CANCELED").pk

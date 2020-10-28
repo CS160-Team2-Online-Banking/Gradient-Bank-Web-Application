@@ -1,6 +1,7 @@
 from bankapi.transfer.transfer_process import TransferProcess
 import bankapi.models as bankmodels
 from decimal import *
+from bankapi.utils.network_utils import build_event_now
 from django.db import transaction
 from django.db.models import F
 from django.db.models.functions import Now
@@ -24,23 +25,25 @@ class InternalTransfer(TransferProcess):
         request_ip4 = self.eventInfo["request_ip4"]
         request_ip6 = self.eventInfo["request_ip6"]
         request_time = self.eventInfo["request_time"]
-        from_owner_id = bankmodels.Accounts.objects.get(pk=self.from_account).owner_id
-        to_owner_id = bankmodels.Accounts.objects.get(pk=self.to_account).owner_id
+
+        from_results = bankmodels.Accounts.objects.filter(pk=self.from_account)
+        to_results = bankmodels.Accounts.objects.filter(pk=self.to_account)
+
+        if len(from_results) and len(to_results):
+            from_owner_id = from_results.first().owner_id
+            to_owner_id = to_results.first().owner_id
+        else:
+            return  # we cannot transfer money to accounts that don't exist
+
         transfer_type = "A_TO_A" if from_owner_id == to_owner_id else "U_TO_U"
 
         # check for authenticity
         # add the transfer to the queue, otherwise don't add it
         # beyond this point, it will be considered an authentic request
-        print(requesting_user_id)
         if requesting_user_id == from_owner_id:
             # add the transfer to the transfers table, and queue it's id to the
-            new_event = bankmodels.EventLog(intiator_user_id=requesting_user_id,
-                                            ip6_address=0,
-                                            ip4_address=0,
-                                            event_type_id=TRANSFER_QUEUE_EVENT_ID,
-                                            event_time=request_time)
+            new_event = build_event_now(requesting_user_id, 0, 0, TRANSFER_QUEUE_EVENT_ID, request_time)
             new_event.save()
-
             new_transfer = bankmodels.Transfers(to_account_id=self.to_account,
                                                 from_account_id=self.from_account,
                                                 transfer_type=transfer_type,
