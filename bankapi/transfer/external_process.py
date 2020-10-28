@@ -38,7 +38,7 @@ class ExternalTransfer(TransferProcess):
             new_event.save()
             new_transfer = Transfers(to_account_id=self.to_account,
                                      from_account_id=self.from_account,
-                                     transfer_type="EXTERNAL",
+                                     transfer_type="EXTERN",
                                      amount=self.amount,
                                      create_event_id=new_event.pk,
                                      time_stamp=Now())

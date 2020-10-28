@@ -1,7 +1,7 @@
 from bankapi.transfer.transfer_process import TransferProcess
 import bankapi.models as bankmodels
 from decimal import *
-from bankapi.utils.network_utils import build_event_now
+from bankapi.utils.network_utils import build_event
 from django.db import transaction
 from django.db.models import F
 from django.db.models.functions import Now
@@ -42,7 +42,7 @@ class InternalTransfer(TransferProcess):
         # beyond this point, it will be considered an authentic request
         if requesting_user_id == from_owner_id:
             # add the transfer to the transfers table, and queue it's id to the
-            new_event = build_event_now(requesting_user_id, 0, 0, TRANSFER_QUEUE_EVENT_ID, request_time)
+            new_event = build_event(requesting_user_id, 0, 0, TRANSFER_QUEUE_EVENT_ID, request_time)
             new_event.save()
             new_transfer = bankmodels.Transfers(to_account_id=self.to_account,
                                                 from_account_id=self.from_account,
