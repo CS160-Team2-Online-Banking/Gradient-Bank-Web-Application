@@ -10,7 +10,7 @@ from bankapi.authentication.auth import decrypt_auth_token, encrpyt_auth_token
 from bankapi.utils.network_utils import get_requestor_ip, get_utc_now_str
 from bankapi.transfer.internal_process import InternalTransfer
 from bankapi.transfer.external_process import ExternalTransfer
-from bankapi.autopayment.autopayment_builder import AutopaymentBuilder
+from bankapi.autopayment.autopayment import AutopaymentBuilder
 
 
 
@@ -107,7 +107,7 @@ class AutoPaymentView(View):
         if result is None:
             return JsonResponse({"success": False, "msg": "Error: Server failed to process request"}, status=500)
         else:
-            return JsonResponse({"success": True, "data":{"owner_id":result[0], "autopayment_id":result[1]}}, status=200)
+            return JsonResponse({"success": True, "data":{"owner_id": result[0], "autopayment_id": result[1]}}, status=200)
 
 
 

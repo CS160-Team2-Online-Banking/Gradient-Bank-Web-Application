@@ -14,3 +14,7 @@ class TransferProcess:
     def get_transfer_info(self) -> dict:
         # returns a dictionary of data about this transfer request
         pass
+
+    def cancel_transfer(self, transfer_id):
+        # called when the transfer is canceled
+        pass

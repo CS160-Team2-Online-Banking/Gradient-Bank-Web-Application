@@ -15,7 +15,7 @@ class BankManager(models.Model):
     manager_email = models.CharField(unique=True, max_length=255)
 
     class Meta:
-        managed = True
+        managed = False
         db_table = 'Bank_Manager'
 
 
@@ -32,8 +32,18 @@ class Customer(models.Model):
     customer_routingnumber = models.IntegerField(db_column='customer_routingNumber')  # Field name made lowercase.
 
     class Meta:
-        managed = True
+        managed = False
         db_table = 'Customer'
+
+
+class AccountTypes(models.Model):
+    use_db = 'bank_data'
+    account_type_id = models.IntegerField(primary_key=True)
+    account_type_name = models.CharField(max_length=64)
+
+    class Meta:
+        managed = True
+        db_table = 'account_types'
 
 
 class Accounts(models.Model):
@@ -41,10 +51,11 @@ class Accounts(models.Model):
     account_id = models.AutoField(primary_key=True)
     balance = models.DecimalField(max_digits=18, decimal_places=2)
     account_number = models.IntegerField(unique=True)
-    owner = models.ForeignKey(Customer, db_column="owner_id", on_delete=models.RESTRICT)
+    account_type = models.ForeignKey(AccountTypes, related_name="acct_to_actyp", db_column='account_type_id', on_delete=models.RESTRICT)
+    owner = models.ForeignKey(Customer, related_name="acct_to_cstmr", db_column="owner_id", on_delete=models.RESTRICT)
 
     class Meta:
-        managed = True
+        managed = False
         db_table = 'Accounts'
 
 
@@ -80,8 +91,9 @@ class EventTypes(models.Model):
     descrp = models.CharField(max_length=128, blank=True, null=True)
 
     class Meta:
-        managed = True
+        managed = False
         db_table = 'event_types'
+
 
 class EventLog(models.Model):
     use_db = 'bank_data'
@@ -93,7 +105,7 @@ class EventLog(models.Model):
     event_time = models.DateTimeField()
 
     class Meta:
-        managed = True
+        managed = False
         db_table = 'event_log'
 
 
@@ -105,7 +117,7 @@ class PaymentSchedules(models.Model):
     payment_frequency = models.CharField(max_length=7)
 
     class Meta:
-        managed = True
+        managed = False
         db_table = 'payment_schedules'
 
 
@@ -134,24 +146,34 @@ class AutopaymentObjects(models.Model):
     to_account = models.ForeignKey(Accounts, related_name="autop_to_to_acct", db_column="to_account_id", on_delete=models.RESTRICT)
     transfer_amount = models.DecimalField(max_digits=18, decimal_places=2)
     transfer_type = models.CharField(max_length=6)
+    last_payment = models.DateTimeField(null=True)
 
     class Meta:
-        managed = True
+        managed = False
         db_table = 'autopayment_objects'
         unique_together = (('owner_user_id', 'autopayment_id'),)
 
+
+class PaymentNetworks(models.Model):
+    use_db = 'bank_data'
+    network_id = models.IntegerField(primary_key=True)
+    network_GID = models.IntegerField(null=True)
+
+    class Meta:
+        managed = True
+        db_table = 'payment_networks'
 
 class Transactions(models.Model):
     use_db = 'bank_data'
     transaction_id = models.AutoField(primary_key=True)
     card_account = models.ForeignKey(Accounts, related_name="trrnsct_from_to_acct", db_column="card_account_id",  on_delete=models.RESTRICT)
     merchant_id = models.IntegerField()
-    card_network_id = models.IntegerField()
+    card_network = models.ForeignKey(PaymentNetworks, related_name="trnsct_to_ntwrk", db_column="card_network_id", on_delete=models.RESTRICT)
     amount = models.DecimalField(max_digits=18, decimal_places=2)
     time_stamp = models.DateTimeField()
 
     class Meta:
-        managed = True
+        managed = False
         db_table = 'transactions'
 
 
@@ -167,7 +189,7 @@ class Transfers(models.Model):
     time_stamp = models.DateTimeField()
 
     class Meta:
-        managed = True
+        managed = False
         db_table = 'transfers'
 
 class TransferTypes:
@@ -181,7 +203,7 @@ class PendingTransactionsQueue(models.Model):
     added = models.DateTimeField()
 
     class Meta:
-        managed = True
+        managed = False
         db_table = 'pending_transactions_queue'
 
 
@@ -191,7 +213,7 @@ class PendingTransfersQueue(models.Model):
     added = models.DateTimeField()
 
     class Meta:
-        managed = True
+        managed = False
         db_table = 'pending_transfers_queue'
 
 
@@ -202,7 +224,7 @@ class CompletedTransactionsLog(models.Model):
     completed = models.DateTimeField()
 
     class Meta:
-        managed = True
+        managed = False
         db_table = 'completed_transactions_log'
 
 
@@ -213,9 +235,38 @@ class CompletedTransfersLog(models.Model):
     started = models.DateTimeField()
 
     class Meta:
-        managed = True
+        managed = False
         db_table = 'completed_transfers_log'
+
+class FailedTransfers(models.Model):
+    use_db = 'bank_data'
+    transfer = models.OneToOneField(Transfers, related_name="f_trnsfr_to_trnsfr", primary_key=True, db_column="transfer_id", on_delete=models.CASCADE)
+    started = models.DateTimeField()
+    failed = models.DateTimeField()
+
+    class Meta:
+        managed = True
+        db_table = 'failed_transfers_log'
+
+
+class FailedTransactions(models.Model):
+    use_db = 'bank_data'
+    transaction = models.OneToOneField(Transactions, related_name="f_trnsct_to_trnsct", primary_key=True, db_column="transaction_id", on_delete=models.CASCADE)
+    started = models.DateTimeField()
+    failed = models.DateTimeField()
+
+    class Meta:
+        managed = True
+        db_table = 'failed_transactions_log'
 
 
 TRANSFER_QUEUE_EVENT_ID = EventTypes.objects.get(name="TRANSFER QUEUED").pk
 TRANSFER_CANCEL_EVENT_ID = EventTypes.objects.get(name="TRANSFER CANCELED").pk
+SAVING_ACCOUNT_ID = 1
+if AccountTypes.objects.filter(pk=SAVING_ACCOUNT_ID).first() is None:
+    saving = AccountTypes(account_type_id=SAVING_ACCOUNT_ID, account_type_name='SAVING')
+    saving.save()
+CHECKING_ACCOUNT_ID = 2
+if AccountTypes.objects.filter(pk=CHECKING_ACCOUNT_ID).first() is None:
+    checking = AccountTypes(account_type_id=CHECKING_ACCOUNT_ID, account_type_name='CHECKING')
+    checking.save()

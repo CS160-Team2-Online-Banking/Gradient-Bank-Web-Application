@@ -6,6 +6,7 @@ from django.db import transaction
 from django.db.models import F
 from django.db.models.functions import Now
 
+
 class ExternalTransfer(TransferProcess):
     def __init__(self, data=None):
         if data is not None:
@@ -28,7 +29,7 @@ class ExternalTransfer(TransferProcess):
             from_owner_id = from_results.first().owner_id
             to_owner_id = to_results.first().owner_id
         else:
-            return  # we cannot schedule a transfer to accounts that aren't registered
+            return False  # we cannot schedule a transfer to accounts that aren't registered
 
         # check for authenticity
         # add the transfer to the queue, otherwise don't add it
@@ -46,6 +47,8 @@ class ExternalTransfer(TransferProcess):
             pending_transfer = PendingTransfersQueue(transfer_id=new_transfer.pk,
                                                      added=Now())
             pending_transfer.save()
+            return True
+        return False
 
     def get_transfer_info(self):
         data = dict()
@@ -63,16 +66,15 @@ class ExternalTransfer(TransferProcess):
         # move the transfer from pending to complete
         transfer = Transfers.objects.filter(pk=transfer_id).first()
         if transfer is None:
-            return  # TODO: handle this, raise an exception or something
+            return False  # TODO: handle this, raise an exception or something
 
         external_account = ExternalAccount.objects.filter(pk=transfer.to_account_id).first()
         internal_account = Accounts.objects.filter(pk=transfer.from_account_id).first()
         if (external_account is None) or (internal_account is None):
-            return  # TODO: handle this, raise an exception or something
-
+            return False  # TODO: handle this, raise an exception or something
         pending_transfer = PendingTransfersQueue.objects.filter(pk=transfer_id).first()
         if pending_transfer is None:
-            return  # TODO: handle this, raise an exception or something
+            return False  # TODO: handle this, raise an exception or something
 
         _amount = transfer.amount
         if transfer.amount <= internal_account.balance:
@@ -88,8 +90,19 @@ class ExternalTransfer(TransferProcess):
                                                        started=pending_transfer.added)
             pending_transfer.delete()
             completed_transfer.save()
+            return True
+        return False
 
-
+    @transaction.atomic
+    def cancel_transfer(self, transfer_id=None):
+        pending_transfer = PendingTransfersQueue.object.filter(pk=transfer_id).first()
+        transfer = Transfers.objects.filter(pk=transfer_id).first()
+        if pending_transfer is not None:
+            failed_transaction = FailedTransfers(transfer_id=transfer.pk,
+                                                 started=pending_transfer.added,
+                                                 failed=Now())
+            failed_transaction.save()
+            pending_transfer.delete()
 
 
 

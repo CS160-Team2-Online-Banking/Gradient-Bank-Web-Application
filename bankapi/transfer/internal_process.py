@@ -1,13 +1,10 @@
 from bankapi.transfer.transfer_process import TransferProcess
-import bankapi.models as bankmodels
+from bankapi.models import *
 from decimal import *
 from bankapi.utils.network_utils import build_event
 from django.db import transaction
 from django.db.models import F
 from django.db.models.functions import Now
-
-TRANSFER_QUEUE_EVENT_ID = bankmodels.EventTypes.objects.get(name="TRANSFER QUEUED").pk
-TRANSFER_CANCEL_EVENT_ID = bankmodels.EventTypes.objects.get(name="TRANSFER CANCELED").pk
 
 
 class InternalTransfer(TransferProcess):
@@ -26,14 +23,14 @@ class InternalTransfer(TransferProcess):
         request_ip6 = self.eventInfo["request_ip6"]
         request_time = self.eventInfo["request_time"]
 
-        from_results = bankmodels.Accounts.objects.filter(pk=self.from_account)
-        to_results = bankmodels.Accounts.objects.filter(pk=self.to_account)
+        from_results = Accounts.objects.filter(pk=self.from_account)
+        to_results = Accounts.objects.filter(pk=self.to_account)
 
         if len(from_results) and len(to_results):
             from_owner_id = from_results.first().owner_id
             to_owner_id = to_results.first().owner_id
         else:
-            return  # we cannot transfer money to accounts that don't exist
+            return False  # TODO: handle this, raise an exception or something
 
         transfer_type = "A_TO_A" if from_owner_id == to_owner_id else "U_TO_U"
 
@@ -44,17 +41,18 @@ class InternalTransfer(TransferProcess):
             # add the transfer to the transfers table, and queue it's id to the
             new_event = build_event(requesting_user_id, 0, 0, TRANSFER_QUEUE_EVENT_ID, request_time)
             new_event.save()
-            new_transfer = bankmodels.Transfers(to_account_id=self.to_account,
-                                                from_account_id=self.from_account,
-                                                transfer_type=transfer_type,
-                                                amount=self.amount,
-                                                create_event_id=new_event.pk,
-                                                time_stamp=Now())
+            new_transfer = Transfers(to_account_id=self.to_account,
+                                     from_account_id=self.from_account,
+                                     transfer_type=transfer_type,
+                                     amount=self.amount,
+                                     create_event_id=new_event.pk,
+                                     time_stamp=Now())
             new_transfer.save()
-            queue_ticket = bankmodels.PendingTransfersQueue(transfer_id=new_transfer.pk,
-                                                            added=Now())
+            queue_ticket = PendingTransfersQueue(transfer_id=new_transfer.pk,
+                                                 added=Now())
             queue_ticket.save()
-
+            return True
+        return False
 
 
     def get_transfer_info(self):
@@ -66,9 +64,22 @@ class InternalTransfer(TransferProcess):
 
     @transaction.atomic
     def process_transfer(self, transfer_id=None):
-        transfer = bankmodels.Transfers.objects.get(pk=transfer_id)
-        from_account = bankmodels.Accounts.objects.get(pk=transfer.from_account_id)
-        to_account = bankmodels.Accounts.objects.get(pk=transfer.to_account_id)
+        transfer = Transfers.objects.filter(pk=transfer_id).first()
+        if transfer is None:
+            return False  # TODO: handle this, raise an exception or something
+
+        from_account = Accounts.objects.filter(pk=transfer.from_account_id).first()
+        if from_account is None:
+            return False  # TODO: handle this, raise an exception or something
+
+        to_account = Accounts.objects.filter(pk=transfer.to_account_id).first()
+        if to_account is None:
+            return False  # TODO: handle this, raise an exception or something
+
+        pending_transfer = PendingTransfersQueue.objects.filter(pk=transfer.pk).first()
+        if pending_transfer is None:
+            return False  # TODO: handle this, raise an exception or something
+
         amount = transfer.amount
         if transfer.amount <= from_account.balance:
             from_account.balance = from_account.balance-amount
@@ -76,12 +87,21 @@ class InternalTransfer(TransferProcess):
             from_account.save()
             to_account.save()
 
-            pending_transfer = bankmodels.PendingTransfersQueue.objects.get(pk=transfer.pk)
-            new_completed_record = bankmodels.CompletedTransfersLog(transfer_id=pending_transfer.pk,
-                                                                    completed=Now(),
-                                                                    started=pending_transfer.added)
+            new_completed_record = CompletedTransfersLog(transfer_id=pending_transfer.pk,
+                                                         completed=Now(),
+                                                         started=pending_transfer.added)
             pending_transfer.delete()
             new_completed_record.save()
+            return True
+        return False
 
-
-
+    @transaction.atomic
+    def cancel_transfer(self, transfer_id=None):
+        pending_transfer = PendingTransfersQueue.object.filter(pk=transfer_id).first()
+        transfer = Transfers.objects.filter(pk=transfer_id).first()
+        if pending_transfer is not None:
+            failed_transaction = FailedTransfers(transfer_id=transfer.pk,
+                                                 started=pending_transfer.added,
+                                                 failed=Now())
+            failed_transaction.save()
+            pending_transfer.delete()
