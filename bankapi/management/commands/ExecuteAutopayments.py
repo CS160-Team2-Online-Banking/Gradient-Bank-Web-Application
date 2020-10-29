@@ -36,7 +36,7 @@ class Command(BaseCommand):
                                                              "request_ip6": 0,
                                                              "request_time": get_utc_now_str()
                                                          }})
-                
+
                 with transaction.atomic():
                     result = transfer_handler.queue_transfer({"user_id": auto_obj.owner_user_id})
                     if result:  # if the payment went through
