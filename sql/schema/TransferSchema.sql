@@ -59,8 +59,8 @@ CREATE TABLE pending_transfers_queue (
 CREATE TABLE event_log (
 	event_id INT NOT NULL AUTO_INCREMENT,
 	intiator_user_id INT NOT NULL,
-	ip6_address CHAR(16),
-	ip4_address CHAR(4),
+	ip6_address BINARY(16),
+	ip4_address BINARY(4),
 	event_type INT NOT NULL,
 	event_time DATETIME NOT NULL,
 	PRIMARY KEY (event_id)

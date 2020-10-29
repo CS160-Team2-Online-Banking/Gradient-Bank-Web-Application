@@ -21,11 +21,12 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'y3c@y_28b7%7(00&a#$ivu(j+r2#&^ms*%!-v6z_m9r89)p6-^'
-
+JWT_SECRET = "j*qV)m}9'NRYV:[\@T2]'QQux5:~Ynn.uMjBA2E\tP*[cd&MR;qWbq<MqP?kca?*"
+JWT_ALGO = 'HS256'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = ['159.89.148.172', 'localhost', '127.0.0.1']
 
 
 # Application definition
@@ -45,7 +46,9 @@ INSTALLED_APPS = [
     'django.contrib.sites',
     'allauth',
     'allauth.account',
-    'allauth.socialaccount'
+    'allauth.socialaccount',
+    'bankapi',
+    'rest_framework'
 ]
 SITE_ID = 1
 
@@ -60,6 +63,8 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = 'config.urls'
+
+DATABASE_ROUTERS = ['bankapi.dbrouter.CustomRouter']
 
 TEMPLATES = [
     {
@@ -84,24 +89,34 @@ WSGI_APPLICATION = 'config.wsgi.application'
 # https://docs.djangoproject.com/en/3.0/ref/settings/#databases
 
 # default database configuration (SQLite)
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
-    }
-}
-
-# DATABASE for MySQL Configuration
 # DATABASES = {
 #     'default': {
-#         'ENGINE':'django.db.backends.mysql',
-#         'NAME':'●●(Database Name)',
-#         'USER':'●●（User name for the database）',
-#         'PASSWORD':'●●（Password for the database）',
-#         'HOST':'localhost',
-#         'PORT':'',
-#     }
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+#     },
 # }
+
+# DATABASE for MySQL Configuration
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'online_django_playground_1',
+        'USER': 'zackf',
+        'PASSWORD': 'cs160Dev',
+        'HOST': '159.89.148.172',
+        'PORT': '3306',
+        'SUPPORTS_TRANSACTIONS': True,
+     },
+    'bank_data': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'online_banking_playground_1',
+        'USER': 'zackf',
+        'PASSWORD': 'cs160Dev',
+        'HOST': '159.89.148.172',
+        'PORT': '3306',
+        'SUPPORTS_TRANSACTIONS': True,
+    }
+}
 
 
 # Password validation

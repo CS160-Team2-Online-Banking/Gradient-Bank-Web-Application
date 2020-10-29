@@ -12,3 +12,5 @@ venv/*
 .vscode/
 .idea/
 .DS_Store
+config/settings.py
+config/settings.py
