@@ -6,7 +6,8 @@ from django.utils.decorators import method_decorator
 import json
 
 from bankapi.models import TransferTypes
-from bankapi.authentication.auth import decrypt_auth_token, encrpyt_auth_token
+from bankapi.transaction.transaction import TransactionProcess
+from bankapi.authentication.auth import *
 from bankapi.utils.network_utils import get_requestor_ip, get_utc_now_str
 from bankapi.transfer.internal_process import InternalTransfer
 from bankapi.transfer.external_process import ExternalTransfer
@@ -108,6 +109,45 @@ class AutoPaymentView(View):
             return JsonResponse({"success": False, "msg": "Error: Server failed to process request"}, status=500)
         else:
             return JsonResponse({"success": True, "data":{"owner_id": result[0], "autopayment_id": result[1]}}, status=200)
+
+
+
+@method_decorator(csrf_exempt, name='dispatch')  # django requires all post requests to include a CSRF token by default
+class TransactionView(View):
+    def get(self):
+        pass
+
+    def post(self, request):
+        try:
+            auth_token = decrypt_auth_token_str(request.headers.get("authorization"))
+            json_data = json.loads(request.body)
+        except json.decoder.JSONDecodeError:
+            return JsonResponse({"success": False, "msg": "Error: JSON could not be parsed"}, status=400)
+
+        if 'data' not in json_data:
+            return JsonResponse({"success": False, "msg": "Error: Badly formatted body"}, status=400)
+
+        data = json_data["data"]
+        try:
+            transaction_data = {
+                "card_account_number": data["card_account_number"],
+                "merchant_id": data["card_account_number"],
+                "card_network_id": data["card_network_id"],
+                "amount": data["amount"],
+                "time_stamp": data["time_stamp"]
+            }
+        except KeyError:
+            return JsonResponse({"success": False, "msg": "Error: Body is missing parameters"}, status=400)
+        except ValueError:
+            return JsonResponse({"success": False, "msg": "Error: Invalid parameter type"}, status=400)
+
+        transaction_handler = TransactionProcess(transaction_data)
+        result = transaction_handler.queue_transaction(auth_token)
+
+        if result is None:
+            return JsonResponse({"success": False, "msg": "Error: server failed to process request"}, status=500)
+        else:
+            return JsonResponse({"success": True})
 
 
 
