@@ -1,6 +1,7 @@
 from django.shortcuts import render
 from django.http import JsonResponse
 from django.views import View
+from django.db.models.functions import Now
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 import json
@@ -14,12 +15,8 @@ from bankapi.transfer.external_process import ExternalTransfer
 from bankapi.autopayment.autopayment import AutopaymentBuilder
 
 
-
 @method_decorator(csrf_exempt, name='dispatch')  # django requires all post requests to include a CSRF token by default
 class TransferView(View):
-    def get(self, request):
-        return JsonResponse({})
-
     def post(self, request):
         try:
             auth_token = decrypt_auth_token(request)
@@ -33,8 +30,24 @@ class TransferView(View):
         data = json_data["data"]
 
         try:
-            to_account_id = int(data["to_account_id"])
-            from_account_id = int(data["from_account_id"])
+            to_account_id = None
+            to_account_no = None
+            from_account_id = None
+            from_account_no = None
+            if "to_account_id" in data:
+                to_account_id = int(data["to_account_id"])
+            elif "to_account_no" in data:
+                to_account_no = int(data["to_account_no"])
+            else:
+                raise KeyError
+
+            if "from_account_id" in data:
+                from_account_id = int(data["from_account_id"])
+            elif "from_account_no" in data:
+                from_account_no = int(data["from_account_no"])
+            else:
+                raise KeyError
+
             amount = data["amount"]
         except KeyError:
             return JsonResponse({"success": False, "msg": "Error: Body is missing parameters"}, status=400)
@@ -43,12 +56,14 @@ class TransferView(View):
 
         request_info = {
             "to_account_id": to_account_id,
+            "to_account_no": to_account_no,
             "from_account_id": from_account_id,
+            "from_account_no": from_account_no,
             "amount": amount,
             "event_info": {
                 "request_ip4": "",
                 "request_ip6": "",
-                "request_time": get_utc_now_str()
+                "request_time": Now()
             }
         }
 
@@ -61,14 +76,12 @@ class TransferView(View):
                 ExternalTransfer(request_info).queue_transfer(auth_token)
         else:
             InternalTransfer(request_info).queue_transfer(auth_token)
-
+        request_info.pop("event_info")
         return JsonResponse({"success": True, "data": request_info}, status=200)
+
 
 @method_decorator(csrf_exempt, name='dispatch')  # django requires all post requests to include a CSRF token by default
 class AutoPaymentView(View):
-    def get(self):
-        pass
-
     def post(self, request):
         try:
             auth_token = decrypt_auth_token(request)
@@ -81,8 +94,24 @@ class AutoPaymentView(View):
 
         data = json_data["data"]
         try:
-            to_account_id = int(data["to_account_id"])
-            from_account_id = int(data["from_account_id"])
+            to_account_id = None
+            to_account_no = None
+            from_account_id = None
+            from_account_no = None
+            if "to_account_id" in data:
+                to_account_id = int(data["to_account_id"])
+            elif "to_account_no" in data:
+                to_account_no = int(data["to_account_no"])
+            else:
+                raise KeyError
+
+            if "from_account_id" in data:
+                from_account_id = int(data["from_account_id"])
+            elif "from_account_no" in data:
+                from_account_no = int(data["from_account_no"])
+            else:
+                raise KeyError
+
             transfer_amount = data["transfer_amount"]
             transfer_type = data["transfer_type"]
             payment_schedule_data = {
@@ -98,7 +127,9 @@ class AutoPaymentView(View):
         payment_data = {
             "payment_schedule_data": payment_schedule_data,
             "from_account_id": from_account_id,
+            "from_account_no": from_account_no,
             "to_account_id": to_account_id,
+            "to_account_no": to_account_no,
             "transfer_amount": transfer_amount,
             "transfer_type": transfer_type
         }
@@ -108,15 +139,12 @@ class AutoPaymentView(View):
         if result is None:
             return JsonResponse({"success": False, "msg": "Error: Server failed to process request"}, status=500)
         else:
-            return JsonResponse({"success": True, "data":{"owner_id": result[0], "autopayment_id": result[1]}}, status=200)
-
+            return JsonResponse({"success": True, "data": {"owner_id": result[0], "autopayment_id": result[1]}},
+                                status=200)
 
 
 @method_decorator(csrf_exempt, name='dispatch')  # django requires all post requests to include a CSRF token by default
 class TransactionView(View):
-    def get(self):
-        pass
-
     def post(self, request):
         try:
             auth_token = decrypt_auth_token_str(request.headers.get("authorization"))
@@ -148,7 +176,6 @@ class TransactionView(View):
             return JsonResponse({"success": False, "msg": "Error: server failed to process request"}, status=500)
         else:
             return JsonResponse({"success": True})
-
 
 
 @method_decorator(csrf_exempt, name='dispatch')  # django requires all post requests to include a CSRF token by default

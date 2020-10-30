@@ -18,6 +18,10 @@ def get_datetime_from_str(date_str):
     return datetime.datetime.strptime(date_str, '%Y-%m-%d %H:%M:%S')
 
 
+def get_date_from_str(date_str):
+    return datetime.datetime.strptime(date_str, '%Y-%m-%d')
+
+
 def build_event(user_id, ip4, ip6, event_type, request_time):
     new_event = EventLog(intiator_user_id=user_id,
                          ip6_address=ip6,

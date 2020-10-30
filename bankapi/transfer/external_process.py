@@ -11,9 +11,15 @@ class ExternalTransfer(TransferProcess):
     def __init__(self, data=None):
         if data is not None:
             self.to_account = data["to_account_id"]
+            self.to_account_no = data["to_account_no"]
             self.from_account = data["from_account_id"]
+            self.from_account_no = data["from_account_no"]
             self.amount = data["amount"]
             self.eventInfo = data["event_info"]
+
+            if ((self.to_account is None and self.to_account_no is None) or
+               (self.from_account is None and self.from_account_no is None)):
+                raise ValueError("Either an account number or id must be specified")
         # ip information should also be collected here
 
     @transaction.atomic
@@ -23,8 +29,15 @@ class ExternalTransfer(TransferProcess):
         request_ip6 = self.eventInfo["request_ip6"]
         request_time = self.eventInfo["request_time"]
 
-        from_results = Accounts.objects.filter(pk=self.from_account)
-        to_results = Accounts.objects.filter(pk=self.to_account)
+        if self.from_account is not None:
+            from_results = Accounts.objects.filter(pk=self.from_account)
+        else:
+            from_results = Accounts.objects.filter(account_number=self.from_account_no)
+
+        if self.to_account is not None:
+            to_results = Accounts.objects.filter(pk=self.to_account)
+        else:
+            to_results = Accounts.objects.filter(account_number=self.to_account_no)
         if len(from_results) and len(to_results):
             from_owner_id = from_results.first().owner_id
             to_owner_id = to_results.first().owner_id
@@ -37,8 +50,8 @@ class ExternalTransfer(TransferProcess):
         if requesting_user_id == from_owner_id == to_owner_id:
             new_event = build_event(requesting_user_id, 0, 0, TRANSFER_QUEUE_EVENT_ID, request_time)
             new_event.save()
-            new_transfer = Transfers(to_account_id=self.to_account,
-                                     from_account_id=self.from_account,
+            new_transfer = Transfers(to_account_id=to_results.first().pk,
+                                     from_account_id=from_results.first().pk,
                                      transfer_type="EXTERN",
                                      amount=self.amount,
                                      create_event_id=new_event.pk,
