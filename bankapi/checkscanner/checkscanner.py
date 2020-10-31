@@ -12,5 +12,13 @@ import pytesseract
 
 pytesseract.pytesseract.tesseract_cmd = r'tesseract-4.0.0-alpha/tesseract.exe'
 
-def get_check_data(img):
+
+def get_check_str(img):
     gray_scale = img.convert('LA')
+    raw_check_str = pytesseract.image_to_string(gray_scale, lang='eng')
+    return raw_check_str
+
+def get_check_data(img):
+    raw_check_str = get_check_str(img)
+
+
