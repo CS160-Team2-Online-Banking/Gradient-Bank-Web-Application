@@ -94,7 +94,8 @@ class ExternalTransfer(TransferProcess):
             internal_account.balance = internal_account.balance - _amount
             internal_account.save()
             external_queue_object = ExternalTransferPool(internal_account_id=internal_account.pk,
-                                                         external_account_id=external_account.pk,
+                                                         external_account_no=external_account.account_number,
+                                                         external_account_routing_no=external_account.external_account_routing_no,
                                                          amount=_amount,
                                                          inbound=False)
             external_queue_object.save()
