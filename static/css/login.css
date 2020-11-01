@@ -1,0 +1,16 @@
+
+.btn-google {
+    background-color: hsl(345, 94%, 42%);
+	border-radius: 20px 20px 20px 20px;
+	font-size: 15px;
+}
+
+.btn-google:hover {
+	background-color: hsl(345, 98%, 50%);
+}
+
+.login-p {
+	color: #aebbcb;
+	margin: 20px 0px;
+	text-align: center;
+}

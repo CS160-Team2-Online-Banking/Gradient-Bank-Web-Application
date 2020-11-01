@@ -4,7 +4,7 @@ from django.views import View
 
 class SignUp(View):
     def get(self, request, *args, **kwargs):
-        return render(request, 'account/sign-up.html')
+        return render(request, 'account/signup.html')
 
 
 signup = SignUp.as_view()

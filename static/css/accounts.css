@@ -1,0 +1,95 @@
+
+body {
+	background: #fff;
+    padding: 120px;
+	font-family: 'Roboto';
+}
+
+
+.input-group {
+    margin: 10px 0px;
+}
+
+.btn-primary,
+.btn-primary:hover {
+	border-radius: 10px 10px 10px 10px;
+	background-color: #5f9ea0;
+	border-color: #5f9ea0;
+	margin: 10px 0px;
+}
+
+
+h3 {
+    text-align: center;
+}
+
+p {
+	color: #aebbcb;
+}
+
+a {
+	color: #23a9f6;
+}
+
+label {
+	text-transform: uppercase;
+	color: #bdc7d4;
+}
+
+
+.form-control {
+    background: none;
+    height: 40px;
+    border: none;
+    border-radius: 0px;
+    box-shadow: none;
+    color: #8b9eb6;
+    padding: 0px;
+}
+
+.form-control:focus {
+    box-shadow: none;
+}
+
+div.field {
+    margin-top: 30px;
+}
+
+div.field > span.helptext {
+    font-size: 14px;
+    color: #999;
+}
+
+div.field > label {
+    display: block;
+}
+
+div.field > input, div.field > textarea, div.field > select, div.field > button {
+    width: 100%;
+    padding: 10px 12px;
+    box-sizing: border-box;
+    border-radius: 10px 10px 10px 10px;
+    border: solid 1px #999;
+}
+
+div.field > input:focus, div.field > textarea:focus, div.field > select:focus {
+    outline: none;
+    width: 100%;
+    padding: 10px 12px;
+    box-sizing: border-box;
+    border-radius: 10px 10px 10px 10px;
+    border: solid 2px rgb(241, 161, 31);
+    background-color: #ffffff;
+
+}
+
+.alert-message {
+	background-color: red;
+	color:rgb(255, 255, 255);
+}
+
+
+.info-message {
+	background-color: rgb(108, 116, 236);
+	color:white;
+}
