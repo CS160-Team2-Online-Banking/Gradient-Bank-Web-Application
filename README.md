@@ -40,15 +40,17 @@
 
 `python manage.py migrate`
 
-4. Register the user who manages the system
+4.Collects the static files from all installed apps and copies them to the STATICFILES_STORAGE.
+`python manage.py collectstatic`
+
+5. Register the user who manages the system
 
 `python manage.py createsuperuser`
 
 input username, email, password
 
 
-
-5. Start to run the system
+6. Start to run the system
 
 `python manage.py runserver`
 

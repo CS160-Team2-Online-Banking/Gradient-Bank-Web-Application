@@ -1,12 +1,41 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
+{% load static %}
+{% load socialaccount %}
+
+{% block extra_css %}
+<link rel="stylesheet" type="text/css" href="{% static 'css/accounts.css' %}">
+<link rel="stylesheet" type="text/css" href="{% static 'css/login.css' %}">
+{% endblock %}
+
 {% block contents %}
+<div class="row">
+    <div class="col-md-6 md-offset-3 mx-auto">
+        <h3>Login</h3>
+        <!-- django form -->
+        <form role="form" class="login" method="POST" action="{% url 'account_login' %}">
+            {% csrf_token %}
 
-<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center mt-5 border-bottom">
-    <h1 class="h2">Login Page</h1>
+            {% for field in form %}
+
+            {% if field.label %}
+            <div class="form-group field" style="width: 100%;">
+                <label for="{{ field.id_for_label }}">{{field.label}}　{{ field }}</label>
+            </div>
+
+            {% else %}
+            <div class="form-group field" style="width: 100%;">
+                {{ field }}
+            </div>
+            {% endif %}
+            {% endfor %}
+            {% for error in form.non_field_errors %}
+            <div class="alert-message">
+                <p>{{ error }}</p>
+            </div>
+            {% endfor %}
+            <p class="login-p">Sign up <a href="{{ signup_url }}">Here</a></p>
+            <button type="submit" class="btn-block btn btn-lg btn-primary">Login</button>
+        </form>
+    </div>
 </div>
-
-<div>
-    <h4>Contents would be here.</h4>
-</div>
-
 {% endblock %}

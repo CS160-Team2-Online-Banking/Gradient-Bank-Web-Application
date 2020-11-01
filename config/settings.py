@@ -95,7 +95,6 @@ WSGI_APPLICATION = 'config.wsgi.application'
 #         'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
 #     },
 # }
-
 # DATABASE for MySQL Configuration
 DATABASES = {
     'default': {
@@ -106,7 +105,7 @@ DATABASES = {
         'HOST': '159.89.148.172',
         'PORT': '3306',
         'SUPPORTS_TRANSACTIONS': True,
-     },
+    },
     'bank_data': {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'online_banking_playground_1',
@@ -160,7 +159,7 @@ STATIC_URL = '/static/'
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PROJECT_NAME = os.path.basename(BASE_DIR)
 STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
-STATIC_ROOT = '/var/www/{}/static'.format(PROJECT_NAME)
+STATIC_ROOT = '{}/static'.format(PROJECT_NAME)
 
 
 MEDIA_URL = '/media/'

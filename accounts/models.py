@@ -23,7 +23,6 @@ class CustomUserManager(UserManager):
         return user
 
     def create_user(self, email, password=None, **extra_fields):
-
         extra_fields.setdefault('is_staff', False)
         extra_fields.setdefault('is_superuser', False)
         return self._create_user(email, password, **extra_fields)
@@ -37,12 +36,14 @@ class CustomUserManager(UserManager):
             raise ValueError('Superuser must have is_superuser=True.')
         return self._create_user(email, password, **extra_fields)
 
+
 # CustomerUser
 
 
 class CustomUser(AbstractBaseUser, PermissionsMixin):
     password = models.CharField(max_length=255, null=True, blank=True)
-    username = models.CharField(max_length=255, null=True, blank=True)
+    username = models.CharField(
+        max_length=255, null=True, unique=True, blank=True)
     email = models.CharField(max_length=255, null=True,
                              unique=True, blank=True)
     age = models.IntegerField(null=True, blank=True)
@@ -71,8 +72,8 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     objects = CustomUserManager()
 
     EMAIL_FIELD = 'email'
-    USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = []
+    USERNAME_FIELD = 'username'
+    REQUIRED_FIELDS = [EMAIL_FIELD]
 
     class Meta:
         verbose_name = _('user')
