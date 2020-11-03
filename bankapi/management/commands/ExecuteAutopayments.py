@@ -18,7 +18,7 @@ class Command(BaseCommand):
                 data = {"to_account_id": auto_obj.to_account_id,
                         "to_routing_no": auto_obj.to_routing_no,
                         "from_account_no": auto_obj.from_account.account_number,
-                        "from_routing_no": settings.our_routing_number,
+                        "from_routing_no": settings.BANK_ROUTING_NUMBER,
                         "amount": auto_obj.transfer_amount}
 
                 print('preparing for transfer')

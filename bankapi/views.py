@@ -28,10 +28,10 @@ class TransferView(View):
         data = json_data["data"]
 
         try:
-            to_account_no = data["to_account_no"]
-            to_routing_no = data["to_routing_no"]
-            from_account_no = data["from_account_no"]
-            from_routing_no = data["from_routing_no"]
+            to_account_no = int(data["to_account_no"])
+            to_routing_no = int(data["to_routing_no"])
+            from_account_no = int(data["from_account_no"])
+            from_routing_no = int(data["from_routing_no"])
             amount = data["amount"]
         except KeyError:
             return JsonResponse({"success": False, "msg": "Error: Body is missing parameters"}, status=400)
@@ -43,9 +43,10 @@ class TransferView(View):
             "from_account_no": from_account_no,
             "to_routing_no": to_routing_no,
             "to_account_no": to_account_no,
-            "amount": amount,
+            "amount": Decimal(amount),
         }
         result = ExchangeProcessor.start_exchange(request_info, auth_token)
+        print(result)
         if result["success"]:
             log_event(request, entry_type=EventTypes.TRANSFER_CREATE_REQUEST, associated_item=result["data"]["transfer_id"])
             return JsonResponse({"success": True, "data": request_info}, status=200)
@@ -67,12 +68,12 @@ class AutoPaymentView(View):
         data = json_data["data"]
         try:
 
-            to_account_no = data["to_account_no"]
-            to_routing_no = data["to_routing_no"]
-            from_account_no = data["from_account_no"]
-            from_routing_no = data["from_routing_no"]
+            to_account_no = int(data["to_account_no"])
+            to_routing_no = int(data["to_routing_no"])
+            from_account_no = int(data["from_account_no"])
+            from_routing_no = int(data["from_routing_no"])
 
-            transfer_amount = data["transfer_amount"]
+            transfer_amount = Decimal(data["transfer_amount"])
             payment_schedule_data = {
                 "payment_frequency": data["payment_schedule_data"]["payment_frequency"],
                 "start_date": data["payment_schedule_data"]["start_date"],

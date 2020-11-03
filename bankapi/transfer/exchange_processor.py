@@ -26,7 +26,7 @@ def external_transfer_handler(auth_token, from_account_no, to_account_no, to_rou
             ex = ExchangeHistory(to_account_no=to_account_no,
                                  from_account_no=from_account_no,
                                  to_routing_no=to_routing_no,
-                                 from_routing_no=settings.our_routing_number,
+                                 from_routing_no=settings.BANK_ROUTING_NUMBER,
                                  amount=amount,
                                  posted=Now(),
                                  status=ExchangeHistory.ExchangeHistoryStatus.POSTED)
@@ -67,8 +67,8 @@ def internal_transfer_handler(auth_token, from_account_no, to_account_no, amount
 
             ex = ExchangeHistory(to_account_no=to_account_no,
                                  from_account_no=from_account_no,
-                                 to_routing_no=settings.our_routing_number,
-                                 from_routing_no=settings.our_routing_number,
+                                 to_routing_no=settings.BANK_ROUTING_NUMBER,
+                                 from_routing_no=settings.BANK_ROUTING_NUMBER,
                                  amount=amount,
                                  posted=Now(),
                                  finished=Now(),
@@ -97,8 +97,8 @@ def deposit_handler(auth_token, from_account_no, from_routing_no, to_account_no,
     if requesting_user_id == to_owner_id and debit_authorization_key == settings.DEBIT_AUTH_KEY:
         ex = ExchangeHistory(to_account_no=to_account_no,
                              from_account_no=from_account_no,
-                             to_routing_no=settings.our_routing_number,
-                             from_routing_no=settings.our_routing_number,
+                             to_routing_no=settings.BANK_ROUTING_NUMBER,
+                             from_routing_no=settings.BANK_ROUTING_NUMBER,
                              amount=amount,
                              posted=Now(),
                              type=ExchangeHistory.ExchangeTypes.DEPOSIT,
@@ -126,14 +126,13 @@ class ExchangeProcessor:
         from_account_no = exchange_data["from_account_no"]
         from_routing_no = exchange_data["from_routing_no"]
         amount = exchange_data["amount"]
-
-        if from_routing_no == settings.our_routing_number:
-            if to_routing_no == settings.our_routing_number:
-                result = internal_transfer_handler(auth_token, from_account_no, to_routing_no, amount)
+        if from_routing_no == settings.BANK_ROUTING_NUMBER:
+            if to_routing_no == settings.BANK_ROUTING_NUMBER:
+                result = internal_transfer_handler(auth_token, from_account_no, to_account_no, amount)
             else:
                 result = external_transfer_handler(auth_token, from_account_no, to_account_no, to_routing_no, amount)
         else:
-            if to_routing_no == settings.our_routing_number:
+            if to_routing_no == settings.BANK_ROUTING_NUMBER:
                 result = deposit_handler(auth_token, from_account_no, from_routing_no, to_account_no, amount)
             else:
                 result = {"success": False, "msg": "Neither of these accounts are managed by this bank"}

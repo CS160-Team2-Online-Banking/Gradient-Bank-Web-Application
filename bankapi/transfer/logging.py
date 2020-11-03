@@ -23,8 +23,8 @@ def log_event(request, entry_type, associated_item=None):
     except KeyError:
         return  # TODO: do something here
 
-    log = EventLog(intiator_user=user_id,
-                   event_type_id=entry_type,
+    log = EventLog(intiator_user_id=user_id,
+                   event_type=entry_type,
                    event_time=Now())
     if associated_item:
         log.data_id = associated_item

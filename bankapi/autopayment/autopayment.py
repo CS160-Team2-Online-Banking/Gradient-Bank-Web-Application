@@ -21,7 +21,7 @@ class AutopaymentBuilder:
         if owner is None:
             return None  # TODO: handle this, raise an exception or something
 
-        from_account = Accounts.objects.filter(account_number=from_account_no)
+        from_account = Accounts.objects.filter(account_number=from_account_no).first()
 
         if from_account is None:
             return None  # TODO: handle this, raise an exception or something
