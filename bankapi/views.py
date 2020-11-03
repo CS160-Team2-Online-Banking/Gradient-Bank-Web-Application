@@ -6,12 +6,10 @@ from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 import json
 
-from bankapi.models import TransferTypes
 from bankapi.transaction.transaction import TransactionProcess
+from bankapi.transfer.exchange_processor import *
 from bankapi.authentication.auth import *
-from bankapi.utils.network_utils import get_requestor_ip, get_utc_now_str
-from bankapi.transfer.internal_process import InternalTransfer
-from bankapi.transfer.external_process import ExternalTransfer
+from bankapi.transfer.logging import *
 from bankapi.autopayment.autopayment import AutopaymentBuilder
 
 
@@ -30,24 +28,10 @@ class TransferView(View):
         data = json_data["data"]
 
         try:
-            to_account_id = None
-            to_account_no = None
-            from_account_id = None
-            from_account_no = None
-            if "to_account_id" in data:
-                to_account_id = int(data["to_account_id"])
-            elif "to_account_no" in data:
-                to_account_no = int(data["to_account_no"])
-            else:
-                raise KeyError
-
-            if "from_account_id" in data:
-                from_account_id = int(data["from_account_id"])
-            elif "from_account_no" in data:
-                from_account_no = int(data["from_account_no"])
-            else:
-                raise KeyError
-
+            to_account_no = data["to_account_no"]
+            to_routing_no = data["to_routing_no"]
+            from_account_no = data["from_account_no"]
+            from_routing_no = data["from_routing_no"]
             amount = data["amount"]
         except KeyError:
             return JsonResponse({"success": False, "msg": "Error: Body is missing parameters"}, status=400)
@@ -55,29 +39,17 @@ class TransferView(View):
             return JsonResponse({"success": False, "msg": "Error: Invalid parameter type"}, status=400)
 
         request_info = {
-            "to_account_id": to_account_id,
-            "to_account_no": to_account_no,
-            "from_account_id": from_account_id,
+            "from_routing_no": from_routing_no,
             "from_account_no": from_account_no,
+            "to_routing_no": to_routing_no,
+            "to_account_no": to_account_no,
             "amount": amount,
-            "event_info": {
-                "request_ip4": "",
-                "request_ip6": "",
-                "request_time": Now()
-            }
         }
-
-        # attempt to queue the transfer
-        if "transfer_type" in data:
-            transfer_type = data["transfer_type"]
-            if transfer_type == TransferTypes.U_TO_U or transfer_type == TransferTypes.A_TO_A:
-                InternalTransfer(request_info).queue_transfer(auth_token)
-            elif transfer_type == TransferTypes.EXTERN:
-                ExternalTransfer(request_info).queue_transfer(auth_token)
-        else:
-            InternalTransfer(request_info).queue_transfer(auth_token)
-        request_info.pop("event_info")
-        return JsonResponse({"success": True, "data": request_info}, status=200)
+        result = ExchangeProcessor.start_exchange(request_info, auth_token)
+        if result["success"]:
+            log_event(request, entry_type=EventTypes.TRANSFER_CREATE_REQUEST, associated_item=result["data"]["transfer_id"])
+            return JsonResponse({"success": True, "data": request_info}, status=200)
+        return JsonResponse({"success": False, "msg": "Error: transfer could not be processed"}, status=500)
 
 
 @method_decorator(csrf_exempt, name='dispatch')  # django requires all post requests to include a CSRF token by default
@@ -94,26 +66,13 @@ class AutoPaymentView(View):
 
         data = json_data["data"]
         try:
-            to_account_id = None
-            to_account_no = None
-            from_account_id = None
-            from_account_no = None
-            if "to_account_id" in data:
-                to_account_id = int(data["to_account_id"])
-            elif "to_account_no" in data:
-                to_account_no = int(data["to_account_no"])
-            else:
-                raise KeyError
 
-            if "from_account_id" in data:
-                from_account_id = int(data["from_account_id"])
-            elif "from_account_no" in data:
-                from_account_no = int(data["from_account_no"])
-            else:
-                raise KeyError
+            to_account_no = data["to_account_no"]
+            to_routing_no = data["to_routing_no"]
+            from_account_no = data["from_account_no"]
+            from_routing_no = data["from_routing_no"]
 
             transfer_amount = data["transfer_amount"]
-            transfer_type = data["transfer_type"]
             payment_schedule_data = {
                 "payment_frequency": data["payment_schedule_data"]["payment_frequency"],
                 "start_date": data["payment_schedule_data"]["start_date"],
@@ -126,12 +85,11 @@ class AutoPaymentView(View):
 
         payment_data = {
             "payment_schedule_data": payment_schedule_data,
-            "from_account_id": from_account_id,
+            "from_routing_no": from_routing_no,
             "from_account_no": from_account_no,
-            "to_account_id": to_account_id,
+            "to_routing_no": to_routing_no,
             "to_account_no": to_account_no,
             "transfer_amount": transfer_amount,
-            "transfer_type": transfer_type
         }
 
         result = AutopaymentBuilder.build_autopayment(auth_token, payment_data)

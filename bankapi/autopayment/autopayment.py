@@ -11,42 +11,20 @@ class AutopaymentBuilder:
     def build_autopayment(decrypted_auth_token, payment_data):
         owner_id = decrypted_auth_token["user_id"]
         payment_schedule_data = payment_data["payment_schedule_data"]
-        from_account_id = payment_data["from_account_id"]
         from_account_no = payment_data["from_account_no"]
-        to_account_id = payment_data["to_account_id"]
+        from_routing_no = payment_data["from_routing_no"]
         to_account_no = payment_data["to_account_no"]
+        to_routing_no = payment_data["to_routing_no"]
         transfer_amount = payment_data["transfer_amount"]
-        transfer_type = payment_data["transfer_type"]
-
-        if ((from_account_id is None and from_account_no is None) or
-           (to_account_id is None and to_account_no is None)):
-            return None
 
         owner = Customer.objects.filter(pk=owner_id).first()
         if owner is None:
             return None  # TODO: handle this, raise an exception or something
 
-        if from_account_id is not None:
-            from_account = Accounts.objects.filter(pk=from_account_id).first()
-        else:
-            from_account = Accounts.objects.filter(account_number=from_account_no)
+        from_account = Accounts.objects.filter(account_number=from_account_no)
 
         if from_account is None:
             return None  # TODO: handle this, raise an exception or something
-
-        if transfer_type == TransferTypes.EXTERN:
-            account_model = ExternalAccount
-        else:
-            account_model = Accounts
-            transfer_type = TransferTypes.U_TO_U
-
-        if to_account_id is not None:
-            to_account = account_model.objects.filter(pk=to_account_id).first()
-        else:
-            to_account = account_model.objects.filter(account_number=to_account_no).first()
-        if to_account is None:
-            return None  # TODO: handle this, raise an exception or something
-
 
         # if all accounts associated with this account exist, and the user is authorized to setup transfers
         if from_account.owner_id == owner.pk:
@@ -73,12 +51,14 @@ class AutopaymentBuilder:
                                              autopayment_id=new_auto_payment_id,
                                              payment_schedule_id=payment_schedule.pk,
                                              from_account_id=from_account.pk,
-                                             to_account_id=to_account.pk,
+                                             to_account_no=to_account_no,
+                                             to_routing_no=to_routing_no,
                                              transfer_amount=transfer_amount,
-                                             transfer_type=transfer_type,
                                              id=new_id)
             autopayment.save()
-        return (autopayment.owner_user_id, autopayment.autopayment_id)
+            return autopayment.owner_user_id, autopayment.autopayment_id
+        return None
+
 
 def is_payment_due(autopayment_obj) -> bool:
     # if the current date is less than the end date and after the start date
