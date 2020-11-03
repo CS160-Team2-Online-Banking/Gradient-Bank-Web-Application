@@ -13,6 +13,8 @@ from bankapi.utils.network_utils import get_requestor_ip, get_utc_now_str
 from bankapi.transfer.internal_process import InternalTransfer
 from bankapi.transfer.external_process import ExternalTransfer
 from bankapi.autopayment.autopayment import AutopaymentBuilder
+from bankapi.account.internal_process import InternalAccount
+from bankapi.account.external_process import ExternalAccount
 
 
 @method_decorator(csrf_exempt, name='dispatch')  # django requires all post requests to include a CSRF token by default
