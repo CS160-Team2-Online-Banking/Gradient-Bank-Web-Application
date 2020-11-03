@@ -5,10 +5,10 @@ class SearchForm(forms.Form):
     title = forms.CharField(
         initial='',
         label='title',
-        required=False,  # 必須ではない
+        required=False,
     )
     text = forms.CharField(
         initial='',
         label='text',
-        required=False,  # 必須ではない
+        required=False,
     )
