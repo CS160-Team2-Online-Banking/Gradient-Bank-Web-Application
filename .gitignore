@@ -14,3 +14,4 @@ venv/*
 .DS_Store
 config/settings.py
 config/settings.py
+tesseract-4.0.0-alpha/*

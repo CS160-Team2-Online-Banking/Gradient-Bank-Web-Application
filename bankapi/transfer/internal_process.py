@@ -46,7 +46,7 @@ class InternalTransfer(TransferProcess):
         else:
             return False  # TODO: handle this, raise an exception or something
 
-        transfer_type = "A_TO_A" if from_owner_id == to_owner_id else "U_TO_U"
+        transfer_type = TransferTypes.A_TO_A if from_owner_id == to_owner_id else TransferTypes.U_TO_U
 
         # check for authenticity
         # add the transfer to the queue, otherwise don't add it

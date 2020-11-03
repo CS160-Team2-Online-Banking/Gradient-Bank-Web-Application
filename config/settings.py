@@ -23,6 +23,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = 'y3c@y_28b7%7(00&a#$ivu(j+r2#&^ms*%!-v6z_m9r89)p6-^'
 JWT_SECRET = "j*qV)m}9'NRYV:[\@T2]'QQux5:~Ynn.uMjBA2E\tP*[cd&MR;qWbq<MqP?kca?*"
 JWT_ALGO = 'HS256'
+DEBIT_AUTH_KEY = "j564k32ln$%#nj34kl54mj32m54k3"
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
