@@ -1,9 +1,11 @@
 from bankapi.models import *
 from django.db import transaction
 from datetime import datetime
+from django.core import serializers
 import re
 
 
+# In retrospect, this should have been named Autopayment Manager
 class AutopaymentBuilder:
 
     @staticmethod
@@ -109,6 +111,42 @@ class AutopaymentBuilder:
         autopay_obj.save()
 
         return autopay_obj.owner_user_id, autopay_obj.autopayment_id
+
+    @staticmethod
+    def cancel_autopayment(decrypted_auth_token, autopayment_id):
+        owner_id = decrypted_auth_token["user_id"]
+        payment_id = autopayment_id
+
+        owner = Customer.objects.filter(pk=owner_id).first()
+        if owner is None:
+            return None
+
+        autopay_obj = AutopaymentObjects.objects.filter(owner_user_id=owner.pk, autopayment_id=payment_id).first()
+        if autopay_obj is None:
+            return None
+        autopay_obj.delete()
+        return True  # TODO: return something nicer here
+
+    @staticmethod
+    def get_autopayment(decrypted_auth_token, autopayment_id):
+        owner_id = decrypted_auth_token["user_id"]
+        payment_id = autopayment_id
+
+        owner = Customer.objects.filter(pk=owner_id).first()
+        if owner is None:
+            return None
+
+        if autopayment_id is None:
+            autopay_obj = AutopaymentObjects.objects.filter(owner_user_id=owner.pk)
+        else:
+            autopay_obj = AutopaymentObjects.objects.filter(owner_user_id=owner.pk, autopayment_id=payment_id)
+
+        if autopay_obj.first() is None:
+            return None
+
+        return serializers.serialize("json", autopay_obj)
+
+
 
 def is_payment_due(autopayment_obj) -> bool:
     # if the current date is less than the end date and after the start date
