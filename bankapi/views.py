@@ -101,6 +101,52 @@ class AutoPaymentView(View):
             return JsonResponse({"success": True, "data": {"owner_id": result[0], "autopayment_id": result[1]}},
                                 status=200)
 
+    @staticmethod
+    def try_set(key, src, dict, conv):
+        if key in src:
+            dict[key] = conv(src[key])
+
+    def put(self, request):
+        try:
+            auth_token = decrypt_auth_token(request)
+            json_data = json.loads(request.body)
+        except json.decoder.JSONDecodeError:
+            return JsonResponse({"success": False, "msg": "Error: JSON could not be parsed"}, status=400)
+
+        if 'data' not in json_data:
+            return JsonResponse({"success": False, "msg": "Error: Badly formatted body"}, status=400)
+        data = json_data["data"]
+
+        payment_data = dict()
+
+        try:
+            autopayment_id = int(data["autopayment_id"])
+            payment_data["autopayment_id"] = autopayment_id
+            self.try_set("to_account_no", data, payment_data, int)
+            self.try_set("to_routing_no", data, payment_data, int)
+            self.try_set("from_account_no", data, payment_data, int)
+            self.try_set("from_routing_no", data, payment_data, int)
+            self.try_set("transfer_amount", data, payment_data, Decimal)
+            if "payment_schedule_data" in data:
+                payment_schedule_data = data["payment_schedule_data"]
+                payment_schedule_deltas = dict()
+                self.try_set("payment_frequency", payment_schedule_data, payment_schedule_deltas, str)
+                self.try_set("start_date", payment_schedule_data, payment_schedule_deltas, str)
+                self.try_set("end_date", payment_schedule_data, payment_schedule_deltas, str)
+                payment_data["payment_schedule_data"] = payment_schedule_deltas
+        except KeyError:
+            return JsonResponse({"success": False, "msg": "Error: Body is missing parameters"}, status=400)
+        except ValueError:
+            return JsonResponse({"success": False, "msg": "Error: Invalid parameter type"}, status=400)
+
+        result = AutopaymentBuilder.modify_autopayment(auth_token, payment_data)
+
+        if result is None:
+            return JsonResponse({"success": False, "msg": "Error: Server failed to process request"}, status=500)
+        else:
+            return JsonResponse({"success": True, "data": {"owner_id": result[0], "autopayment_id": result[1]}},
+                                status=200)
+
 
 @method_decorator(csrf_exempt, name='dispatch')  # django requires all post requests to include a CSRF token by default
 class TransactionView(View):
@@ -137,6 +183,8 @@ class TransactionView(View):
             return JsonResponse({"success": True})
 
 
+'''
+# This class is depricated and should be deleted
 @method_decorator(csrf_exempt, name='dispatch')  # django requires all post requests to include a CSRF token by default
 class AuthView(View):
     def post(self, request):  # grant authentication if the user entered the correct password and email
@@ -157,3 +205,4 @@ class AuthView(View):
             return response
         else:
             return JsonResponse({"success": False, "msg": "Error: No password or username provided"}, status=400)
+'''
