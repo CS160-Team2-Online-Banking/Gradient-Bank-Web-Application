@@ -152,17 +152,17 @@ class ExchangeProcessor:
         if target_account is None:
             return {"success": False, "msg": "the accounts specified does not exist"}
 
-        if target_account.owner_user_id == requesting_user_id:
+        if target_account.owner_id == requesting_user_id:
             exchange_records = ExchangeHistory.objects.filter((Q(to_account_no=account_no, to_routing_no=settings.BANK_ROUTING_NUMBER)|
                                                                Q(from_account_no=account_no, from_routing_no=settings.BANK_ROUTING_NUMBER)))
             serialized_records = json.loads(serializers.serialize("json", exchange_records))
-            serialized_records = list(map(lambda x: x["fields"]), serialized_records)
+            serialized_records = list(map(lambda x: x["fields"], serialized_records))
             for i, record in enumerate(serialized_records):
-                if (int(record["from_account_no"]) == account_no and
+                if (int(record["from_account_no"]) == target_account.account_number and
                 int(record["from_routing_no"]) == settings.BANK_ROUTING_NUMBER):
-                    serialized_records[i]["transfer_amount"] = -Decimal(record["transfer_amount"])
+                    record["amount"] = str(-Decimal(record["amount"]))
 
-            return serialized_records
+            return {"success": True, "data": serialized_records}
 
         else:
             return {"success": False, "msg": "insufficient permission"}

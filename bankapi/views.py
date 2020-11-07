@@ -11,6 +11,7 @@ from functools import update_wrapper
 from bankapi.transfer.exchange_processor import *
 from bankapi.authentication.auth import *
 from bankapi.transfer.logging import *
+from bankapi.account.account_process import AccountProcess
 from bankapi.autopayment.autopayment import AutopaymentBuilder
 from django.utils.decorators import classonlymethod
 
@@ -292,8 +293,19 @@ class AccountView(APIView):
         # Note: for each account, you should also retrieve the associated transfers to it
         # this way, people can see what the history of transactions are for the account
         # you can use ExchangeProcessor.get_exchange_history to do this
-        pass
+        try:
+            auth_token = decrypt_auth_token(request)
+        except json.decoder.JSONDecodeError:
+            return JsonResponse({"success": False, "msg": "Error: JSON could not be parsed"}, status=400)
 
+        result = AccountProcess.account_lookup(auth_token, account_no)
+        if not result["success"]:
+            return JsonResponse({"success": False, "msg": "Error: Server failed to process request"}, status=500)
+        else:
+            return JsonResponse({"success": True, "data": result["data"]}, status=200)
+
+    def put(self, request, account_no):
+        pass
 
     def post(self, request):
         """ View method for creating (opening) a new bank account """
