@@ -246,7 +246,6 @@ class AutoPaymentView(APIView):
             return JsonResponse({"success": False, "msg": "Error: JSON could not be parsed"}, status=400)
 
         result = AutopaymentBuilder.get_autopayment(auth_token, autopayment_id)
-
         if result is None:
             return JsonResponse({"success": False, "msg": "Error: Server failed to process request"}, status=500)
         else:

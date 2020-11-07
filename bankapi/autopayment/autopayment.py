@@ -2,7 +2,7 @@ from bankapi.models import *
 from django.db import transaction
 from datetime import datetime
 from django.core import serializers
-import re
+import json
 
 
 # In retrospect, this should have been named Autopayment Manager
@@ -143,8 +143,15 @@ class AutopaymentBuilder:
 
         if autopay_obj.first() is None:
             return None
+        json_arr = json.loads(serializers.serialize("json", autopay_obj))
+        json_arr = list(map(lambda x: x["fields"], json_arr))
 
-        return serializers.serialize("json", autopay_obj)
+        for i, entry in enumerate(json_arr):
+            payment_schedule_id = entry["payment_schedule"]
+            payment_schedule = PaymentSchedules.objects.filter(pk=payment_schedule_id)
+            entry["payment_schedule"] = json.loads(serializers.serialize("json", payment_schedule))[0]["fields"]
+
+        return json_arr
 
 
 

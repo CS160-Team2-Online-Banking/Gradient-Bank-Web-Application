@@ -7,6 +7,7 @@ from django.db.models import F
 from django.db.models import Q
 from django.db.models.functions import Now
 from django.core import serializers
+import json
 
 
 @transaction.atomic
@@ -154,7 +155,8 @@ class ExchangeProcessor:
         if target_account.owner_user_id == requesting_user_id:
             exchange_records = ExchangeHistory.objects.filter((Q(to_account_no=account_no, to_routing_no=settings.BANK_ROUTING_NUMBER)|
                                                                Q(from_account_no=account_no, from_routing_no=settings.BANK_ROUTING_NUMBER)))
-            serialized_records = serializers.serialize("json", exchange_records)
+            serialized_records = json.loads(serializers.serialize("json", exchange_records))
+            serialized_records = list(map(lambda x: x["fields"]), serialized_records)
             for i, record in enumerate(serialized_records):
                 if (int(record["from_account_no"]) == account_no and
                 int(record["from_routing_no"]) == settings.BANK_ROUTING_NUMBER):
