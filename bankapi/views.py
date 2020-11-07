@@ -49,21 +49,40 @@ class APIView(View):
         view.view_initkwargs = initkwargs
 
         update_wrapper(view, cls, updated=())
-        update_wrapper(view, cls.access_dispatcher, assigned=())
+        update_wrapper(view, cls.dispatch, assigned=())
         return view
 
     @classonlymethod
     def as_post_view(cls, **initkwargs):
+
+        for key in initkwargs:
+            if key in cls.http_method_names:
+                raise TypeError(
+                    'The method name %s is not accepted as a keyword argument '
+                    'to %s().' % (key, cls.__name__)
+                )
+            if not hasattr(cls, key):
+                raise TypeError("%s() received an invalid keyword %r. as_view "
+                                "only accepts arguments that are already "
+                                "attributes of the class." % (cls.__name__, key))
+
         def view(request, *args, **kwargs):
             self = cls(**initkwargs)
             self.request = request
             self.args = args
             self.kwargs = kwargs
-            if request.method.lower() is "post":
+            if request.method.lower() == "post":
                 handler = getattr(self, request.method.lower(), self.http_method_not_allowed)
             else:
                 handler = self.http_method_not_allowed
             return handler(request, *args, **kwargs)
+
+        view.view_class = cls
+        view.view_initkwargs = initkwargs
+
+        update_wrapper(view, cls, updated=())
+        update_wrapper(view, cls.dispatch, assigned=())
+
         return view
 
     def access_dispatcher(self, request, *args, **kwargs):
@@ -72,6 +91,7 @@ class APIView(View):
         else:
             handler = self.http_method_not_allowed
         return handler(request, *args, **kwargs)
+
 
 @method_decorator(csrf_exempt, name='dispatch')  # django requires all post requests to include a CSRF token by default
 class TransferView(APIView):
@@ -280,7 +300,7 @@ class AccountView(APIView):
         """ View method for creating (opening) a new bank account """
         pass
 
-'''
+
 # This class is depricated and should be deleted
 @method_decorator(csrf_exempt, name='dispatch')  # django requires all post requests to include a CSRF token by default
 class AuthView(View):
@@ -302,4 +322,3 @@ class AuthView(View):
             return response
         else:
             return JsonResponse({"success": False, "msg": "Error: No password or username provided"}, status=400)
-'''

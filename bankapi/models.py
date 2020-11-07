@@ -30,7 +30,6 @@ class Customer(models.Model):
     customer_email = models.CharField(max_length=50)
     customer_ssn = models.IntegerField(db_column='customer_SSN')  # Field name made lowercase.
     customer_address = models.CharField(max_length=50)
-    customer_routingnumber = models.IntegerField(db_column='customer_routingNumber')  # Field name made lowercase.
 
     class Meta:
         managed = False
