@@ -1,47 +1,128 @@
 from urllib.request import *
 
-from django.conf import settings
+# from django.conf import settings
 from datetime import datetime, timedelta
 import jwt
+import json
 origin = "http://127.0.0.1:8000"
-API_PATH = "{origin}/api/".format(origin=origin)
+API_PATH = "{origin}/api".format(origin=origin)
 EXPIRE_TIME = timedelta(minutes=5)
 
+
+class settings:
+    JWT_SECRET = "j*qV)m}9'NRYV:[\@T2]'QQux5:~Ynn.uMjBA2E\tP*[cd&MR;qWbq<MqP?kca?*"
+    JWT_ALGO = 'HS256'
+    BANK_ROUTING_NUMBER = 123456789
+
+
+class DummyUser:
+    is_authenticated = True
+    id = 1
+
+
 def attach_auth_token(user, request):
-    userid = user.pk
-    expiration = datetime.utcnow() + EXPIRE_TIME
-    encrpyted_token = jwt.encode({"user_id": userid, "expires": expiration.isoformat()}, settings.JWT_SECRET,
-                                 algorithm=settings.JWT_ALGO).decode('utf-8')
+    if user.is_authenticated:
+        userid = user.id
+        expiration = datetime.utcnow() + EXPIRE_TIME
+        encrpyted_token = jwt.encode({"user_id": userid, "expires": expiration.isoformat()}, settings.JWT_SECRET,
+                                     algorithm=settings.JWT_ALGO).decode('utf-8')
+        request.add_header("Cookie", "auth_token={token}".format(token=encrpyted_token))
+        return request
+    else:
+        raise ValueError("User object must be authenticated")
 
-    request.add_header()
-    pass
 
-def add_json_body(request):
+def add_json_body(request, data: dict):
     request.add_header('Content-Type', 'application/json')
+    request.data(json.dump(data))
+    return request
 
 
 def api_get_accounts(user):
-    pass
+    req = Request(url="{path}/accounts/".format(path=API_PATH))
+    attach_auth_token(user, req)
+    response = urlopen(req).read()
+    if response:
+        data = json.loads(response)
+        if data["success"]:
+            return data["data"]
+    return False
 
 
 def api_get_account_details(user, account_no):
-    pass
+    req = Request(url="{path}/accounts/{id}".format(path=API_PATH, id=account_no))
+    attach_auth_token(user, req)
+    response = urlopen(req).read()
+    if response:
+        data = json.loads(response)
+        if data["success"]:
+            return data["data"]
+    return False
 
 
 def api_setup_autopayment(user, to_account_no, to_account_routing, from_account_no, amount, start_date, end_date,
                           frequency):
-
-    pass
+    req = Request(url="{path}/autopayments".format(path=API_PATH), method='POST')
+    attach_auth_token(user, req)
+    payload = {"data": {
+        "to_account_no": to_account_no,
+        "to_routing_no": to_account_routing,
+        "from_account_no": from_account_no,
+        "from_routing_no": settings.BANK_ROUTING_NUMBER,
+        "transfer_amount": amount,
+        "payment_schedule_data": {
+            "payment_frequency": frequency,
+            "start_date": start_date,
+            "end_date": end_date
+        }
+    }}
+    add_json_body(req, payload)
+    response = urlopen(req).read()
+    if response:
+        data = json.loads(response)
+        if data["success"]:
+            return True
+    return False
 
 
 def api_get_autopayments(user):
-    pass
+    req = Request(url="{path}/autopayments/".format(path=API_PATH))
+    attach_auth_token(user, req)
+    response = urlopen(req).read()
+    if response:
+        data = json.loads(response)
+        if data["success"]:
+            return data["data"]
+    return False
+
 
 
 def api_get_autopayment_details(user, id):
-    pass
+    req = Request(url="{path}/autopayments/{id}".format(path=API_PATH, id=id))
+    attach_auth_token(user, req)
+    response = urlopen(req).read()
+    if response:
+        data = json.loads(response)
+        if data["success"]:
+            return data["data"]
+    return False
 
 
 def api_post_transfer(user, to_account_no, to_account_routing, from_account_no, amount):
-    pass
+    req = Request(url="{path}/transfers".format(path=API_PATH), method='POST')
+    attach_auth_token(user, req)
+    payload = {"data": {
+        "to_account_no": to_account_no,
+        "to_routing_no": to_account_routing,
+        "from_account_no": from_account_no,
+        "from_routing_no": settings.BANK_ROUTING_NUMBER,
+        "amount": amount,
+    }}
+    add_json_body(req, payload)
+    response = urlopen(req).read()
+    if response:
+        data = json.loads(response)
+        if data["success"]:
+            return True
+    return False
 

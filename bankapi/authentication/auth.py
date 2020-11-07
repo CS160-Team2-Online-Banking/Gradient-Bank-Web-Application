@@ -11,7 +11,7 @@ def decrypt_auth_token(request):
     current_time = datetime.utcnow()
     expire_date = datetime.strptime(decrypted_token["expires"])  # this parses iso format strings by default
     if current_time > expire_date:
-        throw ValueError("the auth token specified has expired")
+        raise ValueError("the auth token specified has expired")
     """
     return decrypted_token
 
@@ -23,7 +23,7 @@ def decrypt_auth_token_str(str):
     current_time = datetime.utcnow()
     expire_date = datetime.strptime(decrypted_token["expires"])  # this parses iso format strings by default
     if current_time > expire_date:
-        throw ValueError("the auth token specified has expired")
+        raise ValueError("the auth token specified has expired")
     """
     return decrypted_token
 
