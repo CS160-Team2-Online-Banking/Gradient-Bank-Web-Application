@@ -4,7 +4,10 @@ from decimal import *
 from django.conf import settings
 from django.db import transaction
 from django.db.models import F
+from django.db.models import Q
 from django.db.models.functions import Now
+from django.core import serializers
+import json
 
 
 @transaction.atomic
@@ -55,6 +58,8 @@ def internal_transfer_handler(auth_token, from_account_no, to_account_no, amount
         return {"success": False, "msg": "you can only transfer non-zero positive sums of money"}
     if from_account is None or to_account is None:
         return {"success": False, "msg": "one of the accounts specified does not exist"}
+    if from_account == to_account:
+        return {"success": False, "msg": "invalid transfer"}
 
     owner_id = from_account.owner_id
 
@@ -137,3 +142,27 @@ class ExchangeProcessor:
             else:
                 result = {"success": False, "msg": "Neither of these accounts are managed by this bank"}
         return result
+
+    @staticmethod
+    def get_exchange_history(account_no, auth_token) -> list:
+        # using an account number, retrieve all exchanges involving that account to date
+        requesting_user_id = auth_token["user_id"]
+        target_account = Accounts.objects.filter(account_number=account_no).first()
+
+        if target_account is None:
+            return {"success": False, "msg": "the accounts specified does not exist"}
+
+        if target_account.owner_id == requesting_user_id:
+            exchange_records = ExchangeHistory.objects.filter((Q(to_account_no=account_no, to_routing_no=settings.BANK_ROUTING_NUMBER)|
+                                                               Q(from_account_no=account_no, from_routing_no=settings.BANK_ROUTING_NUMBER)))
+            serialized_records = json.loads(serializers.serialize("json", exchange_records))
+            serialized_records = list(map(lambda x: x["fields"], serialized_records))
+            for i, record in enumerate(serialized_records):
+                if (int(record["from_account_no"]) == target_account.account_number and
+                int(record["from_routing_no"]) == settings.BANK_ROUTING_NUMBER):
+                    record["amount"] = str(-Decimal(record["amount"]))
+
+            return {"success": True, "data": serialized_records}
+
+        else:
+            return {"success": False, "msg": "insufficient permission"}

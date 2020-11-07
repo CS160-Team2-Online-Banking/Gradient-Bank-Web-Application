@@ -1,9 +1,11 @@
 from bankapi.models import *
 from django.db import transaction
 from datetime import datetime
-import re
+from django.core import serializers
+import json
 
 
+# In retrospect, this should have been named Autopayment Manager
 class AutopaymentBuilder:
 
     @staticmethod
@@ -31,7 +33,8 @@ class AutopaymentBuilder:
             payment_frequency = payment_schedule_data["payment_frequency"]
             start_date = payment_schedule_data["start_date"]
             end_date = payment_schedule_data["end_date"]
-
+            if transfer_amount < 0:
+                return None
             if not PaymentFrequencies.validate_string(payment_frequency):
                 return None  # TODO: handle this, raise an exception or something
 
@@ -58,6 +61,98 @@ class AutopaymentBuilder:
             autopayment.save()
             return autopayment.owner_user_id, autopayment.autopayment_id
         return None
+
+    @staticmethod
+    @transaction.atomic
+    def modify_autopayment(decrypted_auth_token, payment_data):
+        owner_id = decrypted_auth_token["user_id"]
+        payment_id = payment_data["autopayment_id"]
+
+        owner = Customer.objects.filter(pk=owner_id).first()
+        if owner is None:
+            return None
+
+        autopay_obj = AutopaymentObjects.objects.filter(owner_user_id=owner.pk, autopayment_id=payment_id).first()
+        if autopay_obj is None:
+            return None
+
+        if "from_account_no" in payment_data:
+            new_from_account_no = payment_data["from_account_no"]
+            new_f_account = Accounts.objects.filter(account_number=new_from_account_no).first()
+            if new_f_account is None:
+                return None
+            if new_f_account.owner_id == owner_id:
+                autopay_obj.from_account_id = new_f_account.pk
+            else:
+                return None
+
+        if "to_account_no" in payment_data:
+            autopay_obj.to_account_no = payment_data["to_account_no"]
+        if "to_routing_no" in payment_data:
+            autopay_obj.to_routing_no = payment_data["to_routing_no"]
+        if "transfer_amount" in payment_data:
+            transfer_amount = payment_data["transfer_amount"]
+            if transfer_amount < 0:
+                autopay_obj.transfer_amount = transfer_amount
+
+        if "payment_schedule_data" in payment_data:
+            schedule_data = payment_data["payment_schedule_data"]
+            schedule_obj = autopay_obj.payment_schedule
+            if "start_date" in schedule_data:
+                schedule_obj.start_date = schedule_data["start_date"]
+            if "end_date" in schedule_data:
+                schedule_obj.start_date = schedule_data["end_date"]
+            if "payment_frequency" in schedule_data:
+                payment_freq = schedule_data["payment_frequency"]
+                if not PaymentFrequencies.validate_string(payment_freq):
+                    return None
+                schedule_obj.payment_frequency = payment_freq
+            schedule_obj.save()
+        autopay_obj.save()
+
+        return autopay_obj.owner_user_id, autopay_obj.autopayment_id
+
+    @staticmethod
+    def cancel_autopayment(decrypted_auth_token, autopayment_id):
+        owner_id = decrypted_auth_token["user_id"]
+        payment_id = autopayment_id
+
+        owner = Customer.objects.filter(pk=owner_id).first()
+        if owner is None:
+            return None
+
+        autopay_obj = AutopaymentObjects.objects.filter(owner_user_id=owner.pk, autopayment_id=payment_id).first()
+        if autopay_obj is None:
+            return None
+        autopay_obj.delete()
+        return True  # TODO: return something nicer here
+
+    @staticmethod
+    def get_autopayment(decrypted_auth_token, autopayment_id):
+        owner_id = decrypted_auth_token["user_id"]
+        payment_id = autopayment_id
+
+        owner = Customer.objects.filter(pk=owner_id).first()
+        if owner is None:
+            return None
+
+        if autopayment_id is None:
+            autopay_obj = AutopaymentObjects.objects.filter(owner_user_id=owner.pk)
+        else:
+            autopay_obj = AutopaymentObjects.objects.filter(owner_user_id=owner.pk, autopayment_id=payment_id)
+
+        if autopay_obj.first() is None:
+            return None
+        json_arr = json.loads(serializers.serialize("json", autopay_obj))
+        json_arr = list(map(lambda x: x["fields"], json_arr))
+
+        for i, entry in enumerate(json_arr):
+            payment_schedule_id = entry["payment_schedule"]
+            payment_schedule = PaymentSchedules.objects.filter(pk=payment_schedule_id)
+            entry["payment_schedule"] = json.loads(serializers.serialize("json", payment_schedule))[0]["fields"]
+
+        return json_arr
+
 
 
 def is_payment_due(autopayment_obj) -> bool:
