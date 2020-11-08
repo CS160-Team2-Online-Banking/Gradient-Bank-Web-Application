@@ -10,7 +10,7 @@ from bankapi.transaction.transaction import TransactionProcess
 from functools import update_wrapper
 from bankapi.transfer.exchange_processor import *
 from bankapi.authentication.auth import *
-from bankapi.transfer.logging import *
+from bankapi.logging.logging import log_event
 from bankapi.account.account_process import AccountProcess
 from bankapi.autopayment.autopayment import AutopaymentBuilder
 from django.utils.decorators import classonlymethod
@@ -129,7 +129,7 @@ class TransferView(APIView):
         result = ExchangeProcessor.start_exchange(request_info, auth_token)
         print(result)
         if result["success"]:
-            log_event(request, entry_type=EventTypes.TRANSFER_CREATE_REQUEST, associated_item=result["data"]["transfer_id"])
+            log_event(request, auth_token, event_type=EventTypes.REQUEST_TRANSFER, data_id=result["data"]["transfer_id"])
             return JsonResponse({"success": True, "data": request_info}, status=200)
         return JsonResponse({"success": False, "msg": "Error: transfer could not be processed"}, status=500)
 
@@ -179,6 +179,8 @@ class AutoPaymentView(APIView):
         if result is None:
             return JsonResponse({"success": False, "msg": "Error: Server failed to process request"}, status=500)
         else:
+            log_event(request, auth_token, event_type=EventTypes.SETUP_AUTOPAYMENT,
+                      data_id=result[1])
             return JsonResponse({"success": True, "data": {"owner_id": result[0], "autopayment_id": result[1]}},
                                 status=200)
 
@@ -224,6 +226,8 @@ class AutoPaymentView(APIView):
         if result is None:
             return JsonResponse({"success": False, "msg": "Error: Server failed to process request"}, status=500)
         else:
+            log_event(request, auth_token, event_type=EventTypes.EDIT_AUTOPAYMENT,
+                      data_id=result[1])
             return JsonResponse({"success": True, "data": {"owner_id": result[0], "autopayment_id": result[1]}},
                                 status=200)
 
@@ -238,6 +242,7 @@ class AutoPaymentView(APIView):
         if result is None:
             return JsonResponse({"success": False, "msg": "Error: Server failed to process request"}, status=500)
         else:
+            log_event(request, auth_token, event_type=EventTypes.CANCEL_AUTOPAYMENT)
             return JsonResponse({"success": True}, status=200)
 
     def get(self, request, autopayment_id=None):
