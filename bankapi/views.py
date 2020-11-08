@@ -127,7 +127,6 @@ class TransferView(APIView):
             "amount": Decimal(amount),
         }
         result = ExchangeProcessor.start_exchange(request_info, auth_token)
-        print(result)
         if result["success"]:
             log_event(request, auth_token, event_type=EventTypes.REQUEST_TRANSFER, data_id=result["data"]["transfer_id"])
             return JsonResponse({"success": True, "data": request_info}, status=200)
@@ -334,7 +333,6 @@ class AuthView(View):
             json_data = {"success": True}
             response = JsonResponse(json_data)
             response.set_cookie(key='auth_token', value=encrpyted_token)
-            print("accepted")
             return response
         else:
             return JsonResponse({"success": False, "msg": "Error: No password or username provided"}, status=400)
