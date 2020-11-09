@@ -16,6 +16,8 @@ class CustomUserManager(UserManager):
         if not email:
             raise ValueError('The given email must be set')
 
+        # TODO: add methods to create/link a bank customer account from the 'bank_data' db
+        # TODO: then save the data and set the primary key of that customer object to the bank_customer_id
         email = self.normalize_email(email)
         user = self.model(email=email, **extra_fields)
         user.set_password(password)
@@ -23,6 +25,7 @@ class CustomUserManager(UserManager):
         return user
 
     def create_user(self, email, password=None, **extra_fields):
+        # TODO: see above, i think you need to add extra_fields for all the stuff needed to create a bank customer
         extra_fields.setdefault('is_staff', False)
         extra_fields.setdefault('is_superuser', False)
         return self._create_user(email, password, **extra_fields)
@@ -49,7 +52,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     age = models.IntegerField(null=True, blank=True)
     sex = models.IntegerField(null=True, blank=True)
     admin = models.IntegerField(null=True, blank=True)
-
+    bank_customer_id = models.IntegerField(null=True, blank=True)
     # Flags for permission to access the admin site
 
     is_staff = models.BooleanField(

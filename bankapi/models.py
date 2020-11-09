@@ -30,7 +30,6 @@ class Customer(models.Model):
     customer_email = models.CharField(max_length=50)
     customer_ssn = models.IntegerField(db_column='customer_SSN')  # Field name made lowercase.
     customer_address = models.CharField(max_length=50)
-    customer_routingnumber = models.IntegerField(db_column='customer_routingNumber')  # Field name made lowercase.
 
     class Meta:
         managed = False
@@ -74,40 +73,6 @@ class ExternalAccount(models.Model):
         db_table = 'external_accounts'
 
 
-class ExternalTransferPool(models.Model):
-    use_db = 'bank_data'
-    pending_extern_id = models.AutoField(primary_key=True)
-    internal_account = models.ForeignKey(Accounts, related_name="etp_to_acc", db_column="internal_account_id",
-                                         on_delete=models.RESTRICT)
-    external_account_routing_no = models.IntegerField(default=0)
-    external_account_no = models.BigIntegerField(default=0)
-    amount = models.DecimalField(max_digits=18, decimal_places=2)
-    inbound = models.BooleanField()  # indicates whether money should be moved to the internal account
-    debit_transfer = models.BooleanField(default=False)  # debit indicates it's a debit transfer (we're pulling money)
-
-    class Meta:
-        managed = True
-        db_table = 'external_transfer_pool'
-
-
-class DebitHistory(models.Model):
-    use_db = 'bank_data'
-    id = models.AutoField(primary_key=True)
-    debit_intiator = models.ForeignKey(Customer, related_name="dbt_to_cstmr", db_column="debit_initator_id", on_delete=models.RESTRICT)
-    from_account_no = models.BigIntegerField()
-    from_routing_no = models.IntegerField()
-    to_account = models.ForeignKey(Accounts, related_name="dbt_to_acct", db_column="to_account_id", on_delete=models.RESTRICT)
-    amount = models.DecimalField(max_digits=18, decimal_places=2)
-    time_started = models.DateTimeField()
-    time_processed = models.DateTimeField(null=True)
-    pending_queue_obj = models.ForeignKey(ExternalTransferPool, related_name="dbt_to_extpo", db_column="pending_id",
-                                          on_delete=models.SET_NULL, null=True)
-    status = models.CharField(max_length=32, null=True)
-
-    class Meta:
-        managed = True
-        db_table = 'debit_history'
-
 class EventTypes(models.Model):
     use_db = 'bank_data'
     event_type_id = models.AutoField(primary_key=True)
@@ -126,8 +91,9 @@ class EventLog(models.Model):
                                       on_delete=models.RESTRICT)
     ip6_address = models.BinaryField(max_length=16, blank=True, null=True)
     ip4_address = models.BinaryField(max_length=4, blank=True, null=True)
-    event_type = models.ForeignKey(EventTypes, related_name="event_type", db_column="event_type",
-                                   on_delete=models.RESTRICT)
+    #event_type = models.ForeignKey(EventTypes, related_name="event_type", db_column="event_type",
+    #                               on_delete=models.RESTRICT)
+    event_type = models.IntegerField()
     event_time = models.DateTimeField()
     data_id = models.IntegerField(null=True)
 
@@ -171,10 +137,9 @@ class AutopaymentObjects(models.Model):
                                             db_column="payment_schedule_id", on_delete=models.CASCADE)
     from_account = models.ForeignKey(Accounts, related_name="autop_from_to_acct", db_column="from_account_id",
                                      on_delete=models.RESTRICT)
-    to_account = models.ForeignKey(Accounts, related_name="autop_to_to_acct", db_column="to_account_id",
-                                   on_delete=models.RESTRICT)
+    to_account_no = models.BigIntegerField()
+    to_routing_no = models.IntegerField()
     transfer_amount = models.DecimalField(max_digits=18, decimal_places=2)
-    transfer_type = models.CharField(max_length=6)
     last_payment = models.DateTimeField(null=True)
 
     class Meta:
@@ -225,6 +190,73 @@ class Transfers(models.Model):
     class Meta:
         managed = False
         db_table = 'transfers'
+
+
+class ExchangeHistory(models.Model):
+    use_db = 'bank_data'
+
+    class ExchangeTypes:
+        DEPOSIT = "DEPOSIT"
+        TRANSFER = "TRANSFER"
+        WITHDRAWAL = "WITHDRAWAL"
+
+    class ExchangeHistoryStatus:
+        FINISHED = "FINISHED"
+        POSTED = "POSTED"
+        FAILED = "FAILED"
+        CANCELED = "CANCELED"
+
+    id = models.AutoField(primary_key=True)
+    to_account_no = models.BigIntegerField(null=True)
+    to_routing_no = models.IntegerField(null=True)
+    from_account_no = models.BigIntegerField()
+    from_routing_no = models.IntegerField()
+    atm_id = models.BigIntegerField(null=True)
+    amount = models.DecimalField(max_digits=16, decimal_places=2)
+    posted = models.DateTimeField()
+    finished = models.DateTimeField(null=True)
+    type = models.CharField(max_length=16, default=ExchangeTypes.TRANSFER)
+    status = models.CharField(max_length=16, default=ExchangeHistoryStatus.POSTED)
+
+    class Meta:
+        managed = True
+        db_table = 'exchange_history'
+
+
+class ExternalTransferPool(models.Model):
+    use_db = 'bank_data'
+    pending_extern_id = models.AutoField(primary_key=True)
+    internal_account = models.ForeignKey(Accounts, related_name="etp_to_acc", db_column="internal_account_id",
+                                         on_delete=models.RESTRICT)
+    external_account_routing_no = models.IntegerField(default=0)
+    external_account_no = models.BigIntegerField(default=0)
+    amount = models.DecimalField(max_digits=18, decimal_places=2)
+    inbound = models.BooleanField()  # indicates whether money should be moved to the internal account
+    debit_transfer = models.BooleanField(default=False)  # debit indicates it's a debit transfer (we're pulling money)
+    exchange_obj = models.ForeignKey(ExchangeHistory, related_name="etp_to_exch", db_column="exchange_obj_id",
+                                     on_delete=models.RESTRICT, null=True)
+    class Meta:
+        managed = True
+        db_table = 'external_transfer_pool'
+
+
+class DebitHistory(models.Model):
+    use_db = 'bank_data'
+    id = models.AutoField(primary_key=True)
+    debit_intiator = models.ForeignKey(Customer, related_name="dbt_to_cstmr", db_column="debit_initator_id", on_delete=models.RESTRICT)
+    from_account_no = models.BigIntegerField()
+    from_routing_no = models.IntegerField()
+    to_account = models.ForeignKey(Accounts, related_name="dbt_to_acct", db_column="to_account_id", on_delete=models.RESTRICT)
+    amount = models.DecimalField(max_digits=18, decimal_places=2)
+    time_started = models.DateTimeField()
+    time_processed = models.DateTimeField(null=True)
+    pending_queue_obj = models.ForeignKey(ExternalTransferPool, related_name="dbt_to_extpo", db_column="pending_id",
+                                          on_delete=models.SET_NULL, null=True)
+    status = models.CharField(max_length=32, null=True)
+
+    class Meta:
+        managed = True
+        db_table = 'debit_history'
 
 
 class TransferTypes:
