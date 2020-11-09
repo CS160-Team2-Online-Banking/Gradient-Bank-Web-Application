@@ -1,12 +1,26 @@
 {% extends 'base.html' %}
 {% block contents %}
 
-<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center mt-5 border-bottom">
-    <h1 class="h2">{{ message_from_backend }} Online Banking Service (Landing Page)</h1>
-</div>
+<body>
+    <h1>Your Account</h1>
+    <p>Balance: $$$</p>
+</body>
+<br>
+<p>Transaction History: </p>
+<table style="width:80%">
+    <tr>
+        <th>Date</th>
+        <th>Description</th>
+        <th>Amount</th>
+    </tr>
+    <tr>
+        <th>Date</th>
+        <th>Description</th>
+        <th>Amount</th>
+    </tr>
+</table>
 
-<div>
-    <h4>We are currently developing contents</h4>
-</div>
-
+<br><a href="Withdraw.html"><button>Withdraw</button></a>
+<a href="Deposit_Check.html"><button>Deposit Check</button></a>
+<a href="Account_Settings.html"><button>Account Settings</button></a>
 {% endblock %}

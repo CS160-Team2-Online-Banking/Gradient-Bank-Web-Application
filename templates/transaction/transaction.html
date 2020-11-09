@@ -1,12 +1,38 @@
 {% extends 'base.html' %}
 {% block contents %}
 
-<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center mt-5 border-bottom">
-    <h1 class="h2">Transaction Page</h1>
-</div>
+<!DOCTYPE html>
+<html lang="en">
 
-<div>
-    <h4>Contents would be here.</h4>
-</div>
+<head>
+    <meta charset="UTF-8">
+    <title>Automatic Payments</title>
+</head>
+
+<body>
+    <h1>Setup Automatic Bill Payments</h1>
+    <p>Please input following information to set up automatic bill payments</p>
+    <br>
+    <p>Transfer Money from:</p>
+    <select name="Accounts" onchange="location = this.value;">
+        <option value='none' selected>Accounts</option>
+        <option>Savings</option>
+        <option>Checking</option>
+    </select>
+    <br>
+    <p>Money transfer to:</p>
+    <select name="Bills" onchange="location = this.value;">
+        <option value='none' selected>Bills</option>
+        <option>Credit Card</option>
+        <option>Loan</option>
+    </select>
+    <br>
+    <p>Select Date of Auto Bill Pay:</p>
+    <input type="text" placeholder="Date to Pay">
+
+    <br><a href="BasePage.html"><button>Submit</button></a>
+</body>
+
+</html>
 
 {% endblock %}
