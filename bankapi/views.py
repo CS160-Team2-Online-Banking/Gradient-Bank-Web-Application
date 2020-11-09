@@ -16,6 +16,7 @@ from bankapi.autopayment.autopayment import AutopaymentBuilder
 from django.utils.decorators import classonlymethod
 
 
+
 class APIView(View):
     restful_access_names = ["get", "put", "patch", "delete"]
 
@@ -199,7 +200,6 @@ class AutoPaymentView(APIView):
         data = json_data["data"]
 
         payment_data = dict()
-
         try:
             payment_data["autopayment_id"] = autopayment_id
             self.try_set("to_account_no", data, payment_data, int)
@@ -287,6 +287,7 @@ class TransactionView(View):
         else:
             return JsonResponse({"success": True})
 
+@method_decorator(csrf_exempt, name='dispatch')  # django requires all post requests to include a CSRF token by default
 class AccountView(APIView):
     def get(self, request, account_no=None):
         """ View method for retrieving account information """
@@ -304,12 +305,33 @@ class AccountView(APIView):
         else:
             return JsonResponse({"success": True, "data": result["data"]}, status=200)
 
-    def put(self, request, account_no):
-        pass
-
     def post(self, request):
         """ View method for creating (opening) a new bank account """
-        pass
+        try:
+            auth_token = decrypt_auth_token_str(request.headers.get("authorization"))
+            json_data = json.loads(request.body)
+        except json.decoder.JSONDecodeError:
+            return JsonResponse({"success": False, "msg": "Error: JSON could not be parsed"}, status=400)
+
+        if 'data' not in json_data:
+            return JsonResponse({"success": False, "msg": "Error: Badly formatted body"}, status=400)
+
+        data = json_data["data"]
+        #user_id = auth_token
+        try:
+            account_data = {
+                #"account_id": data["account_id"],
+                #"balance": 0,
+                #"account_number": new_account_number,
+                "account_type": data["account_type"]
+                #"owner": user_id
+            }
+        except KeyError:
+            return JsonResponse({"success": False, "msg": "Error: Body is missing parameters"}, status=400)
+        except ValueError:
+            return JsonResponse({"success": False, "msg": "Error: Invalid parameter type"}, status=400)
+        AccountProcess.account_add(self, auth_token, account_data)
+        #pass
 
 
 # This class is depricated and should be deleted
