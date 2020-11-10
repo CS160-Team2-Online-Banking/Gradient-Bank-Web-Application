@@ -39,7 +39,6 @@ class CustomUserManager(UserManager):
 
 # CustomerUser
 
-
 class CustomUser(AbstractBaseUser, PermissionsMixin):
     password = models.CharField(max_length=255, null=True, blank=True)
     username = models.CharField(

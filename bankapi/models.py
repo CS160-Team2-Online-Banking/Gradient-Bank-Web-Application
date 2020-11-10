@@ -6,11 +6,21 @@
 #   * Remove `managed = False` lines if you wish to allow Django to create, modify, and delete the table
 # Feel free to rename the models, but don't rename db_table values or field names.
 from django.db import models
-import re
+
+
+class Accounts(models.Model):
+    account_id = models.AutoField(primary_key=True)
+    balance = models.DecimalField(max_digits=18, decimal_places=2)
+    account_number = models.IntegerField(unique=True)
+    owner_id = models.IntegerField()
+    account_type_id = models.IntegerField()
+
+    class Meta:
+        managed = False
+        db_table = 'Accounts'
 
 
 class BankManager(models.Model):
-    use_db = 'bank_data'
     bank_manager_id = models.AutoField(primary_key=True)
     hashed_pass = models.CharField(max_length=100)
     manager_email = models.CharField(unique=True, max_length=255)
@@ -21,16 +31,15 @@ class BankManager(models.Model):
 
 
 class Customer(models.Model):
-    use_db = 'bank_data'
     customer_id = models.IntegerField(primary_key=True)
     event_id = models.IntegerField(blank=True, null=True)
     autopayment_id = models.IntegerField(blank=True, null=True)
     customer_name = models.CharField(max_length=50)
     customer_phone = models.IntegerField()
     customer_email = models.CharField(max_length=50)
-    customer_ssn = models.IntegerField(db_column='customer_SSN')  # Field name made lowercase.
+    # Field name made lowercase.
+    customer_ssn = models.IntegerField(db_column='customer_SSN')
     customer_address = models.CharField(max_length=50)
-    customer_routingnumber = models.IntegerField(db_column='customer_routingNumber')  # Field name made lowercase.
 
     class Meta:
         managed = False
@@ -38,59 +47,93 @@ class Customer(models.Model):
 
 
 class AccountTypes(models.Model):
-    use_db = 'bank_data'
     account_type_id = models.IntegerField(primary_key=True)
     account_type_name = models.CharField(max_length=64)
 
     class Meta:
-        managed = True
+        managed = False
         db_table = 'account_types'
 
 
-class Accounts(models.Model):
-    use_db = 'bank_data'
-    account_id = models.AutoField(primary_key=True)
-    balance = models.DecimalField(max_digits=18, decimal_places=2)
-    account_number = models.IntegerField(unique=True)
-    account_type = models.ForeignKey(AccountTypes, related_name="acct_to_actyp", db_column='account_type_id',
-                                     on_delete=models.RESTRICT)
-    owner = models.ForeignKey(Customer, related_name="acct_to_cstmr", db_column="owner_id", on_delete=models.RESTRICT)
+class AutopaymentObjects(models.Model):
+    id = models.IntegerField()
+    owner_user_id = models.IntegerField(primary_key=True)
+    autopayment_id = models.IntegerField()
+    from_account_id = models.IntegerField()
+    payment_schedule_id = models.IntegerField()
+    to_account_no = models.BigIntegerField()
+    to_routing_no = models.IntegerField()
+    transfer_amount = models.DecimalField(max_digits=18, decimal_places=2)
+    last_payment = models.DateTimeField(blank=True, null=True)
 
     class Meta:
         managed = False
-        db_table = 'Accounts'
+        db_table = 'autopayment_objects'
+        unique_together = (('owner_user_id', 'autopayment_id'),)
 
 
-class ExternalAccount(models.Model):
-    use_db = 'bank_data'
-    external_account_id = models.AutoField(primary_key=True)
-    owner_user = models.ForeignKey(Customer, related_name="exa_to_cstmr", db_column="owner_user_id",
-                                   on_delete=models.RESTRICT)
-    routing_number = models.IntegerField()
-    account_number = models.BigIntegerField()
+class CompletedTransactionsLog(models.Model):
+    transaction_id = models.IntegerField(primary_key=True)
+    started = models.DateTimeField()
+    completed = models.DateTimeField()
 
     class Meta:
-        managed = True
-        db_table = 'external_accounts'
+        managed = False
+        db_table = 'completed_transactions_log'
 
 
-class ExternalTransferPool(models.Model):
-    use_db = 'bank_data'
-    pending_extern_id = models.AutoField(primary_key=True)
-    internal_account = models.ForeignKey(Accounts, related_name="etp_to_acc", db_column="internal_account_id",
-                                         on_delete=models.RESTRICT)
-    external_account = models.ForeignKey(ExternalAccount, related_name="etp_to_exa", db_column="external_account_id",
-                                         on_delete=models.RESTRICT)
+class CompletedTransfersLog(models.Model):
+    transfer_id = models.IntegerField(primary_key=True)
+    completed = models.DateTimeField()
+    started = models.DateTimeField()
+
+    class Meta:
+        managed = False
+        db_table = 'completed_transfers_log'
+
+
+class DebitHistory(models.Model):
+    from_account_no = models.BigIntegerField()
+    from_routing_no = models.IntegerField()
     amount = models.DecimalField(max_digits=18, decimal_places=2)
-    inbound = models.BooleanField()
+    time_started = models.DateTimeField()
+    time_processed = models.DateTimeField(blank=True, null=True)
+    debit_initator = models.ForeignKey(Customer, models.DO_NOTHING)
+    to_account = models.ForeignKey(Accounts, models.DO_NOTHING)
+    status = models.CharField(max_length=32, blank=True, null=True)
+    pending = models.ForeignKey(
+        'ExternalTransferPool', models.DO_NOTHING, blank=True, null=True)
 
     class Meta:
-        managed = True
-        db_table = 'external_transfer_pool'
+        managed = False
+        db_table = 'debit_history'
+
+
+class DjangoMigrations(models.Model):
+    app = models.CharField(max_length=255)
+    name = models.CharField(max_length=255)
+    applied = models.DateTimeField()
+
+    class Meta:
+        managed = False
+        db_table = 'django_migrations'
+
+
+class EventLog(models.Model):
+    event_id = models.AutoField(primary_key=True)
+    intiator_user_id = models.IntegerField()
+    ip6_address = models.CharField(max_length=16, blank=True, null=True)
+    ip4_address = models.CharField(max_length=4, blank=True, null=True)
+    event_type = models.IntegerField()
+    event_time = models.DateTimeField()
+    data_id = models.IntegerField(blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = 'event_log'
 
 
 class EventTypes(models.Model):
-    use_db = 'bank_data'
     event_type_id = models.AutoField(primary_key=True)
     name = models.CharField(unique=True, max_length=32)
     descrp = models.CharField(max_length=128, blank=True, null=True)
@@ -100,24 +143,84 @@ class EventTypes(models.Model):
         db_table = 'event_types'
 
 
-class EventLog(models.Model):
-    use_db = 'bank_data'
-    event_id = models.AutoField(primary_key=True)
-    intiator_user = models.ForeignKey(Customer, related_name="evnt_to_custmr", db_column="intiator_user_id",
-                                      on_delete=models.RESTRICT)
-    ip6_address = models.BinaryField(max_length=16, blank=True, null=True)
-    ip4_address = models.BinaryField(max_length=4, blank=True, null=True)
-    event_type = models.ForeignKey(EventTypes, related_name="event_type", db_column="event_type",
-                                   on_delete=models.RESTRICT)
-    event_time = models.DateTimeField()
+class ExchangeHistory(models.Model):
+    to_account_no = models.BigIntegerField(blank=True, null=True)
+    to_routing_no = models.IntegerField(blank=True, null=True)
+    from_account_no = models.BigIntegerField()
+    from_routing_no = models.IntegerField()
+    atm_id = models.BigIntegerField(blank=True, null=True)
+    amount = models.DecimalField(max_digits=16, decimal_places=2)
+    posted = models.DateTimeField()
+    finished = models.DateTimeField(blank=True, null=True)
+    type = models.CharField(max_length=16)
+    status = models.CharField(max_length=16)
 
     class Meta:
         managed = False
-        db_table = 'event_log'
+        db_table = 'exchange_history'
+
+
+class ExternalAccounts(models.Model):
+    external_account_id = models.AutoField(primary_key=True)
+    routing_number = models.IntegerField()
+    account_number = models.BigIntegerField()
+    owner_user = models.ForeignKey(Customer, models.DO_NOTHING)
+
+    class Meta:
+        managed = False
+        db_table = 'external_accounts'
+
+
+class ExternalTransferPool(models.Model):
+    pending_extern_id = models.AutoField(primary_key=True)
+    amount = models.DecimalField(max_digits=18, decimal_places=2)
+    inbound = models.IntegerField()
+    internal_account = models.ForeignKey(Accounts, models.DO_NOTHING)
+    debit_transfer = models.IntegerField()
+    external_account_no = models.BigIntegerField()
+    external_account_routing_no = models.IntegerField()
+    exchange_obj = models.ForeignKey(
+        ExchangeHistory, models.DO_NOTHING, blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = 'external_transfer_pool'
+
+
+class FailedTransactionsLog(models.Model):
+    transaction = models.OneToOneField(
+        'Transactions', models.DO_NOTHING, primary_key=True)
+    started = models.DateTimeField()
+    failed = models.DateTimeField()
+
+    class Meta:
+        managed = False
+        db_table = 'failed_transactions_log'
+
+
+class FailedTransfersLog(models.Model):
+    transfer = models.OneToOneField(
+        'Transfers', models.DO_NOTHING, primary_key=True)
+    started = models.DateTimeField()
+    failed = models.DateTimeField()
+
+    class Meta:
+        managed = False
+        db_table = 'failed_transfers_log'
+
+
+class PaymentNetworks(models.Model):
+    network_id = models.IntegerField(primary_key=True)
+    # Field name made lowercase.
+    network_gid = models.IntegerField(
+        db_column='network_GID', blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = 'payment_networks'
 
 
 class PaymentSchedules(models.Model):
-    use_db = 'bank_data'
     schedule_id = models.AutoField(primary_key=True)
     start_date = models.DateField()
     end_date = models.DateField()
@@ -128,59 +231,29 @@ class PaymentSchedules(models.Model):
         db_table = 'payment_schedules'
 
 
-class PaymentFrequencies:
-    YEARLY = 'YEARLY'
-    MONTHLY = 'MONTHLY'
-    WEEKLY = 'WEEKLY'
-    DAILY = 'DAILY'
-    REGEX = '({y})|({m})|({w})|({d})'.format(y=YEARLY, m=MONTHLY, w=WEEKLY, d=DAILY)
-
-    @staticmethod
-    def validate_string(str):
-        result = re.findall(PaymentFrequencies.REGEX, str)
-        return len(result) == 1
-
-
-class AutopaymentObjects(models.Model):
-    use_db = 'bank_data'
-    id = models.IntegerField(primary_key=True)
-    owner_user = models.ForeignKey(Customer, related_name="autop_to_custmr", db_column="owner_user_id",
-                                   on_delete=models.RESTRICT)
-    autopayment_id = models.IntegerField()
-    payment_schedule = models.OneToOneField(PaymentSchedules, related_name="autop_pymnt_schedule",
-                                            db_column="payment_schedule_id", on_delete=models.CASCADE)
-    from_account = models.ForeignKey(Accounts, related_name="autop_from_to_acct", db_column="from_account_id",
-                                     on_delete=models.RESTRICT)
-    to_account = models.ForeignKey(Accounts, related_name="autop_to_to_acct", db_column="to_account_id",
-                                   on_delete=models.RESTRICT)
-    transfer_amount = models.DecimalField(max_digits=18, decimal_places=2)
-    transfer_type = models.CharField(max_length=6)
-    last_payment = models.DateTimeField(null=True)
+class PendingTransactionsQueue(models.Model):
+    transaction_id = models.IntegerField(primary_key=True)
+    added = models.DateTimeField()
 
     class Meta:
         managed = False
-        db_table = 'autopayment_objects'
-        unique_together = (('owner_user_id', 'autopayment_id'),)
+        db_table = 'pending_transactions_queue'
 
 
-class PaymentNetworks(models.Model):
-    use_db = 'bank_data'
-    network_id = models.IntegerField(primary_key=True)
-    network_GID = models.IntegerField(null=True)
+class PendingTransfersQueue(models.Model):
+    transfer_id = models.IntegerField(primary_key=True)
+    added = models.DateTimeField()
 
     class Meta:
-        managed = True
-        db_table = 'payment_networks'
+        managed = False
+        db_table = 'pending_transfers_queue'
 
 
 class Transactions(models.Model):
-    use_db = 'bank_data'
     transaction_id = models.AutoField(primary_key=True)
-    card_account = models.ForeignKey(Accounts, related_name="trrnsct_from_to_acct", db_column="card_account_id",
-                                     on_delete=models.RESTRICT)
+    card_account_id = models.IntegerField()
     merchant_id = models.IntegerField()
-    card_network = models.ForeignKey(PaymentNetworks, related_name="trnsct_to_ntwrk", db_column="card_network_id",
-                                     on_delete=models.RESTRICT)
+    card_network_id = models.IntegerField()
     amount = models.DecimalField(max_digits=18, decimal_places=2)
     time_stamp = models.DateTimeField()
 
@@ -190,14 +263,10 @@ class Transactions(models.Model):
 
 
 class Transfers(models.Model):
-    use_db = 'bank_data'
     transfer_id = models.AutoField(primary_key=True)
-    create_event = models.ForeignKey(EventLog, related_name="trnsfr_to_evnt", db_column="create_event_id",
-                                     on_delete=models.RESTRICT)
+    create_event_id = models.IntegerField()
     to_account_id = models.IntegerField()
-    # to_account = models.ForeignKey(Accounts, related_name="trnsfr_from_to_acct", db_column="to_account_id", on_delete=models.RESTRICT)
-    from_account = models.ForeignKey(Accounts, related_name="trnsfr_to_to_acct", db_column="from_account_id",
-                                     on_delete=models.RESTRICT)
+    from_account_id = models.IntegerField()
     transfer_type = models.CharField(max_length=6)
     amount = models.DecimalField(max_digits=18, decimal_places=2)
     time_stamp = models.DateTimeField()
@@ -205,58 +274,6 @@ class Transfers(models.Model):
     class Meta:
         managed = False
         db_table = 'transfers'
-
-
-class TransferTypes:
-    U_TO_U = 'U_TO_U'
-    A_TO_A = 'A_TO_A'
-    EXTERN = 'EXTERN'
-
-
-class PendingTransactionsQueue(models.Model):
-    use_db = 'bank_data'
-    transaction = models.OneToOneField(Transactions, related_name="p_trnsct_to_trnsct", primary_key=True,
-                                       db_column="transaction_id", on_delete=models.CASCADE)
-    added = models.DateTimeField()
-
-    class Meta:
-        managed = False
-        db_table = 'pending_transactions_queue'
-
-
-class PendingTransfersQueue(models.Model):
-    use_db = 'bank_data'
-    transfer = models.OneToOneField(Transfers, related_name="p_trnsfr_to_trnsfr", primary_key=True,
-                                    db_column="transfer_id", on_delete=models.CASCADE)
-    added = models.DateTimeField()
-
-    class Meta:
-        managed = False
-        db_table = 'pending_transfers_queue'
-
-
-class CompletedTransactionsLog(models.Model):
-    use_db = 'bank_data'
-    transaction = models.OneToOneField(Transactions, related_name="c_trnsct_to_trnsct", primary_key=True,
-                                       db_column="transaction_id", on_delete=models.CASCADE)
-    started = models.DateTimeField()
-    completed = models.DateTimeField()
-
-    class Meta:
-        managed = False
-        db_table = 'completed_transactions_log'
-
-
-class CompletedTransfersLog(models.Model):
-    use_db = 'bank_data'
-    transfer = models.OneToOneField(Transfers, related_name="c_trnsfr_to_trnsfr", primary_key=True,
-                                    db_column="transfer_id", on_delete=models.CASCADE)
-    completed = models.DateTimeField()
-    started = models.DateTimeField()
-
-    class Meta:
-        managed = False
-        db_table = 'completed_transfers_log'
 
 
 class FailedTransfers(models.Model):
@@ -270,26 +287,22 @@ class FailedTransfers(models.Model):
         managed = True
         db_table = 'failed_transfers_log'
 
-
-class FailedTransactions(models.Model):
-    use_db = 'bank_data'
-    transaction = models.OneToOneField(Transactions, related_name="f_trnsct_to_trnsct", primary_key=True,
-                                       db_column="transaction_id", on_delete=models.CASCADE)
-    started = models.DateTimeField()
-    failed = models.DateTimeField()
-
-    class Meta:
-        managed = True
-        db_table = 'failed_transactions_log'
+class TransferTypes:
+    U_TO_U = 'U_TO_U'
+    A_TO_A = 'A_TO_A'
+    EXTERN = 'EXTERN'
 
 
 TRANSFER_QUEUE_EVENT_ID = EventTypes.objects.get(name="TRANSFER QUEUED").pk
 TRANSFER_CANCEL_EVENT_ID = EventTypes.objects.get(name="TRANSFER CANCELED").pk
+DEBIT_QUEUED_EVENT_ID = EventTypes.objects.get(name="DEBIT QUEUED").pk
 SAVING_ACCOUNT_ID = 1
 if AccountTypes.objects.filter(pk=SAVING_ACCOUNT_ID).first() is None:
-    saving = AccountTypes(account_type_id=SAVING_ACCOUNT_ID, account_type_name='SAVING')
+    saving = AccountTypes(account_type_id=SAVING_ACCOUNT_ID,
+                          account_type_name='SAVING')
     saving.save()
 CHECKING_ACCOUNT_ID = 2
 if AccountTypes.objects.filter(pk=CHECKING_ACCOUNT_ID).first() is None:
-    checking = AccountTypes(account_type_id=CHECKING_ACCOUNT_ID, account_type_name='CHECKING')
+    checking = AccountTypes(
+        account_type_id=CHECKING_ACCOUNT_ID, account_type_name='CHECKING')
     checking.save()

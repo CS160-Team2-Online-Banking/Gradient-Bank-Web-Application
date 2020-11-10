@@ -81,7 +81,7 @@ class ExternalTransfer(TransferProcess):
         if transfer is None:
             return False  # TODO: handle this, raise an exception or something
 
-        external_account = ExternalAccount.objects.filter(pk=transfer.to_account_id).first()
+        external_account = ExternalAccounts.objects.filter(pk=transfer.to_account_id).first()
         internal_account = Accounts.objects.filter(pk=transfer.from_account_id).first()
         if (external_account is None) or (internal_account is None):
             return False  # TODO: handle this, raise an exception or something

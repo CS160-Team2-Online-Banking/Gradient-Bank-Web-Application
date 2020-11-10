@@ -19,6 +19,7 @@ CREATE TABLE Customer (
 	account_id int NOT NULL,
 	event_id int,
 	autopayment_id int,
+	customer_password char(256) NOT NULL,
 	customer_name char(50) NOT NULL,
     customer_phone int(10) NOT NULL,
     customer_email varchar(50) NOT NULL,
