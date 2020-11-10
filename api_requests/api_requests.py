@@ -41,9 +41,9 @@ def add_json_body(request, data: dict):
 def api_get_accounts(user):
     req = Request(url="{path}/accounts/".format(path=API_PATH))
     attach_auth_token(user, req)
-    response = urlopen(req).read()
-    if response:
-        data = json.loads(response)
+    response = urlopen(req)
+    if response.status < 300:
+        data = json.loads(response.read())
         if data["success"]:
             return data["data"]
     return False
@@ -52,9 +52,9 @@ def api_get_accounts(user):
 def api_get_account_details(user, account_no):
     req = Request(url="{path}/accounts/{id}".format(path=API_PATH, id=account_no))
     attach_auth_token(user, req)
-    response = urlopen(req).read()
-    if response:
-        data = json.loads(response)
+    response = urlopen(req)
+    if response.status < 300:
+        data = json.loads(response.read())
         if data["success"]:
             return data["data"]
     return False
@@ -77,9 +77,9 @@ def api_setup_autopayment(user, to_account_no, to_account_routing, from_account_
         }
     }}
     add_json_body(req, payload)
-    response = urlopen(req).read()
-    if response:
-        data = json.loads(response)
+    response = urlopen(req)
+    if response.status < 300:
+        data = json.loads(response.read())
         if data["success"]:
             return True
     return False
@@ -88,9 +88,9 @@ def api_setup_autopayment(user, to_account_no, to_account_routing, from_account_
 def api_get_autopayments(user):
     req = Request(url="{path}/autopayments/".format(path=API_PATH))
     attach_auth_token(user, req)
-    response = urlopen(req).read()
-    if response:
-        data = json.loads(response)
+    response = urlopen(req)
+    if response.status < 300:
+        data = json.loads(response.read())
         if data["success"]:
             return data["data"]
     return False
@@ -100,9 +100,9 @@ def api_get_autopayments(user):
 def api_get_autopayment_details(user, id):
     req = Request(url="{path}/autopayments/{id}".format(path=API_PATH, id=id))
     attach_auth_token(user, req)
-    response = urlopen(req).read()
-    if response:
-        data = json.loads(response)
+    response = urlopen(req)
+    if response.status < 300:
+        data = json.loads(response.read())
         if data["success"]:
             return data["data"]
     return False
@@ -119,9 +119,9 @@ def api_post_transfer(user, to_account_no, to_account_routing, from_account_no, 
         "amount": amount,
     }}
     add_json_body(req, payload)
-    response = urlopen(req).read()
-    if response:
-        data = json.loads(response)
+    response = urlopen(req)
+    if response.status < 300:
+        data = json.loads(response.read())
         if data["success"]:
             return True
     return False
