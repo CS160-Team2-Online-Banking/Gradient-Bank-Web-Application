@@ -1,9 +1,6 @@
 {% extends 'base.html' %}
 {% block contents %}
 
-<!DOCTYPE html>
-<html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <title>Automatic Payments</title>
@@ -15,21 +12,27 @@
     <br>
     <p>Transfer Money from:</p>
     <select name="Accounts" onchange="location = this.value;">
-        <option value='none' selected>Accounts</option>
-        <option>Savings</option>
-        <option>Checking</option>
+        {% for account in from_accounts %}
+        <option value='{{account.account_number}}'>{{account.account_type.account_type_name}}: {{account.account_number}}</option>
+        {% empty %}
+        <option>You have no accounts</option>
+        {% endfor %}
     </select>
     <br>
+    <input type="text" placeholder="Amount">
     <p>Money transfer to:</p>
-    <select name="Bills" onchange="location = this.value;">
-        <option value='none' selected>Bills</option>
-        <option>Credit Card</option>
-        <option>Loan</option>
-    </select>
+    <input type="text" placeholder="Routing Number">
+    <input type="text" placeholder="Account Number">
     <br>
     <p>Select Date of Auto Bill Pay:</p>
-    <input type="text" placeholder="Date to Pay">
-
+    <select name="frequency">
+        <option value="DAILY" selected>Daily</option>
+        <option value="WEEKLY">Weekly</option>
+        <option value="MONTHLY">Monthly</option>
+        <option value="YEARLY">Yearly</option>
+    </select>
+    <input type="text" placeholder="Start Date">
+    <input type="text" placeholder="End Date">
     <br><a href="BasePage.html"><button>Submit</button></a>
 </body>
 
