@@ -2,38 +2,41 @@
 {% block contents %}
 
 <head>
-    <meta charset="UTF-8">
     <title>Automatic Payments</title>
 </head>
 
 <body>
     <h1>Setup Automatic Bill Payments</h1>
     <p>Please input following information to set up automatic bill payments</p>
-    <br>
-    <p>Transfer Money from:</p>
-    <select name="Accounts" onchange="location = this.value;">
-        {% for account in from_accounts %}
-        <option value='{{account.account_number}}'>{{account.account_type.account_type_name}}: {{account.account_number}}</option>
-        {% empty %}
-        <option>You have no accounts</option>
-        {% endfor %}
-    </select>
-    <br>
-    <input type="text" placeholder="Amount">
-    <p>Money transfer to:</p>
-    <input type="text" placeholder="Routing Number">
-    <input type="text" placeholder="Account Number">
-    <br>
-    <p>Select Date of Auto Bill Pay:</p>
-    <select name="frequency">
-        <option value="DAILY" selected>Daily</option>
-        <option value="WEEKLY">Weekly</option>
-        <option value="MONTHLY">Monthly</option>
-        <option value="YEARLY">Yearly</option>
-    </select>
-    <input type="text" placeholder="Start Date">
-    <input type="text" placeholder="End Date">
-    <br><a href="BasePage.html"><button>Submit</button></a>
+    <form method="post" action="{{response_url}}">
+        <label for="from_account">Transfer Money from:</label>
+        <select name="from_account" onchange="location = this.value;">
+            {% for account in from_accounts %}
+            <option value='{{account.account_number}}'>{{account.account_type.account_type_name}}: {{account.account_number}}</option>
+            {% empty %}
+            <option>You have no accounts</option>
+            {% endfor %}
+        </select>
+        <label for="amount">Amount: </label>
+        <input name="amount" type="text" placeholder="Amount">
+        <label for="to_routing_no">Routing Number: </label>
+        <input name="to_routing_no" type="text" placeholder="Routing Number">
+        <label for="to_account_no">Account Number: </label>
+        <input name="to_account_no" type="text" placeholder="Account Number">
+        <p>Select Date of Auto Bill Pay:</p>
+        <label for="frequency">Payment Frequency: </label>
+        <select name="frequency">
+            <option value="DAILY" selected>Daily</option>
+            <option value="WEEKLY">Weekly</option>
+            <option value="MONTHLY">Monthly</option>
+            <option value="YEARLY">Yearly</option>
+        </select>
+        <label for="start_date">Start Date: </label>
+        <input name="start_date" type="text" placeholder="Start Date">
+        <label for="end_date">End Date: </label>
+        <input name="end_date" type="text" placeholder="End Date">
+        <input type="submit" value="Submit">
+    </form>
 </body>
 
 </html>

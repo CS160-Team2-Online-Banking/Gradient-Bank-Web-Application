@@ -31,15 +31,18 @@
                         <li class="nav-item"><a class="nav-link" href="#"> </a></li>
                     </ul>
                     <ul class="navbar-nav">
+                        <!--
                         <li class="nav-item"><a class="nav-link" href="/transaction/">Transaction Page</a>
                         </li>
                         <li class="nav-item"><a class="nav-link" href="/atm/search/">ATM SEARCH Page</a>
                         </li>
-                        <li class="nav-item"><a class="nav-link" href="/accounts/signup/">Sign Up Page</a>
-                        </li>
+                        -->
+                        {% if request.user.is_authenticated %}
+                        <li class="nav-item"><a class="nav-link" href="/accounts/logout">Logout</a></li>
+                        {% else %}
+                        <li class="nav-item"><a class="nav-link" href="/accounts/signup/">Sign Up Page</a></li>
                         <li class="nav-item"><a class="nav-link" href="/accounts/login">Login</a></li>
-                        <li class="nav-item"><a class="nav-link" href="/accounts/logout">Logout</a>
-                        </li>
+                        {% endif %}
                     </ul>
                 </nav>
             </div>
@@ -77,6 +80,7 @@
                                 </a>
                             </nav>
                         </li>
+                        <!--
                         <li class="nav-item">
                             <nav class="navbar navbar-light bg-light">
                                 <a class='navbar-brand' href='/accounts/signup/'>
@@ -98,6 +102,7 @@
                                 </a>
                             </nav>
                         </li>
+                        -->
                     </ul>
                 </div>
             </div id="sidemenu">

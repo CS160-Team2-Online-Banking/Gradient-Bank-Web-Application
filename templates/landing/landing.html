@@ -1,9 +1,10 @@
 {% extends 'base.html' %}
 {% block contents %}
 
-<body>
-    <h1>Your Account</h1>
-</body>
+{% if request.user.is_authenticated %}
+
+<h1>Your Account</h1>
+
 <table style="width:80%">
     <tr>
         <th>Account No.</th>
@@ -18,8 +19,12 @@
         <tr><td colspan="3">No accounts</td></tr>
     {% endfor %}
 </table>
-
-<br><a href="Withdraw.html"><button>Withdraw</button></a>
-<a href="Deposit_Check.html"><button>Deposit Check</button></a>
-<a href="Account_Settings.html"><button>Account Settings</button></a>
+<a href="withdraw.html"><button>Withdraw</button></a> <!-- Withdraw will re-direct the user to the ATM search page -->
+<a href="deposit_check.html"><button>Deposit Check</button></a> <!-- Re-direct to the check deposit page -->
+<a href="open_account.html"><button>Open Account</button></a> <!-- Re-direct to the open account page -->
+{% else %}
+<h1>Welcome to Online Bank</h1>
+<p>We don't pay interest. You've been warned.</p>
+<p>To start using online bank, please login or signup.</p>
+{% endif %}
 {% endblock %}
