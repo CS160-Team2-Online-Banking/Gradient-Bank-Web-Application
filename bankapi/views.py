@@ -6,19 +6,96 @@ from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 import json
 
-from bankapi.models import TransferTypes
 from bankapi.transaction.transaction import TransactionProcess
+from functools import update_wrapper
+from bankapi.transfer.exchange_processor import *
 from bankapi.authentication.auth import *
-from bankapi.utils.network_utils import get_requestor_ip, get_utc_now_str
-from bankapi.transfer.internal_process import InternalTransfer
-from bankapi.transfer.external_process import ExternalTransfer
+from bankapi.transfer.logging import *
+from bankapi.account.account_process import AccountProcess
 from bankapi.autopayment.autopayment import AutopaymentBuilder
-from bankapi.account.internal_process import InternalAccount
-from bankapi.account.external_process import ExternalAccount
+from django.utils.decorators import classonlymethod
+
+
+class APIView(View):
+    restful_access_names = ["get", "put", "patch", "delete"]
+
+    @classonlymethod
+    def as_access_view(cls, **initkwargs):
+        """ Modified version of the as_view() method that generates handlers that only support RESTful operations"""
+        # Code is similar to that found in https://github.com/django/django/blob/master/django/views/generic/base.py#L31
+
+        # error handlers take directly from django.views.generic.base.as_view():
+        for key in initkwargs:
+            if key in cls.http_method_names:
+                raise TypeError(
+                    'The method name %s is not accepted as a keyword argument '
+                    'to %s().' % (key, cls.__name__)
+                )
+            if not hasattr(cls, key):
+                raise TypeError("%s() received an invalid keyword %r. as_view "
+                                "only accepts arguments that are already "
+                                "attributes of the class." % (cls.__name__, key))
+
+        def view(request, *args, **kwargs):
+            self = cls(**initkwargs)
+            if hasattr(self, 'get') and not hasattr(self, 'head'):
+                self.head = self.get
+            self.request = request
+            self.args = args
+            self.kwargs = kwargs
+            return self.access_dispatcher(request, *args, **kwargs)
+
+        # more code to handle view intialization taken from django.views.generic.base.as_view()
+        view.view_class = cls
+        view.view_initkwargs = initkwargs
+
+        update_wrapper(view, cls, updated=())
+        update_wrapper(view, cls.dispatch, assigned=())
+        return view
+
+    @classonlymethod
+    def as_post_view(cls, **initkwargs):
+
+        for key in initkwargs:
+            if key in cls.http_method_names:
+                raise TypeError(
+                    'The method name %s is not accepted as a keyword argument '
+                    'to %s().' % (key, cls.__name__)
+                )
+            if not hasattr(cls, key):
+                raise TypeError("%s() received an invalid keyword %r. as_view "
+                                "only accepts arguments that are already "
+                                "attributes of the class." % (cls.__name__, key))
+
+        def view(request, *args, **kwargs):
+            self = cls(**initkwargs)
+            self.request = request
+            self.args = args
+            self.kwargs = kwargs
+            if request.method.lower() == "post":
+                handler = getattr(self, request.method.lower(), self.http_method_not_allowed)
+            else:
+                handler = self.http_method_not_allowed
+            return handler(request, *args, **kwargs)
+
+        view.view_class = cls
+        view.view_initkwargs = initkwargs
+
+        update_wrapper(view, cls, updated=())
+        update_wrapper(view, cls.dispatch, assigned=())
+
+        return view
+
+    def access_dispatcher(self, request, *args, **kwargs):
+        if request.method.lower() in self.restful_access_names:
+            handler = getattr(self, request.method.lower(), self.http_method_not_allowed)
+        else:
+            handler = self.http_method_not_allowed
+        return handler(request, *args, **kwargs)
 
 
 @method_decorator(csrf_exempt, name='dispatch')  # django requires all post requests to include a CSRF token by default
-class TransferView(View):
+class TransferView(APIView):
     def post(self, request):
         try:
             auth_token = decrypt_auth_token(request)
@@ -32,24 +109,10 @@ class TransferView(View):
         data = json_data["data"]
 
         try:
-            to_account_id = None
-            to_account_no = None
-            from_account_id = None
-            from_account_no = None
-            if "to_account_id" in data:
-                to_account_id = int(data["to_account_id"])
-            elif "to_account_no" in data:
-                to_account_no = int(data["to_account_no"])
-            else:
-                raise KeyError
-
-            if "from_account_id" in data:
-                from_account_id = int(data["from_account_id"])
-            elif "from_account_no" in data:
-                from_account_no = int(data["from_account_no"])
-            else:
-                raise KeyError
-
+            to_account_no = int(data["to_account_no"])
+            to_routing_no = int(data["to_routing_no"])
+            from_account_no = int(data["from_account_no"])
+            from_routing_no = int(data["from_routing_no"])
             amount = data["amount"]
         except KeyError:
             return JsonResponse({"success": False, "msg": "Error: Body is missing parameters"}, status=400)
@@ -57,33 +120,22 @@ class TransferView(View):
             return JsonResponse({"success": False, "msg": "Error: Invalid parameter type"}, status=400)
 
         request_info = {
-            "to_account_id": to_account_id,
-            "to_account_no": to_account_no,
-            "from_account_id": from_account_id,
+            "from_routing_no": from_routing_no,
             "from_account_no": from_account_no,
-            "amount": amount,
-            "event_info": {
-                "request_ip4": "",
-                "request_ip6": "",
-                "request_time": Now()
-            }
+            "to_routing_no": to_routing_no,
+            "to_account_no": to_account_no,
+            "amount": Decimal(amount),
         }
-
-        # attempt to queue the transfer
-        if "transfer_type" in data:
-            transfer_type = data["transfer_type"]
-            if transfer_type == TransferTypes.U_TO_U or transfer_type == TransferTypes.A_TO_A:
-                InternalTransfer(request_info).queue_transfer(auth_token)
-            elif transfer_type == TransferTypes.EXTERN:
-                ExternalTransfer(request_info).queue_transfer(auth_token)
-        else:
-            InternalTransfer(request_info).queue_transfer(auth_token)
-        request_info.pop("event_info")
-        return JsonResponse({"success": True, "data": request_info}, status=200)
+        result = ExchangeProcessor.start_exchange(request_info, auth_token)
+        print(result)
+        if result["success"]:
+            log_event(request, entry_type=EventTypes.TRANSFER_CREATE_REQUEST, associated_item=result["data"]["transfer_id"])
+            return JsonResponse({"success": True, "data": request_info}, status=200)
+        return JsonResponse({"success": False, "msg": "Error: transfer could not be processed"}, status=500)
 
 
 @method_decorator(csrf_exempt, name='dispatch')  # django requires all post requests to include a CSRF token by default
-class AutoPaymentView(View):
+class AutoPaymentView(APIView):
     def post(self, request):
         try:
             auth_token = decrypt_auth_token(request)
@@ -96,26 +148,13 @@ class AutoPaymentView(View):
 
         data = json_data["data"]
         try:
-            to_account_id = None
-            to_account_no = None
-            from_account_id = None
-            from_account_no = None
-            if "to_account_id" in data:
-                to_account_id = int(data["to_account_id"])
-            elif "to_account_no" in data:
-                to_account_no = int(data["to_account_no"])
-            else:
-                raise KeyError
 
-            if "from_account_id" in data:
-                from_account_id = int(data["from_account_id"])
-            elif "from_account_no" in data:
-                from_account_no = int(data["from_account_no"])
-            else:
-                raise KeyError
+            to_account_no = int(data["to_account_no"])
+            to_routing_no = int(data["to_routing_no"])
+            from_account_no = int(data["from_account_no"])
+            from_routing_no = int(data["from_routing_no"])
 
-            transfer_amount = data["transfer_amount"]
-            transfer_type = data["transfer_type"]
+            transfer_amount = Decimal(data["transfer_amount"])
             payment_schedule_data = {
                 "payment_frequency": data["payment_schedule_data"]["payment_frequency"],
                 "start_date": data["payment_schedule_data"]["start_date"],
@@ -128,12 +167,11 @@ class AutoPaymentView(View):
 
         payment_data = {
             "payment_schedule_data": payment_schedule_data,
-            "from_account_id": from_account_id,
+            "from_routing_no": from_routing_no,
             "from_account_no": from_account_no,
-            "to_account_id": to_account_id,
+            "to_routing_no": to_routing_no,
             "to_account_no": to_account_no,
             "transfer_amount": transfer_amount,
-            "transfer_type": transfer_type
         }
 
         result = AutopaymentBuilder.build_autopayment(auth_token, payment_data)
@@ -143,6 +181,76 @@ class AutoPaymentView(View):
         else:
             return JsonResponse({"success": True, "data": {"owner_id": result[0], "autopayment_id": result[1]}},
                                 status=200)
+
+    @staticmethod
+    def try_set(key, src, dict, conv):
+        if key in src:
+            dict[key] = conv(src[key])
+
+    def put(self, request, autopayment_id):
+        try:
+            auth_token = decrypt_auth_token(request)
+            json_data = json.loads(request.body)
+        except json.decoder.JSONDecodeError:
+            return JsonResponse({"success": False, "msg": "Error: JSON could not be parsed"}, status=400)
+
+        if 'data' not in json_data:
+            return JsonResponse({"success": False, "msg": "Error: Badly formatted body"}, status=400)
+        data = json_data["data"]
+
+        payment_data = dict()
+
+        try:
+            payment_data["autopayment_id"] = autopayment_id
+            self.try_set("to_account_no", data, payment_data, int)
+            self.try_set("to_routing_no", data, payment_data, int)
+            self.try_set("from_account_no", data, payment_data, int)
+            self.try_set("from_routing_no", data, payment_data, int)
+            self.try_set("transfer_amount", data, payment_data, Decimal)
+            if "payment_schedule_data" in data:
+                payment_schedule_data = data["payment_schedule_data"]
+                payment_schedule_deltas = dict()
+                self.try_set("payment_frequency", payment_schedule_data, payment_schedule_deltas, str)
+                self.try_set("start_date", payment_schedule_data, payment_schedule_deltas, str)
+                self.try_set("end_date", payment_schedule_data, payment_schedule_deltas, str)
+                payment_data["payment_schedule_data"] = payment_schedule_deltas
+        except KeyError:
+            return JsonResponse({"success": False, "msg": "Error: Body is missing parameters"}, status=400)
+        except ValueError:
+            return JsonResponse({"success": False, "msg": "Error: Invalid parameter type"}, status=400)
+
+        result = AutopaymentBuilder.modify_autopayment(auth_token, payment_data)
+
+        if result is None:
+            return JsonResponse({"success": False, "msg": "Error: Server failed to process request"}, status=500)
+        else:
+            return JsonResponse({"success": True, "data": {"owner_id": result[0], "autopayment_id": result[1]}},
+                                status=200)
+
+    def delete(self, request, autopayment_id):
+        try:
+            auth_token = decrypt_auth_token(request)
+        except json.decoder.JSONDecodeError:
+            return JsonResponse({"success": False, "msg": "Error: JSON could not be parsed"}, status=400)
+
+        result = AutopaymentBuilder.cancel_autopayment(auth_token, autopayment_id)
+
+        if result is None:
+            return JsonResponse({"success": False, "msg": "Error: Server failed to process request"}, status=500)
+        else:
+            return JsonResponse({"success": True}, status=200)
+
+    def get(self, request, autopayment_id=None):
+        try:
+            auth_token = decrypt_auth_token(request)
+        except json.decoder.JSONDecodeError:
+            return JsonResponse({"success": False, "msg": "Error: JSON could not be parsed"}, status=400)
+
+        result = AutopaymentBuilder.get_autopayment(auth_token, autopayment_id)
+        if result is None:
+            return JsonResponse({"success": False, "msg": "Error: Server failed to process request"}, status=500)
+        else:
+            return JsonResponse({"success": True, "data": result}, status=200)
 
 
 @method_decorator(csrf_exempt, name='dispatch')  # django requires all post requests to include a CSRF token by default
@@ -179,7 +287,32 @@ class TransactionView(View):
         else:
             return JsonResponse({"success": True})
 
+class AccountView(APIView):
+    def get(self, request, account_no=None):
+        """ View method for retrieving account information """
+        # Note: for each account, you should also retrieve the associated transfers to it
+        # this way, people can see what the history of transactions are for the account
+        # you can use ExchangeProcessor.get_exchange_history to do this
+        try:
+            auth_token = decrypt_auth_token(request)
+        except json.decoder.JSONDecodeError:
+            return JsonResponse({"success": False, "msg": "Error: JSON could not be parsed"}, status=400)
 
+        result = AccountProcess.account_lookup(auth_token, account_no)
+        if not result["success"]:
+            return JsonResponse({"success": False, "msg": "Error: Server failed to process request"}, status=500)
+        else:
+            return JsonResponse({"success": True, "data": result["data"]}, status=200)
+
+    def put(self, request, account_no):
+        pass
+
+    def post(self, request):
+        """ View method for creating (opening) a new bank account """
+        pass
+
+
+# This class is depricated and should be deleted
 @method_decorator(csrf_exempt, name='dispatch')  # django requires all post requests to include a CSRF token by default
 class AuthView(View):
     def post(self, request):  # grant authentication if the user entered the correct password and email

@@ -66,7 +66,7 @@ MIDDLEWARE = [
 ROOT_URLCONF = 'config.urls'
 
 DATABASE_ROUTERS = ['bankapi.dbrouter.CustomRouter']
-
+BANK_ROUTING_NUMBER = 123456789
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
@@ -178,5 +178,5 @@ ACCOUNT_LOGOUT_REDIRECT_URL = '/accounts/login/'
 # User CustomUser
 AUTH_USER_MODEL = 'accounts.CustomUser'
 
-# EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+# EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 ACCOUNT_EMAIL_VERIFICATION = "none"
