@@ -11,7 +11,7 @@ class AccountProcess:
         owner_id = decrypted_auth_token["user_id"]
         owner = Customer.objects.filter(pk=owner_id).first()
 
-        if owner_id is None:
+        if owner is None:
             return {"success": False, "msg": "Error: no such customer exists"}
 
         if account_no_to_lookup is None:
@@ -38,6 +38,11 @@ class AccountProcess:
             json_arr = json.loads(serializers.serialize("json", accounts))
             json_arr = list(map(lambda x: x["fields"], json_arr))
 
+            for i, entry in enumerate(json_arr):
+                account_type_id = int(entry["account_type"])
+                account_type = AccountTypes.objects.get(pk=account_type_id)
+                entry["account_type"] = {"account_type_id": account_type.pk,
+                                         "account_type_name": account_type.account_type_name}
             for i, entry in enumerate(json_arr):
                 entry["exchange_history"] = exchange_history
 

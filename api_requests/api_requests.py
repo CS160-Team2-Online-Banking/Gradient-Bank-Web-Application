@@ -1,6 +1,6 @@
 from urllib.request import *
 
-# from django.conf import settings
+from django.conf import settings
 from datetime import datetime, timedelta
 import jwt
 import json
@@ -8,7 +8,7 @@ origin = "http://127.0.0.1:8000"
 API_PATH = "{origin}/api".format(origin=origin)
 EXPIRE_TIME = timedelta(minutes=5)
 
-
+'''
 class settings:
     JWT_SECRET = "j*qV)m}9'NRYV:[\@T2]'QQux5:~Ynn.uMjBA2E\tP*[cd&MR;qWbq<MqP?kca?*"
     JWT_ALGO = 'HS256'
@@ -18,7 +18,7 @@ class settings:
 class DummyUser:
     is_authenticated = True
     id = 1
-
+'''
 
 def attach_auth_token(user, request):
     if user.is_authenticated:
