@@ -102,12 +102,14 @@ def get_bankapi_token(user, day_expire=1):
 
 def add_bankapi_token(request, token):
     """add_bankapi_token
-    Add bankapi token into the session of this request
+    Add bankapi token into the session of this request.
+    If the incoming request have COOKIES, this token will add to the COOKIES as well.
     Args:
         request: the request asking for bankapi token
         token: the bankapi token
     Returns:
         request with token in session
     """
-    request.session['bankapi_token'] = token
+    request.COOKIES['bankapi_token'] = token
+
     return request
