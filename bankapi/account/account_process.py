@@ -1,17 +1,19 @@
+from django.db import *
 from bankapi.models import *
 from django.db import transaction
 from django.core import serializers
 from bankapi.transfer.exchange_processor import ExchangeProcessor
 import json
+from bankapi.models import *
 
-class AccountProcess:
-    # looks up id in account db,
+
+class AccountProcess:        
     @staticmethod
     def account_lookup(decrypted_auth_token, account_no_to_lookup=None) -> dict:
         owner_id = decrypted_auth_token["user_id"]
         owner = Customer.objects.filter(pk=owner_id).first()
 
-        if owner_id is None:
+        if owner is None:
             return {"success": False, "msg": "Error: no such customer exists"}
 
         if account_no_to_lookup is None:
@@ -39,13 +41,38 @@ class AccountProcess:
             json_arr = list(map(lambda x: x["fields"], json_arr))
 
             for i, entry in enumerate(json_arr):
+                account_type_id = int(entry["account_type"])
+                account_type = AccountTypes.objects.get(pk=account_type_id)
+                entry["account_type"] = {"account_type_id": account_type.pk,
+                                         "account_type_name": account_type.account_type_name}
+            for i, entry in enumerate(json_arr):
                 entry["exchange_history"] = exchange_history
 
             return {"success": True, "data": json_arr}
+        
+    @transaction.atomic
+    def account_add(self, decrypted_auth_token, data) -> bool:
+        requesting_user_id = decrypted_auth_token["user_id"]
+        requesters_account = Customer.objects.filter(pk=requesting_user_id).first()
 
+        if requesters_account is None:
+            return False  # TODO: handle this, raise an exception or something
 
-    def account_add(self, decrypted_auth_token, data):
-        pass
+        if Accounts.objects.filter(account_number=1337_0000_0000).first() is None:
+            new_account_number = 1337_0000_0000
+        else:
+            new_account_number = Accounts.objects.latest("account_number").account_number + 1
 
-    def account_update(self, decrypted_auth_token, data):
+        # TODO: data sanitation for account addition
+        new_account = Accounts(account_id=new_account_number,
+                               balance=0,
+                               account_number=new_account_number,
+                               account_type=data.account_type,
+                               owner=requesters_account.pk
+                               )
+        new_account.save()
+        return True;
+
+    # redundant, just use account_lookup
+    def get_account_info(self) -> dict:
         pass
