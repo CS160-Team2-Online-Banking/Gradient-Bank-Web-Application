@@ -2,6 +2,7 @@ from django.shortcuts import render
 from django.views import View
 from django import forms
 from api_requests.api_requests import *
+from django.conf import settings
 
 
 FREQUENCY_CHOICES = [
@@ -34,7 +35,7 @@ class AutopaymentForm(forms.Form):
 
 class PersonalTransferForm(forms.Form):
     from_account = forms.ChoiceField(choices=[("None", "You have no accounts")])
-    to_account = forms.ChoiceField(choices=[("None", "You have no accounts")])
+    to_account_no = forms.ChoiceField(choices=[("None", "You have no accounts")])
     amount = forms.DecimalField(label="Amount", decimal_places=2)
 
     def __init__(self, *args, **kwargs):
@@ -46,7 +47,7 @@ class PersonalTransferForm(forms.Form):
                                                     account_number=x["account_number"])), from_accounts))
         if from_accounts:
             self.fields['from_account'].choices = from_accounts
-            self.fields['to_account'].choices = from_accounts
+            self.fields['to_account_no'].choices = from_accounts
 
 
 class TransferForm(forms.Form):
@@ -76,7 +77,7 @@ class Transaction(View):
         if from_accounts:
             return render(request, 'base_form.html',
                           {"form": AutopaymentForm(from_accounts=from_accounts), "form_title": "Setup Autopayment",
-                           "action": "/transaction/"})
+                           "action": "/transaction/autopayments/"})
         else:
             return render(request, 'feature_access_message.html', {"title": "Setup Autopayment",
                                                                    "message": "You cannot setup autopayments unless you have accounts"})
@@ -97,7 +98,46 @@ class Transaction(View):
                 print("Request Failed")
         else:
             print("Invalid form data")
-        return render(request, 'base_form.html', {"form": form, "form_title": "Autopayment Configured", "action":"/transaction/"})
+        return render(request, 'base_form.html', {"form": form, "form_title": "Autopayment Configured", "action":"/transaction/autopayments/"})
 
+
+class TransferView(View):
+    def get(self, request, type=None):
+        if request.user.is_authenticated:
+            from_accounts = api_get_accounts(request.user)
+            form = PersonalTransferForm(from_accounts=from_accounts)
+            if type == "/external":
+                form = TransferForm(from_accounts=from_accounts)
+
+            return render(request, 'base_form.html', {"form": form, "form_title": "Transfer Money",
+                                                      "action": "/transaction/transfers{type}".format(type=type)})
+        else:
+            return render(request, 'feature_access_message.html', {"title": "Account Details",
+                                                                   "message": "Please Login before transferring money"})
+
+    def post(self, request, type=None):
+        if request.user.is_authenticated:
+            from_accounts = api_get_accounts(request.user)
+
+            if type == "/external":
+                form = TransferForm(request.POST, from_accounts=from_accounts)
+            else:
+                form = PersonalTransferForm(request.POST, from_accounts=from_accounts)
+
+            if form.is_valid():
+                data = form.cleaned_data
+                to_routing_no = data.get("to_routing_no", settings.BANK_ROUTING_NUMBER)
+                result = api_post_transfer(request.user, data["to_account_no"], to_routing_no,
+                                               data["from_account"], str(data["amount"]))
+                if not result:
+                    print("Request Failed")
+
+                return render(request, 'base_form.html', {"form": form, "form_title": "Transfer Money",
+                                                          "action": "/transaction/transfers{type}".format(type=type)})
+
+        else:
+            return render(request, 'feature_access_message.html', {"title": "Account Details",
+                                                                   "message": "Please Login before transferring money"})
 
 transaction = Transaction.as_view()
+transfer = TransferView.as_view()
