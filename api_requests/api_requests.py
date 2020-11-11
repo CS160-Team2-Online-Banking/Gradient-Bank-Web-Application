@@ -40,6 +40,25 @@ def add_json_body(request, data: dict):
     return request
 
 
+def api_post_account(user, account_type):
+    req = Request
+    payload = {"data": {
+            "account_type": account_type
+    }}
+    req = Request(url="{path}/accounts".format(path=API_PATH), method='POST')
+    attach_auth_token(user, req)
+    add_json_body(req, payload)
+    try:
+        response = urlopen(req)
+        if response.status < 300:
+            data = json.loads(response.read())
+            if data["success"]:
+                return True
+        return False
+    except HTTPError as e:
+        return False
+
+
 def api_get_accounts(user):
     req = Request(url="{path}/accounts/".format(path=API_PATH))
     attach_auth_token(user, req)
@@ -96,6 +115,7 @@ def api_setup_autopayment(user, to_account_no, to_account_routing, from_account_
         return False
 
 
+
 def api_get_autopayments(user):
     req = Request(url="{path}/autopayments/".format(path=API_PATH))
     attach_auth_token(user, req)
@@ -108,7 +128,6 @@ def api_get_autopayments(user):
         return False
     except HTTPError as e:
         return False
-
 
 
 def api_get_autopayment_details(user, id):
@@ -145,4 +164,3 @@ def api_post_transfer(user, to_account_no, to_account_routing, from_account_no, 
         return False
     except HTTPError as e:
         return False
-

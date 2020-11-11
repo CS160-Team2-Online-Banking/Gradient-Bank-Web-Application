@@ -43,14 +43,17 @@ class TransferForm(forms.Form):
 
 class Transaction(View):
     def get(self, request, *args, **kwargs):
-        result = []
         if request.user.is_authenticated:
             from_accounts = api_get_accounts(request.user)
             if not from_accounts:
                 from_accounts = []
+            from_accounts = list(map(lambda x: (x["account_number"],
+                                                "{account_type}{account_number}"
+                                                .format(account_type=x["account_type"]["account_type_name"],
+                                                        account_number=x["account_number"])), from_accounts))
         if from_accounts:
             return render(request, 'base_form.html',
-                          {"form": AutopaymentForm(from_accounts=result), "form_title": "Setup Autopayment",
+                          {"form": AutopaymentForm(from_accounts=from_accounts), "form_title": "Setup Autopayment",
                            "action": "/transaction/"})
         else:
             return render(request, 'feature_access_message.html', {"title": "Setup Autopayment",
