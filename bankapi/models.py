@@ -342,6 +342,20 @@ class FailedTransactions(models.Model):
         managed = True
         db_table = 'failed_transactions_log'
 
+
+class SuspiciousExchange(models.Model):
+    use_db = 'bank_data'
+    exchange = models.OneToOneField(ExchangeHistory, related_name="s_susexch_to_exch", primary_key=True,
+                                    db_column="exchange_id", on_delete=models.CASCADE)
+    flag_date = models.DateTimeField()
+    resolve_date = models.DateTimeField(null=True)
+    reviewer = models.IntegerField(null=True)
+
+    class Meta:
+        managed = True
+        db_table = 'suspicious_exchanges'
+
+
 SAVING_ACCOUNT_ID = 1
 if AccountTypes.objects.filter(pk=SAVING_ACCOUNT_ID).first() is None:
     saving = AccountTypes(account_type_id=SAVING_ACCOUNT_ID, account_type_name='SAVING')
