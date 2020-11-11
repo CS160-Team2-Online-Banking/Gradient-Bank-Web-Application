@@ -8,6 +8,27 @@ from django.core import serializers
 import json
 
 
+def flag_suspicious_exchange(exchange):
+    sus = SuspiciousExchange(exchange_id=exchange.pk,
+                             flag_date=Now())
+    sus.save()
+
+
+def is_exchange_suspicious(exchange):
+    create_event = EventLog.objects.filter(event_type=EventTypes.REQUEST_TRANSFER[0], data_id=exchange.pk).first()
+
+    query = Q(pk__isnull=True)
+    if create_event.ip4_address is not None:
+        query = query | Q(ip6_address=create_event.ip6_address)
+    if create_event.ip6_address is not None:
+        query = query | Q(ip4_address=create_event.ip4_address)
+
+    events_with_same_ip = EventLog.objects.filter(Q(intiator_user_id=exchange.intiator_user_id), ~Q(pk=create_event.pk))\
+                                          .filter(query)
+
+    return (not len(events_with_same_ip)) or exchange.amount > 10_000
+
+
 @transaction.atomic
 def external_transfer_handler(auth_token, from_account_no, to_account_no, to_routing_no, amount) -> dict:
     user_id = auth_token["user_id"]
