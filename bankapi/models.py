@@ -50,7 +50,7 @@ class Accounts(models.Model):
     use_db = 'bank_data'
     account_id = models.AutoField(primary_key=True)
     balance = models.DecimalField(max_digits=18, decimal_places=2)
-    account_number = models.IntegerField(unique=True)
+    account_number = models.BigIntegerField(unique=True)
     account_type = models.ForeignKey(AccountTypes, related_name="acct_to_actyp", db_column='account_type_id',
                                      on_delete=models.RESTRICT)
     owner = models.ForeignKey(Customer, related_name="acct_to_cstmr", db_column="owner_id", on_delete=models.RESTRICT)

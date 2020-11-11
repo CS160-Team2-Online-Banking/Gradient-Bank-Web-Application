@@ -14,7 +14,18 @@ from bankapi.logging.logging import log_event
 from bankapi.account.account_process import AccountProcess
 from bankapi.autopayment.autopayment import AutopaymentBuilder
 from django.utils.decorators import classonlymethod
+import traceback
 
+
+def returns_json_error(func):
+    def wrapper(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except:
+            traceback.print_exc()
+            return JsonResponse({"success": False, "msg": "Error: request could not be processed"}, status=500)
+
+    return wrapper
 
 
 class APIView(View):
@@ -97,6 +108,7 @@ class APIView(View):
 
 @method_decorator(csrf_exempt, name='dispatch')  # django requires all post requests to include a CSRF token by default
 class TransferView(APIView):
+    @returns_json_error
     def post(self, request):
         try:
             auth_token = decrypt_auth_token(request)
@@ -136,6 +148,7 @@ class TransferView(APIView):
 
 @method_decorator(csrf_exempt, name='dispatch')  # django requires all post requests to include a CSRF token by default
 class AutoPaymentView(APIView):
+    @returns_json_error
     def post(self, request):
         try:
             auth_token = decrypt_auth_token(request)
@@ -189,6 +202,7 @@ class AutoPaymentView(APIView):
         if key in src:
             dict[key] = conv(src[key])
 
+    @returns_json_error
     def put(self, request, autopayment_id):
         try:
             auth_token = decrypt_auth_token(request)
@@ -230,6 +244,7 @@ class AutoPaymentView(APIView):
             return JsonResponse({"success": True, "data": {"owner_id": result[0], "autopayment_id": result[1]}},
                                 status=200)
 
+    @returns_json_error
     def delete(self, request, autopayment_id):
         try:
             auth_token = decrypt_auth_token(request)
@@ -244,6 +259,7 @@ class AutoPaymentView(APIView):
             log_event(request, auth_token, event_type=EventTypes.CANCEL_AUTOPAYMENT)
             return JsonResponse({"success": True}, status=200)
 
+    @returns_json_error
     def get(self, request, autopayment_id=None):
         try:
             auth_token = decrypt_auth_token(request)
@@ -259,6 +275,7 @@ class AutoPaymentView(APIView):
 
 @method_decorator(csrf_exempt, name='dispatch')  # django requires all post requests to include a CSRF token by default
 class TransactionView(View):
+    @returns_json_error
     def post(self, request):
         try:
             auth_token = decrypt_auth_token_str(request.headers.get("authorization"))
@@ -293,6 +310,7 @@ class TransactionView(View):
 
 @method_decorator(csrf_exempt, name='dispatch')  # django requires all post requests to include a CSRF token by default
 class AccountView(APIView):
+    @returns_json_error
     def get(self, request, account_no=None):
         """ View method for retrieving account information """
         # Note: for each account, you should also retrieve the associated transfers to it
@@ -309,10 +327,11 @@ class AccountView(APIView):
         else:
             return JsonResponse({"success": True, "data": result["data"]}, status=200)
 
+    @returns_json_error
     def post(self, request):
         """ View method for creating (opening) a new bank account """
         try:
-            auth_token = decrypt_auth_token_str(request.headers.get("authorization"))
+            auth_token = decrypt_auth_token(request)
             json_data = json.loads(request.body)
         except json.decoder.JSONDecodeError:
             return JsonResponse({"success": False, "msg": "Error: JSON could not be parsed"}, status=400)
@@ -334,7 +353,10 @@ class AccountView(APIView):
             return JsonResponse({"success": False, "msg": "Error: Body is missing parameters"}, status=400)
         except ValueError:
             return JsonResponse({"success": False, "msg": "Error: Invalid parameter type"}, status=400)
-        AccountProcess.account_add(self, auth_token, account_data)
+        result = AccountProcess.account_add(self, auth_token, account_data)
+        if result["success"]:
+            return JsonResponse({"success": True, "data": result["data"]}, status=200)
+        return JsonResponse({"success": False, "msg": "Error: Server failed to process request"}, status=500)
         #pass
 
 
