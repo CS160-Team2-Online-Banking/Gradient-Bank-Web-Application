@@ -32,15 +32,32 @@ class AutopaymentForm(forms.Form):
             self.fields['from_account'].choices = from_accounts
 
 
-class TransferForm(forms.Form):
+class PersonalTransferForm(forms.Form):
     from_account = forms.ChoiceField(choices=[("None", "You have no accounts")])
+    to_account = forms.ChoiceField(choices=[("None", "You have no accounts")])
     amount = forms.DecimalField(label="Amount", decimal_places=2)
-    to_routing_no = forms.IntegerField(label="To Routing Number")
-    to_account_no = forms.IntegerField(label="To Account Number")
 
     def __init__(self, *args, **kwargs):
         from_accounts = kwargs.pop('from_accounts', [])
-        super(AutopaymentForm, self).__init__(*args, **kwargs)
+        super(PersonalTransferForm, self).__init__(*args, **kwargs)
+        from_accounts = list(map(lambda x: (x["account_number"],
+                                            "{account_type}{account_number}"
+                                            .format(account_type=x["account_type"]["account_type_name"],
+                                                    account_number=x["account_number"])), from_accounts))
+        if from_accounts:
+            self.fields['from_account'].choices = from_accounts
+            self.fields['to_account'].choices = from_accounts
+
+
+class TransferForm(forms.Form):
+    from_account = forms.ChoiceField(choices=[("None", "You have no accounts")])
+    to_routing_no = forms.IntegerField(label="To Routing Number")
+    to_account_no = forms.IntegerField(label="To Account Number")
+    amount = forms.DecimalField(label="Amount", decimal_places=2)
+
+    def __init__(self, *args, **kwargs):
+        from_accounts = kwargs.pop('from_accounts', [])
+        super(TransferForm, self).__init__(*args, **kwargs)
         from_accounts = list(map(lambda x: (x["account_number"],
                                             "{account_type}{account_number}"
                                             .format(account_type=x["account_type"]["account_type_name"],
