@@ -60,7 +60,15 @@ class Transaction(View):
                                                                    "message": "You cannot setup autopayments unless you have accounts"})
 
     def post(self, request):
-        form = AutopaymentForm(request.POST)
+        if request.user.is_authenticated:
+            from_accounts = api_get_accounts(request.user)
+            if not from_accounts:
+                from_accounts = []
+            from_accounts = list(map(lambda x: (x["account_number"],
+                                                "{account_type}{account_number}"
+                                                .format(account_type=x["account_type"]["account_type_name"],
+                                                        account_number=x["account_number"])), from_accounts))
+        form = AutopaymentForm(request.POST, from_accounts=from_accounts)
         if form.is_valid():
             data = form.cleaned_data
             result = api_setup_autopayment(request.user, data["to_account_no"], data["to_routing_no"],
