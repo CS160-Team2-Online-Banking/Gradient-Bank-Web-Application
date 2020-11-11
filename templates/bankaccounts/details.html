@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% block contents %}
+
+<head>
+    <title>Account Details</title>
+</head>
+
+<body>
+<h1>Account Details</h1>
+<h2>{{account.account_type.account_type_name}} {{account.account_number}}</h2>
+<h3>Balance: ${{account.balance}}</h3>
+<h3>Transaction History</h3>
+{% if account.exchange_history %}
+    <table style="width:100%">
+        <tr><th>Type</th><th>Amount</th><th>Status</th><th>Posted</th></tr>
+    {% for exchange in account.exchange_history %}
+        <tr>
+            <td>{{exchange.type}}</td>
+            <td>{{exchange.amount}}</td>
+            <td>{{exchange.status}}</td>
+            <td>{{exchange.posted}}</td>
+        </tr>
+    {% endfor %}
+    </table>
+{% else %}
+    <p>This account has not seen any withdraws or deposits</p>
+{% endif %}
+</body>
+{% endblock %}

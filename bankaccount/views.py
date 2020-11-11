@@ -29,4 +29,18 @@ class OpenAccountView(View):
         return redirect(to="/landing/")
 
 
+class ViewAccountDetails(View):
+    def get(self, request, account_no):
+        if request.user.is_authenticated:
+            result = api_get_account_details(request.user, account_no)
+            if not result or not len(result):
+                return render(request, 'feature_access_message.html', {"title": "Account Details",
+                                                                       "message": "Account could not be found"})
+            return render(request, 'bankaccounts/details.html', {"account": result[0]})
+        else:
+            return render(request, 'feature_access_message.html', {"title": "Account Details",
+                                                                   "message": "Please Login before viewing this account"})
+
+
 OpenAccount = OpenAccountView.as_view()
+AccountDetails = ViewAccountDetails.as_view()

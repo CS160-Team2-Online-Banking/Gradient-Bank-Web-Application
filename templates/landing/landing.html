@@ -12,7 +12,8 @@
         <th>Amount</th>
     </tr>
     {% for account in account_list %}
-    <tr><td>{{account.account_number}}</td>
+    <tr onclick="document.location = '../bankaccount/details/{{account.account_number}}'"
+    style="cursor:pointer;"><td>{{account.account_number}}</td>
         <td>{{account.account_type.account_type_name}}</td>
         <td>${{account.balance}}</td></tr>
     {% empty %}
