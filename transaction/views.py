@@ -24,6 +24,10 @@ class AutopaymentForm(forms.Form):
     def __init__(self, *args, **kwargs):
         from_accounts = kwargs.pop('from_accounts', [])
         super(AutopaymentForm, self).__init__(*args, **kwargs)
+        from_accounts = list(map(lambda x: (x["account_number"],
+                                            "{account_type}{account_number}"
+                                            .format(account_type=x["account_type"]["account_type_name"],
+                                                    account_number=x["account_number"])), from_accounts))
         if from_accounts:
             self.fields['from_account'].choices = from_accounts
 
@@ -37,6 +41,10 @@ class TransferForm(forms.Form):
     def __init__(self, *args, **kwargs):
         from_accounts = kwargs.pop('from_accounts', [])
         super(AutopaymentForm, self).__init__(*args, **kwargs)
+        from_accounts = list(map(lambda x: (x["account_number"],
+                                            "{account_type}{account_number}"
+                                            .format(account_type=x["account_type"]["account_type_name"],
+                                                    account_number=x["account_number"])), from_accounts))
         if from_accounts:
             self.fields['from_account'].choices = from_accounts
 
@@ -47,10 +55,7 @@ class Transaction(View):
             from_accounts = api_get_accounts(request.user)
             if not from_accounts:
                 from_accounts = []
-            from_accounts = list(map(lambda x: (x["account_number"],
-                                                "{account_type}{account_number}"
-                                                .format(account_type=x["account_type"]["account_type_name"],
-                                                        account_number=x["account_number"])), from_accounts))
+
         if from_accounts:
             return render(request, 'base_form.html',
                           {"form": AutopaymentForm(from_accounts=from_accounts), "form_title": "Setup Autopayment",
@@ -64,10 +69,7 @@ class Transaction(View):
             from_accounts = api_get_accounts(request.user)
             if not from_accounts:
                 from_accounts = []
-            from_accounts = list(map(lambda x: (x["account_number"],
-                                                "{account_type}{account_number}"
-                                                .format(account_type=x["account_type"]["account_type_name"],
-                                                        account_number=x["account_number"])), from_accounts))
+
         form = AutopaymentForm(request.POST, from_accounts=from_accounts)
         if form.is_valid():
             data = form.cleaned_data
