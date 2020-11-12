@@ -8,6 +8,7 @@
 </div>
 
 <div id="map"></div>
+<div id="dir_box"></div>
 <!-- Replace the value of the key parameter with your own API key. -->
 <script async defer
     src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAqLzAMqgeVjFb9sf1LLL2heFhLjy8NEYY&callback=initMap&libraries=places">
@@ -86,6 +87,58 @@
         infoWindow.open(map);
     }
 
+    function getRouteCost(directionResponse) {
+        let route_cost = 0;
+        to_route = directionResponse.routes[0];
+        for (const leg of to_route.legs) {
+            route_cost = route_cost + leg.duration.value;
+        }
+        return route_cost;
+    }
+
+    function getClosestATM(places, callback) {
+        /*
+            I've yet to find a convenient API method for this: we should use an API method if one exists
+            instead because right now we're making multiple queries to the API.
+
+            Anyway, the way this method works is that it searches each place starting from the location
+            with the closest distance as the crow flies (straight line) and determines which one has the
+            shortest "cost" (trip duration) associated with it. It exits either when a route is found
+            with a cost that is greater than the previous place or when it exhausts all places.
+        */
+        var fastest_route = null;
+        var closest_atm;
+        var places_stack = places.reverse();
+        var place = places_stack.pop();
+        function next(response, status) {
+            if (status === "OK") {
+                directionsRend.setDirections(response);
+                if (fastest_route == null || getRouteCost(fastest_route) > getRouteCost(response)) {
+                    fastest_route = response;
+                    closest_atm = place;
+
+                    place = places_stack.pop()
+                    if (places_stack.length > 1) {
+                        directionsServ.route({
+                            origin: userPos,
+                            destination: {placeId: place.place_id},
+                            travelMode: google.maps.TravelMode.DRIVING,
+                        }, next);
+                    } else {
+                        callback(fastest_route, closest_atm);
+                    }
+                    return;
+                }
+                callback(fastest_route, closest_atm);
+            }
+        }
+        directionsServ.route({
+            origin: userPos,
+            destination: {placeId: place.place_id},
+            travelMode: google.maps.TravelMode.DRIVING,
+        }, next);
+    }
+
     function callback(results, status) {
         if (status == google.maps.places.PlacesServiceStatus.OK) {
             atmLocations=results;
@@ -93,8 +146,16 @@
                 var place = results[i];
                 createMarker(results[i]);
             }
+
+            getClosestATM(results, (fastest_route, closest_atm) => {
+                console.log("CLOSEST LOCATION FOUND");
+                directionsRend.setDirections(fastest_route);
+                directionsRend.setPanel(document.getElementById('dir_box'));
+            });
+
         }
     }
+
 
     function createMarker(place) {
         var type = place.types;
@@ -132,6 +193,7 @@
             }, (response, status) => {
                 if (status === "OK") {
                     directionsRend.setDirections(response);
+                    directionsRend.setPanel(document.getElementById('dir_box'));
                 } else {
                     window.alert("Could not find route");
                 }
