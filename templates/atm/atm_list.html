@@ -11,7 +11,7 @@
 <div id="map"></div>
 <!-- Replace the value of the key parameter with your own API key. -->
 <script async defer
-    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAqLzAMqgeVjFb9sf1LLL2heFhLjy8NEYY&callback=initMap">
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAqLzAMqgeVjFb9sf1LLL2heFhLjy8NEYY&callback=initMap&libraries=places">
     </script>
 
 <script>
@@ -25,6 +25,7 @@
             },
             zoom: 14
         });
+        google.maps.event.trigger(map, 'resize');
         infoWindow = new google.maps.InfoWindow;
 
         // Try HTML5 geolocation.
@@ -53,15 +54,16 @@
                 var requestAtm = {
                     location: pos,
                     radius: '8000',
-                    type: ['atm']
+                    name: "Chase ATM",
+                    //type: ['atm']
                 };
 
 
                 //Make Places Service requests here
                 service = new google.maps.places.PlacesService(map);
-                service.nearbySearch(requestHosp, callback);
+                //service.nearbySearch(requestHosp, callback);
                 service.nearbySearch(requestAtm, callback);
-                service.nearbySearch(requestPolice, callback);
+                //service.nearbySearch(requestPolice, callback);
 
             }, function () {
                 handleLocationError(true, infoWindow, map.getCenter());
@@ -98,7 +100,7 @@
 
             //Check the placeType and set the icon according to the placeType value
             switch (placeType) {
-
+                case "bank":
                 case "atm":
                     iconStyle = "http://maps.google.com/mapfiles/kml/shapes/dollar.png";
                     break;
