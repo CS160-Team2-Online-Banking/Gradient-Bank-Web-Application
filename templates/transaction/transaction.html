@@ -1,38 +1,60 @@
 {% extends 'base.html' %}
 {% block contents %}
 
-<!DOCTYPE html>
-<html lang="en">
 
-<head>
-    <meta charset="UTF-8">
-    <title>Automatic Payments</title>
-</head>
+<div>
+    <div class="row">
+        <div class="mx-auto">
+            <h1>Setup Automatic Bill Payments</h1>
+            <p>Please input following information to set up automatic bill payments</p>
+            <br>
+        </div>
+    </div>
+    <form action="{% url "transaction:transaction" %}" method="post" class="">
+        {% csrf_token %}
+        <div class="form-group align-items-center">
+            <div class="col-auto my-1">
+                <label class="mr-sm-2" for="accountFormCustomSelect">Transfer Money from:</label>
+                <select required name="accounts" class="custom-select mr-sm-2" id="accountFormCustomSelect">
+                    <option selected>Choose...</option>
+                    <option value="savings">Savings</option>
+                    <option value="checking">Checking</option>
+                </select>
+            </div>
 
-<body>
-    <h1>Setup Automatic Bill Payments</h1>
-    <p>Please input following information to set up automatic bill payments</p>
-    <br>
-    <p>Transfer Money from:</p>
-    <select name="Accounts" onchange="location = this.value;">
-        <option value='none' selected>Accounts</option>
-        <option>Savings</option>
-        <option>Checking</option>
-    </select>
-    <br>
-    <p>Money transfer to:</p>
-    <select name="Bills" onchange="location = this.value;">
-        <option value='none' selected>Bills</option>
-        <option>Credit Card</option>
-        <option>Loan</option>
-    </select>
-    <br>
-    <p>Select Date of Auto Bill Pay:</p>
-    <input type="text" placeholder="Date to Pay">
+            <div class="col-auto my-1">
+                <label class="mr-lg-2" for="billsFormCustomSelect">Money transfer to:</label>
+                <select required name="bills" class="custom-select mr-sm-2" id="billsFormCustomSelect">
+                    <option selected>Choose...</option>
+                    <option value="credit_card">Credit Card</option>
+                    <option value="loan">Loan</option>
+                </select>
+            </div>
+        </div>
 
-    <br><a href="BasePage.html"><button>Submit</button></a>
-</body>
+        <div class="form-group">
+            <label for="amount-input" class="col-2 col-form-label">Amount</label>
+            <div class="col-12">
+                <input class="form-control" name="amount" type="number" value="0" id="amount-input">
+            </div>
+        </div>
 
-</html>
-
+        <div class="form-group">
+            <label for="example-date-input" class="col-2 col-form-label">Select Date of Auto Bill Pay:</label>
+            <div class="col-12">
+                <input class="form-control" type="date" name="auto_payment_date" value="2020-11-15"
+                    id="example-date-input">
+            </div>
+        </div>
+        <div class="row">
+            <div class="mx-auto">
+                <button class="btn btn-primary btn-lg" type="submit">Submit</button>
+            </div>
+        </div>
+    </form>
+</div>
+<script>
+    // Data Picker Initialization
+    $('.datepicker').datepicker();
+</script>
 {% endblock %}
