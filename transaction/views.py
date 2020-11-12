@@ -77,7 +77,7 @@ class Transaction(View):
         if from_accounts:
             return render(request, 'base_form.html',
                           {"form": AutopaymentForm(from_accounts=from_accounts), "form_title": "Setup Autopayment",
-                           "action": "/transaction/autopayments/"})
+                           "action": "/transaction/autopayments"})
         else:
             return render(request, 'feature_access_message.html', {"title": "Setup Autopayment",
                                                                    "message": "You cannot setup autopayments unless you have accounts"})
@@ -98,7 +98,7 @@ class Transaction(View):
                 print("Request Failed")
         else:
             print("Invalid form data")
-        return render(request, 'base_form.html', {"form": form, "form_title": "Autopayment Configured", "action":"/transaction/autopayments/"})
+        return render(request, 'base_form.html', {"form": form, "form_title": "Autopayment Configured", "action":"/transaction/autopayments"})
 
 
 class TransferView(View):
