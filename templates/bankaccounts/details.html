@@ -5,7 +5,7 @@
     <title>Account Details</title>
 </head>
 
-<body>
+<div>
 <h1>Account Details</h1>
 <h2>{{account.account_type.account_type_name}} {{account.account_number}}</h2>
 <h3>Balance: ${{account.balance}}</h3>
@@ -25,5 +25,5 @@
 {% else %}
     <p>This account has not seen any withdraws or deposits</p>
 {% endif %}
-</body>
+</div>
 {% endblock %}

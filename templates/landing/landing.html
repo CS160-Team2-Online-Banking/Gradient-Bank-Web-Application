@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
 {% block contents %}
 
+<div>
 {% if request.user.is_authenticated %}
 
 <h1>Your Account</h1>
@@ -28,4 +29,6 @@
 <p>We don't pay interest. You've been warned.</p>
 <p>To start using online bank, please login or signup.</p>
 {% endif %}
+</div>
+
 {% endblock %}
