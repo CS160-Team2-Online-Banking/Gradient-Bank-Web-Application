@@ -1,55 +1,66 @@
 from django.db import *
-from bankapi.models import *
 from django.db import transaction
-from django.core import serializers
-from bankapi.transfer.exchange_processor import ExchangeProcessor
-import json
+
 from bankapi.models import *
 
 
-class AccountProcess:        
-    @staticmethod
-    def account_lookup(decrypted_auth_token, account_no_to_lookup=None) -> dict:
-        owner_id = decrypted_auth_token["user_id"]
-        owner = Customer.objects.filter(pk=owner_id).first()
+class AccountProcess:
+    def __init__(self, data=None):
+        if data is not None:
+            self.account = data["account_id"]
+            self.balance = data["balance"]
+            self.account_number = data["account_number"]
+            self.account_type = data["account_type"]
+            self.owner = data["owner_id"]
+        # ip information should also be collected here
 
-        if owner is None:
-            return {"success": False, "msg": "Error: no such customer exists"}
+    # looks up id in account db,
+    @transaction.atomic
+    def account_lookup(self, account_id_to_lookup, decrypted_auth_token) -> dict:
+        # need to check for authorization to do this
+        requesting_user_id = decrypted_auth_token["user_id"]
+        request_ip4 = self.eventInfo["request_ip4"]
+        request_ip6 = self.eventInfo["request_ip6"]
+        request_time = self.eventInfo["request_time"]
 
-        if account_no_to_lookup is None:
-            # return all accounts belonging to this user, but omit exchange history details
-            # (we'll need to append the account type still)
-            accounts = Accounts.objects.filter(owner_id=owner.pk)
-            json_arr = json.loads(serializers.serialize("json", accounts))
-            json_arr = list(map(lambda x: x["fields"], json_arr))
-
-            for i, entry in enumerate(json_arr):
-                account_type_id = int(entry["account_type"])
-                account_type = AccountTypes.objects.get(pk=account_type_id)
-                entry["account_type"] = {"account_type_id": account_type.pk,
-                                         "account_type_name": account_type.account_type_name}
-            return {"success": True, "data": json_arr}
+        lookup_account = Accounts.objects.filter(pk=account_id_to_lookup).first()
+        this_accounts_id = self.account
+        requesters_account = Accounts.objects.filter(pk=requesting_user_id).first()
+        if len(lookup_account) and len(requesters_account):
+            requesters_type_id = requesters_account.account_type
+            requesters_type = AccountTypes.objects.filter(pk=requesters_type_id)
+            if len(requesters_type):
+                requesters_type = requesters_type.account_type_name
+            else:
+                return False  # TODO: handle this, raise an exception or something
         else:
-            # return one specific account along with it's exchange history
-            accounts = Accounts.objects.filter(owner_id=owner.pk, account_number=account_no_to_lookup)
-            result = ExchangeProcessor.get_exchange_history(account_no_to_lookup, decrypted_auth_token)
-            exchange_history = list()
-            if result["success"]:
-                exchange_history = result["data"]
+            return False  # TODO: handle this, raise an exception or something
 
-            json_arr = json.loads(serializers.serialize("json", accounts))
-            json_arr = list(map(lambda x: x["fields"], json_arr))
+        account_data = dict()
+        # case where the requester is looking for their own information
+        if len(requesting_user_id) and len(this_accounts_id) and len(account_id_to_lookup) and \
+                this_accounts_id == requesting_user_id and this_accounts_id == account_id_to_lookup:
+            account_data["account_id"] = lookup_account.account_id
+            account_data["balance"] = lookup_account.balance
+            account_data["account_number"] = lookup_account.account_number
+            account_data["account_type"] = lookup_account.account_type
+            account_data["owner"] = lookup_account.owner
+        elif len(requesting_user_id) and len(this_accounts_id) and len(
+                account_id_to_lookup) and requesters_type == "bank_manager":
+            # bank manager requesting information, so it's authorized
+            # TODO: NEED TO CHANGE THE REQUESTER TYPE CHECK -> do data sanitation and check for different cases/spacing between
+            account_data["account_id"] = lookup_account.account_id
+            account_data["balance"] = lookup_account.balance
+            account_data["account_number"] = lookup_account.account_number
+            account_data["account_type"] = lookup_account.account_type
+            account_data["owner"] = lookup_account.owner
+        else:
+            # not authorized
+            account_data = None
 
-            for i, entry in enumerate(json_arr):
-                account_type_id = int(entry["account_type"])
-                account_type = AccountTypes.objects.get(pk=account_type_id)
-                entry["account_type"] = {"account_type_id": account_type.pk,
-                                         "account_type_name": account_type.account_type_name}
-            for i, entry in enumerate(json_arr):
-                entry["exchange_history"] = exchange_history
+        return account_data
+        # pass
 
-            return {"success": True, "data": json_arr}
-        
     @transaction.atomic
     def account_add(self, decrypted_auth_token, data) -> bool:
         requesting_user_id = decrypted_auth_token["user_id"]
@@ -76,3 +87,26 @@ class AccountProcess:
     # redundant, just use account_lookup
     def get_account_info(self) -> dict:
         pass
+
+    @staticmethod
+    def close_account(decrypted_auth_token, account_id):
+        owner_id = decrypted_auth_token["user_id"]
+        bank_id = account_id
+
+        owner = Customer.objects.filter(pk=owner_id).first()
+        if owner is None:
+            return None
+
+        bank_obj = AutopaymentObjects.objects.filter(owner_user_id=owner.pk, account_id=bank_id).first()
+        if bank_obj is None:
+            return None
+
+        bank_obj_save = Accounts(account_id=bank_obj.pk,
+                               balance=bank_obj.balance,
+                               account_number=bank_obj.account_number,
+                               account_type=bank_obj.account_type,
+                               owner=0
+                               )
+        bank_obj_save.save()
+
+        return True  # TODO: return something nicer here
