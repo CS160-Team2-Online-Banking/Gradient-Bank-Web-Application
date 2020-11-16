@@ -14,13 +14,16 @@ FREQUENCY_CHOICES = [
 
 
 class AutopaymentForm(forms.Form):
-    from_account = forms.ChoiceField(choices=[("None", "You have no accounts")])
+    from_account = forms.ChoiceField(
+        choices=[("None", "You have no accounts")])
     amount = forms.DecimalField(label="Amount", decimal_places=2)
     to_routing_no = forms.IntegerField(label="To Routing Number")
     to_account_no = forms.IntegerField(label="To Account Number")
     frequency = forms.ChoiceField(choices=FREQUENCY_CHOICES)
-    start_date = forms.DateField(widget=forms.DateInput(format='%m-%d-%Y', attrs={'type': 'date'}))
-    end_date = forms.DateField(widget=forms.DateInput(format='%m-%d-%Y', attrs={'type': 'date'}))
+    start_date = forms.DateField(widget=forms.DateInput(
+        format='%m-%d-%Y', attrs={'type': 'date'}))
+    end_date = forms.DateField(widget=forms.DateInput(
+        format='%m-%d-%Y', attrs={'type': 'date'}))
 
     def __init__(self, *args, **kwargs):
         from_accounts = kwargs.pop('from_accounts', [])
@@ -34,8 +37,10 @@ class AutopaymentForm(forms.Form):
 
 
 class PersonalTransferForm(forms.Form):
-    from_account = forms.ChoiceField(choices=[("None", "You have no accounts")])
-    to_account_no = forms.ChoiceField(choices=[("None", "You have no accounts")])
+    from_account = forms.ChoiceField(
+        choices=[("None", "You have no accounts")])
+    to_account_no = forms.ChoiceField(
+        choices=[("None", "You have no accounts")])
     amount = forms.DecimalField(label="Amount", decimal_places=2)
 
     def __init__(self, *args, **kwargs):
@@ -51,7 +56,8 @@ class PersonalTransferForm(forms.Form):
 
 
 class TransferForm(forms.Form):
-    from_account = forms.ChoiceField(choices=[("None", "You have no accounts")])
+    from_account = forms.ChoiceField(
+        choices=[("None", "You have no accounts")])
     to_routing_no = forms.IntegerField(label="To Routing Number")
     to_account_no = forms.IntegerField(label="To Account Number")
     amount = forms.DecimalField(label="Amount", decimal_places=2)
@@ -73,6 +79,8 @@ class Transaction(View):
             from_accounts = api_get_accounts(request.user)
             if not from_accounts:
                 from_accounts = []
+        else:
+            from_accounts = None
 
         if from_accounts:
             return render(request, 'base_form.html',
@@ -92,13 +100,14 @@ class Transaction(View):
         if form.is_valid():
             data = form.cleaned_data
             result = api_setup_autopayment(request.user, data["to_account_no"], data["to_routing_no"],
-                                           data["from_account"], str(data["amount"]), data["start_date"].isoformat(),
+                                           data["from_account"], str(
+                                               data["amount"]), data["start_date"].isoformat(),
                                            data["end_date"].isoformat(), data["frequency"])
             if not result:
                 print("Request Failed")
         else:
             print("Invalid form data")
-        return render(request, 'base_form.html', {"form": form, "form_title": "Autopayment Configured", "action":"/transaction/autopayments"})
+        return render(request, 'base_form.html', {"form": form, "form_title": "Autopayment Configured", "action": "/transaction/autopayments"})
 
 
 class TransferView(View):
@@ -122,13 +131,15 @@ class TransferView(View):
             if type == "/external":
                 form = TransferForm(request.POST, from_accounts=from_accounts)
             else:
-                form = PersonalTransferForm(request.POST, from_accounts=from_accounts)
+                form = PersonalTransferForm(
+                    request.POST, from_accounts=from_accounts)
 
             if form.is_valid():
                 data = form.cleaned_data
-                to_routing_no = data.get("to_routing_no", settings.BANK_ROUTING_NUMBER)
+                to_routing_no = data.get(
+                    "to_routing_no", settings.BANK_ROUTING_NUMBER)
                 result = api_post_transfer(request.user, data["to_account_no"], to_routing_no,
-                                               data["from_account"], str(data["amount"]))
+                                           data["from_account"], str(data["amount"]))
                 if not result:
                     print("Request Failed")
 
@@ -138,6 +149,7 @@ class TransferView(View):
         else:
             return render(request, 'feature_access_message.html', {"title": "Account Details",
                                                                    "message": "Please Login before transferring money"})
+
 
 transaction = Transaction.as_view()
 transfer = TransferView.as_view()
