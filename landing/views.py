@@ -30,9 +30,9 @@ class Landing(View):
             # above(line 13:23) is adding user into customer
             # need to confirm on the following code later
 
-            # result = api_get_accounts(request.user)
-            # if not result:
-            #     result = []
+            result = api_get_accounts(request.user)
+            if not result:
+                result = []
             
         else:
             username = 'Guest'
