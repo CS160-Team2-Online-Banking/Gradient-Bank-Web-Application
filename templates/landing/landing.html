@@ -2,33 +2,49 @@
 {% block contents %}
 
 <div>
-{% if request.user.is_authenticated %}
+    {% if request.user.is_authenticated %}
 
-<h1>Your Account</h1>
+    <div>
+        <h1 class="text-center">Your Account</h1>
+    </div>
 
-<table style="width:80%">
-    <tr>
-        <th>Account No.</th>
-        <th>Account Type</th>
-        <th>Amount</th>
-    </tr>
-    {% for account in account_list %}
-    <tr onclick="document.location = '../bankaccount/details/{{account.account_number}}'"
-    style="cursor:pointer;"><td>{{account.account_number}}</td>
-        <td>{{account.account_type.account_type_name}}</td>
-        <td>${{account.balance}}</td></tr>
-    {% empty %}
-        <tr><td colspan="3">No accounts</td></tr>
-    {% endfor %}
-</table>
-<a href="../atm/search"><button>Withdraw</button></a> <!-- Withdraw will re-direct the user to the ATM search page -->
-<a href="deposit_check.html"><button>Deposit Check</button></a> <!-- Re-direct to the check deposit page -->
-<a href="../bankaccount"><button>Open Account</button></a> <!-- Re-direct to the open account page -->
-{% else %}
-<h1>Welcome to Online Bank</h1>
-<p>We don't pay interest. You've been warned.</p>
-<p>To start using online bank, please login or signup.</p>
-{% endif %}
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Account No.</th>
+                <th>Account Type</th>
+                <th>Amount</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for account in account_list %}
+            <tr onclick="document.location = '../bankaccount/details/{{account.account_number}}'"
+                style="cursor:pointer;">
+                <td>{{account.account_number}}</td>
+                <td>{{account.account_type.account_type_name}}</td>
+                <td>${{account.balance}}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="3">No accounts</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <div class="d-flex justify-content-around">
+        <a href="../atm/search"><button type="button" class="btn btn-primary">Withdraw</button></a>
+        <!-- Withdraw will re-direct the user to the ATM search page -->
+        <a href="deposit_check.html"><button type="button" , class="btn btn-success">Deposit Check</button></a>
+        <!-- Re-direct to the check deposit page -->
+        <a href="../bankaccount"><button type="button" class="btn btn-secondary">Open Account</button></a>
+        <!-- Re-direct to the open account page -->
+    </div>
+
+    {% else %}
+    <h1>Welcome to Online Bank</h1>
+    <p>We don't pay interest. You've been warned.</p>
+    <p>To start using online bank, please login or signup.</p>
+    {% endif %}
 </div>
 
 {% endblock %}
