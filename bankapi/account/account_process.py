@@ -67,22 +67,23 @@ class AccountProcess:
         requesters_account = Customer.objects.filter(pk=requesting_user_id).first()
 
         if requesters_account is None:
-            return False  # TODO: handle this, raise an exception or something
+            return {"success": False, "msg": "Error: no such customer exists"}
 
         if Accounts.objects.filter(account_number=1337_0000_0000).first() is None:
             new_account_number = 1337_0000_0000
         else:
             new_account_number = Accounts.objects.latest("account_number").account_number + 1
 
-        # TODO: data sanitation for account addition
-        new_account = Accounts(account_id=new_account_number,
-                               balance=0,
+        account_type = AccountTypes.objects.filter(account_type_name=data["account_type"]).first()
+        if account_type is None:
+            return {"success": False, "msg": "Error: Invalid account type"}
+
+        new_account = Accounts(balance=0,
                                account_number=new_account_number,
-                               account_type=data.account_type,
-                               owner=requesters_account.pk
-                               )
+                               account_type=account_type,
+                               owner_id=requesters_account.pk)
         new_account.save()
-        return True;
+        return {"success": True, "data": {"account_no": new_account.account_number}}
 
     # redundant, just use account_lookup
     def get_account_info(self) -> dict:

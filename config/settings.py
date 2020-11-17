@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     'allauth.account',
     'allauth.socialaccount',
     'bankapi',
+    'bankaccount',
     'rest_framework'
 ]
 SITE_ID = 1

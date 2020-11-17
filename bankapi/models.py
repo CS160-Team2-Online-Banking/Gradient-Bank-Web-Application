@@ -50,7 +50,7 @@ class Accounts(models.Model):
     use_db = 'bank_data'
     account_id = models.AutoField(primary_key=True)
     balance = models.DecimalField(max_digits=18, decimal_places=2)
-    account_number = models.IntegerField(unique=True)
+    account_number = models.BigIntegerField(unique=True)
     account_type = models.ForeignKey(AccountTypes, related_name="acct_to_actyp", db_column='account_type_id',
                                      on_delete=models.RESTRICT)
     owner = models.ForeignKey(Customer, related_name="acct_to_cstmr", db_column="owner_id", on_delete=models.RESTRICT)
@@ -72,7 +72,7 @@ class ExternalAccount(models.Model):
         managed = True
         db_table = 'external_accounts'
 
-
+"""
 class EventTypes(models.Model):
     use_db = 'bank_data'
     event_type_id = models.AutoField(primary_key=True)
@@ -82,7 +82,7 @@ class EventTypes(models.Model):
     class Meta:
         managed = False
         db_table = 'event_types'
-
+"""
 
 class EventLog(models.Model):
     use_db = 'bank_data'
@@ -100,6 +100,14 @@ class EventLog(models.Model):
     class Meta:
         managed = False
         db_table = 'event_log'
+
+
+class EventTypes:
+    CREATE_ACCOUNT = (0, "CREATE ACCOUNT", "")
+    REQUEST_TRANSFER = (1, "REQUEST TRANSFER", "")
+    SETUP_AUTOPAYMENT = (2, "SETUP AUTOPAYMENT", "")
+    EDIT_AUTOPAYMENT = (3, "EDIT AUTOPAYMENT", "")
+    CANCEL_AUTOPAYMENT = (4, "CANCEL AUTOPAYMENT", "")
 
 
 class PaymentSchedules(models.Model):
@@ -334,10 +342,6 @@ class FailedTransactions(models.Model):
         managed = True
         db_table = 'failed_transactions_log'
 
-
-TRANSFER_QUEUE_EVENT_ID = EventTypes.objects.get(name="TRANSFER QUEUED").pk
-TRANSFER_CANCEL_EVENT_ID = EventTypes.objects.get(name="TRANSFER CANCELED").pk
-DEBIT_QUEUED_EVENT_ID = EventTypes.objects.get(name="DEBIT QUEUED").pk
 SAVING_ACCOUNT_ID = 1
 if AccountTypes.objects.filter(pk=SAVING_ACCOUNT_ID).first() is None:
     saving = AccountTypes(account_type_id=SAVING_ACCOUNT_ID, account_type_name='SAVING')

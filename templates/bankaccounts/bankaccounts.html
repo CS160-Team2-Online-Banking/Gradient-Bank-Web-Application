@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block title %}My Bank Accounts{% endblock %}
+
+{% block content %}
+<h1>My Bank Accounts</h1>
+
+<table>
+    <tr>
+        <th>Account No.</th>
+        <th>Account Type</th>
+        <th>Balance</th>
+    </tr>
+    {% for account in account_list %}
+    <tr><td>{{account.account_number}}</td>
+        <td>{{account.account_type.account_type_name}}</td>
+        <td>${{account.balance}}</td></tr>
+    {% endfor %}
+</table>
+{% endblock %}

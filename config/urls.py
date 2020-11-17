@@ -13,6 +13,7 @@ urlpatterns = [
     path('api/', include('bankapi.urls')),
     path('', views.index, name='index'),
     path('admin/', admin.site.urls),
+    path('bankaccount/', include('bankaccount.urls')),
 ]
 
 # メディアファイル公開用のURL設定

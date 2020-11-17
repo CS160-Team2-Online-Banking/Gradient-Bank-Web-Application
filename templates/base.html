@@ -5,16 +5,14 @@
 {% bootstrap_javascript jquery='slim' %}
 {% load static %}
 
-<html lang="ja">
+<!--html lang="ja"-->
 
 <head>
     <meta charset="utf-8">
     <link rel="stylesheet" type='text/css' href="{% static 'css/base.css'%}">
     <link rel="stylesheet" href="https://cccabinet.jpn.org/bootstrap4/css/style.css">
     <title> Online Banking </title>
-
     {% block extra_css %}{% endblock %}
-
 </head>
 
 <body>
@@ -31,15 +29,18 @@
                         <li class="nav-item"><a class="nav-link" href="#"> </a></li>
                     </ul>
                     <ul class="navbar-nav">
+                        <!--
                         <li class="nav-item"><a class="nav-link" href="/transaction/">Transaction Page</a>
                         </li>
                         <li class="nav-item"><a class="nav-link" href="/atm/search/">ATM SEARCH Page</a>
                         </li>
-                        <li class="nav-item"><a class="nav-link" href="/accounts/signup/">Sign Up Page</a>
-                        </li>
+                        -->
+                        {% if request.user.is_authenticated %}
+                        <li class="nav-item"><a class="nav-link" href="/accounts/logout">Logout</a></li>
+                        {% else %}
+                        <li class="nav-item"><a class="nav-link" href="/accounts/signup/">Sign Up Page</a></li>
                         <li class="nav-item"><a class="nav-link" href="/accounts/login">Login</a></li>
-                        <li class="nav-item"><a class="nav-link" href="/accounts/logout">Logout</a>
-                        </li>
+                        {% endif %}
                     </ul>
                 </nav>
             </div>
@@ -49,13 +50,12 @@
 
     <!-- sidebar and contents -->
     <div id="content" class="container-fluid">
-        <div class="row flex-xl-nowrap">
+        <div class="row flex-xl-nowrap" style="height:100%">
 
             <!-- ↓↓ sidebar ↓↓ -->
             <div id="sidemenu" class="col-2 d-none d-md-block bg-light sidebar align-self-start">
                 <div class="sidebar-sticky">
                     <ul class="nav flex-column">
-
                         <li class="nav-item">
                             <nav class="navbar navbar-light bg-light">
                                 <a class="navbar-brand" href="/landing/">
@@ -65,10 +65,38 @@
                         </li>
                         <li class="nav-item">
                             <nav class="navbar navbar-light bg-light">
-                                <a class='navbar-brand' href='/transaction/'>
-                                    <span data-feather="">Transaction</span>
+                            <a  href="#manageSubemenu" id="manageDropdown" data-toggle="collapse" aria-expanded="true" class="navbar-brand dropdown-toggle">
+                                Money Management
+                            </a>
+                            <ul class="collapse list-unstyled" id="manageSubemenu">
+                                <li>
+                                    <a class='dropdown-item' href='/transaction/autopayments'>
+                                        <span data-feather="">Setup Automatic Bill Payment</span>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class='dropdown-item' href='/transaction/transfers/internal'>
+                                        <span data-feather="">Setup Internal Transfer</span>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class='dropdown-item' href='/transaction/transfers/external'>
+                                        <span data-feather="">Setup External Transfer</span>
+                                    </a>
+                                </li>
+                            </ul>
+                                </nav><!--
+                            <div class="dropdown-menu bg-light" aria-labelledby="managementDropdown">
+                                <a class='dropdown-item navbar-brand' href='/transaction/autopayments'>
+                                    <span data-feather="">Setup Automatic Bill Payment</span>
                                 </a>
-                            </nav>
+                                <a class='dropdown-item navbar-brand' href='/transaction/transfers/internal'>
+                                    <span data-feather="">Setup Internal Transfer</span>
+                                </a>
+                                <a class='dropdown-item navbar-brand' href='/transaction/transfers/external'>
+                                    <span data-feather="">Setup External Transfer</span>
+                                </a>
+                            </div>-->
                         </li>
                         <li class="nav-item">
                             <nav class="navbar navbar-light bg-light">
@@ -77,6 +105,7 @@
                                 </a>
                             </nav>
                         </li>
+                        <!--
                         <li class="nav-item">
                             <nav class="navbar navbar-light bg-light">
                                 <a class='navbar-brand' href='/accounts/signup/'>
@@ -98,6 +127,7 @@
                                 </a>
                             </nav>
                         </li>
+                        -->
                     </ul>
                 </div>
             </div id="sidemenu">
