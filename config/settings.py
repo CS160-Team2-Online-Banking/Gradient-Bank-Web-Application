@@ -50,7 +50,8 @@ INSTALLED_APPS = [
     'allauth.socialaccount',
     'bankapi',
     'bankaccount',
-    'rest_framework'
+    'rest_framework',
+    'messenger'
 ]
 SITE_ID = 1
 
@@ -102,7 +103,7 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'online_django_playground_1',
-        'USER': 'zackf',
+        'USER': 'everettel',
         'PASSWORD': 'cs160Dev',
         'HOST': '159.89.148.172',
         'PORT': '3306',
@@ -111,7 +112,7 @@ DATABASES = {
     'bank_data': {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'online_banking_playground_1',
-        'USER': 'zackf',
+        'USER': 'everettel',
         'PASSWORD': 'cs160Dev',
         'HOST': '159.89.148.172',
         'PORT': '3306',
