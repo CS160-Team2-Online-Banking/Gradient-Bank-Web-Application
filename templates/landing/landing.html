@@ -5,7 +5,7 @@
     {% if request.user.is_authenticated %}
 
     <div>
-        <h1 class="text-center">Your Account</h1>
+        <h1 class="text-center">{{ username }}</h1>
     </div>
 
     <table class="table">
@@ -41,6 +41,7 @@
     </div>
 
     {% else %}
+    <h1>Hello, {{ username }}!</h1>
     <h1>Welcome to Online Bank</h1>
     <p>We don't pay interest. You've been warned.</p>
     <p>To start using online bank, please login or signup.</p>

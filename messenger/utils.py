@@ -1,5 +1,8 @@
 import jwt
 import hashlib
+from datetime import datetime, timedelta
+
+
 from accounts.models import CustomUser
 from bankapi.models import Customer
 from bankapi.authentication.auth import encrpyt_auth_token
@@ -80,23 +83,24 @@ def add_customer(user):
     return Customer.objects.filter(customer_id=this_user.id).exists()
 
 
-def get_bankapi_token(user, day_expire=1):
+def get_bankapi_token(user, min_expire=5):
     """get_bankapi_token
     User user id from Django as user_id in token. Get a encrypted token from bankapi
     Args:
         user: the user requesting for a token
-        day_expire: number of day to expire
+        min_expire: number of minutes to expire
     Returns:
         token: the access token from bankapi
     """
     # get user id
     user_id = user.id
-    expiration = day_expire * 24 * 60 * 60
+    expiration = datetime.utcnow() + timedelta(minutes=min_expire)
     print('>>>>>>>>>>>>>>>>>>')
     print('getting token ...')
     print(f'user_id: {user_id}')
     print('>>>>>>>>>>>>>>>>>>')
-    token = encrpyt_auth_token(user_id, expiration)
+    token = encrpyt_auth_token(user_id, expiration.isoformat())
+    print('BANK token: ', token)
     return token
 
 
