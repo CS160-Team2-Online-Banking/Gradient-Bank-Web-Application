@@ -108,6 +108,9 @@ class EventTypes:
     SETUP_AUTOPAYMENT = (2, "SETUP AUTOPAYMENT", "")
     EDIT_AUTOPAYMENT = (3, "EDIT AUTOPAYMENT", "")
     CANCEL_AUTOPAYMENT = (4, "CANCEL AUTOPAYMENT", "")
+    CLOSE_ACCOUNT = (5, "CLOSE ACCOUNT", "")
+    DEPOSIT_CHECK = (6, "DEPOSIT CHECK", "")
+    SUSPICIOUS_TRANSFER = (7, "SUS TRANSFER", "")
 
 
 class PaymentSchedules(models.Model):
@@ -213,6 +216,7 @@ class ExchangeHistory(models.Model):
         POSTED = "POSTED"
         FAILED = "FAILED"
         CANCELED = "CANCELED"
+        FLAGGED = "FLAGGED"
 
     id = models.AutoField(primary_key=True)
     to_account_no = models.BigIntegerField(null=True)

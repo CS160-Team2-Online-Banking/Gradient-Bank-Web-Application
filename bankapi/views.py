@@ -10,7 +10,7 @@ from bankapi.transaction.transaction import TransactionProcess
 from functools import update_wrapper
 from bankapi.transfer.exchange_processor import *
 from bankapi.authentication.auth import *
-from bankapi.logging.logging import log_event
+from bankapi.logging.logging import log_event, create_event
 from bankapi.account.account_process import AccountProcess
 from bankapi.autopayment.autopayment import AutopaymentBuilder
 from django.utils.decorators import classonlymethod
@@ -139,9 +139,9 @@ class TransferView(APIView):
             "to_account_no": to_account_no,
             "amount": Decimal(amount),
         }
-        result = ExchangeProcessor.start_exchange(request_info, auth_token)
+        event = create_event(request, auth_token, event_type=EventTypes.REQUEST_TRANSFER, data_id=None)
+        result = ExchangeProcessor.start_exchange(request_info, auth_token, event)
         if result["success"]:
-            log_event(request, auth_token, event_type=EventTypes.REQUEST_TRANSFER, data_id=result["data"]["transfer_id"])
             return JsonResponse({"success": True, "data": request_info}, status=200)
         return JsonResponse({"success": False, "msg": "Error: transfer could not be processed"}, status=500)
 
