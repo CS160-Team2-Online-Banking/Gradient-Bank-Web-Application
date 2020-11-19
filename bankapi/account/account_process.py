@@ -29,6 +29,7 @@ class AccountProcess:
             # (we'll need to append the account type still)
             accounts = Accounts.objects.filter(owner_id=owner.pk)
             json_arr = json.loads(serializers.serialize("json", accounts))
+            for record in json_arr: record["fields"]["pk"] = record["pk"]
             json_arr = list(map(lambda x: x["fields"], json_arr))
 
             for i, entry in enumerate(json_arr):
@@ -46,6 +47,7 @@ class AccountProcess:
                 exchange_history = result["data"]
 
             json_arr = json.loads(serializers.serialize("json", accounts))
+            for record in json_arr: record["fields"]["pk"] = record["pk"]
             json_arr = list(map(lambda x: x["fields"], json_arr))
 
             for i, entry in enumerate(json_arr):

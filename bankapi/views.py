@@ -360,6 +360,13 @@ class AccountView(APIView):
         #pass
 
 
+class ReportView(View):
+    def post(self):
+        pass
+    def get(self):
+        pass
+
+
 # This class is depricated and should be deleted
 @method_decorator(csrf_exempt, name='dispatch')  # django requires all post requests to include a CSRF token by default
 class AuthView(View):
