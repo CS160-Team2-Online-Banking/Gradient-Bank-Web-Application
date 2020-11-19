@@ -200,7 +200,7 @@ class DepositView(View):
             data = form.cleaned_data
             to_routing_no = data.get(
                 "to_routing_no", settings.BANK_ROUTING_NUMBER)
-            result = api_post_check_deposit(request.user, data["to_account_no"], data['from_account_no'],
+            result = api_post_check_deposit(request.user, data["to_account"], data["from_account_no"],
                                             data["from_routing_no"], str(data["amount"]))
             if not result:
                 print("Request Failed")
