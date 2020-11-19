@@ -4,7 +4,6 @@
 <div>
     <h1> ATM Locator</h1>
     <p>Look for an ATM nearest to you with the map below</p>
-    <input type="text" placeholder="Enter Current Location">
 </div>
 
 <div id="map"></div>
@@ -121,7 +120,7 @@
                     if (places_stack.length > 1) {
                         directionsServ.route({
                             origin: userPos,
-                            destination: {placeId: place.place_id},
+                            destination: { placeId: place.place_id },
                             travelMode: google.maps.TravelMode.DRIVING,
                         }, next);
                     } else {
@@ -134,14 +133,14 @@
         }
         directionsServ.route({
             origin: userPos,
-            destination: {placeId: place.place_id},
+            destination: { placeId: place.place_id },
             travelMode: google.maps.TravelMode.DRIVING,
         }, next);
     }
 
     function callback(results, status) {
         if (status == google.maps.places.PlacesServiceStatus.OK) {
-            atmLocations=results;
+            atmLocations = results;
             for (var i = 0; i < results.length; i++) {
                 var place = results[i];
                 createMarker(results[i]);
@@ -188,7 +187,7 @@
 
             directionsServ.route({
                 origin: userPos,
-                destination: {placeId: place.place_id},
+                destination: { placeId: place.place_id },
                 travelMode: google.maps.TravelMode.DRIVING,
             }, (response, status) => {
                 if (status === "OK") {
