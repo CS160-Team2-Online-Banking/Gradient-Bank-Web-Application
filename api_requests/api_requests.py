@@ -73,6 +73,11 @@ def api_get_accounts(user):
     except HTTPError as e:
         return False
 
+def api_get_autopayments(user):
+    pass
+
+def api_get_autopayment(user):
+    pass
 
 def api_get_account_details(user, account_no):
     req = Request(url="{path}/accounts/{id}".format(path=API_PATH, id=account_no))
