@@ -1,9 +1,34 @@
 {% extends 'base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" type="text/css" href="{% static 'css/accounts.css' %}">
+<link rel="stylesheet" type="text/css" href="{% static 'css/signup.css' %}">
+{% endblock %}
+
+
 {% block contents %}
-<h1>{{form_title}}</h1>
-<form action="{{action}}" method="post" enctype="multipart/form-data">
+<h1 class="text-center">{{form_title}}</h1>
+<form class="signup" action="{{action}}" method="post" enctype="multipart/form-data">
     {% csrf_token %}
-    {{ form.as_p }}
-    <input type="submit" value="Submit">
+    <div class="row">
+        <div class="col-md-6 md-offset-3 mx-auto">
+            {% for field in form %}
+            <div class="form-group field d-inline">
+                {{ field.label_tag }}
+                {{ field }}
+                {% if field.help_text %}
+                <small style="color: grey">{{ field.help_text }}</small>
+                {% endif %}
+                {% for error in field.errors %}
+                <p style="color: red">{{ error }}</p>
+                {% endfor %}
+            </div>
+            {% endfor %}
+            <div class="form-group field">
+                <button class="btn btn-primary" type="submit">Submit</button>
+            </div>
+        </div>
+    </div>
 </form>
 {% endblock %}
