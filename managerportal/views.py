@@ -19,10 +19,11 @@ def get_manager(user):
 
 
 class CustomersSearchForm(forms.Form):
-    order_by = forms.CharField(label=None, widget=forms.HiddenInput(), required=False)
-    cust_table_page = forms.IntegerField(label=None, widget=forms.HiddenInput(), required=False)
+    order_by = forms.CharField(label=None, widget=forms.HiddenInput(), initial='customer_name', required=False)
+    page_number = forms.IntegerField(label=None, widget=forms.HiddenInput(), initial=0, required=False)
     customer_name = forms.CharField(label="Customer Name", required=False)
     customer_phone = forms.IntegerField(label="Phone Number", required=False)
+    customer_email = forms.CharField(label="Customer Email", required=False)
     customer_ssn = forms.CharField(label="Customer SSN", required=False)
     customer_address = forms.CharField(label="Customer Address", required=False)
 
@@ -57,19 +58,58 @@ class LandingView(View):
                                                               "cust_table_page": 0,
                                                               "cust_table_query": {}})
 
+    @staticmethod
+    def prep_post_params(data):
+        params = {}
+
+        def add_contains_search(key):
+            if data[key]:
+                params[key+"__icontains"] = data[key]
+
+        def add_param(key):
+            if data[key]:
+                params[key] = data[key]
+        add_contains_search('customer_name')
+        add_contains_search('customer_phone')
+        add_contains_search('customer_ssn')
+        add_contains_search('customer_email')
+        add_contains_search('customer_address')
+        add_param('order_by')
+        add_param('page_number')
+        return params
+
+
     def post(self, request):
         user = request.user
         manager = get_manager(user)
+        headline = {}
+
+        set_or_message(api_get_data(user, manager, "get_customer_count", {}), "customer_count", headline,
+                       lambda x: list(x.values())[0])
+        set_or_message(api_get_data(user, manager, "get_exchange_count", {}), "exchange_count", headline,
+                       lambda x: list(x.values())[0])
+        set_or_message(api_get_data(user, manager, "get_failed_transactions", {}), "failed_exchanges", headline,
+                       lambda x: list(x.values())[0])
+        set_or_message(api_get_data(user, manager, "get_total_savings", {}), "total_balance", headline,
+                       lambda x: list(x.values())[0])
 
         form = CustomersSearchForm(request.POST)
-        result = api_get_data(user, manager, "get_customers", {})
+
         if form.is_valid():
             data = form.cleaned_data
-            params = form.cleaned_data.items()
+            params = self.prep_post_params(data)
+            result = api_get_data(user, manager, "get_customers", params)
             if not result:
-                print("Request Failed")
+                result = api_get_data(user, manager, "get_customers", {})
         else:
-            print("Invalid form data")
+            result = api_get_data(user, manager, "get_customers", {})
+
+        return render(request, "managerportal/landing.html", {"manager": manager, "headline": headline,
+                                                              "customers_table": result,
+                                                              "form": form,
+                                                              "cust_table_page": 0,
+                                                              "cust_table_query": {}})
+
         # if it's a new search, populate the customer table with the search results and keep the results section the same
         # if it's a detail selection, populate the details section and keep the table the same
 

@@ -38,17 +38,35 @@
             {% endfor %}
             <div class="col"><button type="submit" name="search_customers" class="btn-block btn btn-lg btn-primary">Search</button></div>
         </div>
-    <table>
+        <script>
+            var order_by_toggle = {
+                customer_name: true,
+                customer_phone: true,
+                customer_address: true,
+                customer_email: true,
+                customer_ssn: true,
+                accounts_count: true,
+            };
+            current_order = document.getElementsByName('order_by')[0].value
+            order_by_toggle[current_order.replace('-','')] = current_order[0]!='-';
+            function set_ordering(field) {
+                order_by_toggle[field] = !order_by_toggle[field];
+                asc = order_by_toggle[field];
+                document.getElementsByName('order_by')[0].value = asc ? `${field}` : `-${field}`;
+                document.getElementById("customer_search_form").submit();
+            }
+        </script>
+    <table class="table">
         <tr>
-            <th>Customer Name</th>
-            <th>Phone No.</th>
-            <th>Email</th>
-            <th>SSN</th>
-            <th>Address</th>
+            <th onclick="set_ordering('customer_name')" style="cursor:pointer;">Customer Name</th>
+            <th onclick="set_ordering('customer_phone')" style="cursor:pointer;">Phone No.</th>
+            <th onclick="set_ordering('customer_email')" style="cursor:pointer;">Email</th>
+            <th onclick="set_ordering('customer_ssn')" style="cursor:pointer;">SSN</th>
+            <th onclick="set_ordering('customer_address')" style="cursor:pointer;">Address</th>
             <th>Account Count.</th>
         </tr>
         {% for entry in customers_table.users %}
-        <tr>
+        <tr> <!--onclick="// send a request to get this customers details report" >-->
             <td>{{entry.customer_name}}</td>
             <td>{{entry.customer_phone}}</td>
             <td>{{entry.customer_email}}</td>

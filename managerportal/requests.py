@@ -57,7 +57,7 @@ def api_post_account(user, manager, account_type):
 
 
 def encode_param_html(string):
-    return re.sub(r'[^A-Za-z0-9~\-._]', lambda x: '%'+format(x[0].encode('unicode_escape')[0], 'x'), string)
+    return re.sub(r'[^A-Za-z0-9~\-._]', lambda x: '%'+format(x[0].encode('unicode_escape')[0], 'x'), str(string))
 
 
 def api_get_data(user, manager, datatype, query_params={}):

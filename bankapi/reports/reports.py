@@ -60,7 +60,7 @@ def get_total_savings(auth_token):
     return {"success": True, "data": {"total_savings": total_savings['balance__sum']}}
 
 
-def get_customers(auth_token, page_size=50, page_number=0, order_by='customer_name', **search_criteria):
+def get_customers(auth_token, page_size=20, page_number=0, order_by='customer_name', **search_criteria):
     manager_id = auth_token.get("manager_id", None)
 
     if manager_id is None:
@@ -73,9 +73,8 @@ def get_customers(auth_token, page_size=50, page_number=0, order_by='customer_na
 
     paginator = Paginator(customers, page_size)
     page = paginator.get_page(page_number)
-    print(type(page.object_list))
-    print(page.object_list)
-    serialized_records = json.loads(serializers.serialize("json", customers))
+    serialized_records = json.loads(serializers.serialize("json", page.object_list))
+    serialized_records.reverse()
     #serialized_records = page.object_list
     for record in serialized_records: record["fields"]["pk"] = record["pk"]
     serialized_records = list(map(lambda x: x["fields"], serialized_records))
@@ -93,7 +92,7 @@ def get_customers(auth_token, page_size=50, page_number=0, order_by='customer_na
         user["accounts"] = account_records
 
     # add each customer's accounts
-    return {"success": True, "data": {"users": serialized_records}}
+    return {"success": True, "data": {"users": serialized_records, "page_count":paginator.count}}
 
 
 def get_account_transactions(auth_token, account_no):
