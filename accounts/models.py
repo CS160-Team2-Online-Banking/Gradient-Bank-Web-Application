@@ -9,6 +9,7 @@ from bankapi.models import *
 
 # CustomUserManager
 
+
 class CustomUserManager(UserManager):
     use_in_migrations = True
 
@@ -21,6 +22,7 @@ class CustomUserManager(UserManager):
         # TODO: then save the data and set the primary key of that customer object to the bank_customer_id
         email = self.normalize_email(email)
         user = self.model(email=email, **extra_fields)
+        user.username = extra_fields["username"]
         user.set_password(password)
         if commit:
             user.save(using=self._db)
@@ -100,7 +102,7 @@ class CustomerManager(CustomUserManager):
             middle_initial = "{middle_initial}. "
         else:
             middle_initial = ""
-        customer_name = "{first_name}{middle_initial}{last_name}".format(first_name=extra_fields["first_name"],
+        customer_name = "{first_name} {middle_initial}{last_name}".format(first_name=extra_fields["first_name"],
                                                                          middle_initial=middle_initial,
                                                                          last_name=extra_fields["last_name"])
         customer_phone = extra_fields["phone"]
@@ -125,7 +127,6 @@ class CustomerManager(CustomUserManager):
         user.bank_customer_id = bank_customer.pk
         user.save(using=self._db)
         return user
-
 
 
 class EmployeeManager(CustomUserManager):

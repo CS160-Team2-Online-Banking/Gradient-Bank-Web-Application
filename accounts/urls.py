@@ -1,15 +1,19 @@
 from django.contrib import admin
 from django.urls import include, path
 from django.views.generic import TemplateView
-from .signup_views import *
+from .views import *
 
 app_name = 'accounts'
 
 urlpatterns = [
-    path('customer/login/',
-         TemplateView.as_view(template_name='login.html'), name='login'),
+    path('login',
+         SignInView.as_view(), name='login'),
+    path('customer/login',
+         CustomerSignIn.as_view(), name='cus_login'),
+    path('employee/login',
+         EmployerSignIn.as_view(), name='emp_login'),
     path('logout/',
-         TemplateView.as_view(template_name='logout.html'), name='logout'),
-    path('customer/signup/',
+         LogOut.as_view(), name='logout'),
+    path('signup/',
          CustomerSignUp.as_view(), name='signup'),  # this should direct you to a customer sign up
 ]
