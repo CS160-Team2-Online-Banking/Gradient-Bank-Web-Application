@@ -2,6 +2,7 @@ from bankapi.models import *
 from accounts.models import *
 from django.conf import settings
 from django.core import serializers
+from django.core.paginator import Paginator
 from django.db.models import Sum, Count, Avg, Q
 from django.db.models.functions import *
 from bankapi.transfer.exchange_processor import ExchangeProcessor
@@ -59,14 +60,23 @@ def get_total_savings(auth_token):
     return {"success": True, "data": {"total_savings": total_savings['balance__sum']}}
 
 
-def get_customers(auth_token):
+def get_customers(auth_token, page_size=50, page_number=0, order_by='customer_name', **search_criteria):
     manager_id = auth_token.get("manager_id", None)
 
     if manager_id is None:
         return {"success":  False, "msg": "Access Denied"}
 
-    customers = Customer.objects.all().order_by('customer_name')
+    if len(search_criteria):
+        customers = Customer.objects.filter(**search_criteria).order_by(order_by)
+    else:
+        customers = Customer.objects.all().order_by(order_by)
+
+    paginator = Paginator(customers, page_size)
+    page = paginator.get_page(page_number)
+    print(type(page.object_list))
+    print(page.object_list)
     serialized_records = json.loads(serializers.serialize("json", customers))
+    #serialized_records = page.object_list
     for record in serialized_records: record["fields"]["pk"] = record["pk"]
     serialized_records = list(map(lambda x: x["fields"], serialized_records))
 

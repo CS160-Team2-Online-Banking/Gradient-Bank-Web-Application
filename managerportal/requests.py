@@ -2,6 +2,7 @@ from urllib.request import *
 from urllib.error import *
 from django.conf import settings
 from datetime import datetime, timedelta
+import re
 from decimal import *
 import jwt
 import json
@@ -55,12 +56,16 @@ def api_post_account(user, manager, account_type):
         return False
 
 
+def encode_param_html(string):
+    return re.sub(r'[^A-Za-z0-9~\-._]', lambda x: '%'+format(x[0].encode('unicode_escape')[0], 'x'), string)
+
+
 def api_get_data(user, manager, datatype, query_params={}):
     param_str=""
     if len(query_params):
         param_str = "?{params}".format(params=
                                         "&".join(list(map(
-                                            lambda x: "{name}={value}".format(name=x[0], value=x[1]),
+                                            lambda x: "{name}={value}".format(name=encode_param_html(x[0]), value=encode_param_html(x[1])),
                                             query_params.items()))
                                             )
                                         )

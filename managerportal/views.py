@@ -18,6 +18,15 @@ def get_manager(user):
     return None
 
 
+class CustomersSearchForm(forms.Form):
+    order_by = forms.CharField(label=None, widget=forms.HiddenInput(), required=False)
+    cust_table_page = forms.IntegerField(label=None, widget=forms.HiddenInput(), required=False)
+    customer_name = forms.CharField(label="Customer Name", required=False)
+    customer_phone = forms.IntegerField(label="Phone Number", required=False)
+    customer_ssn = forms.CharField(label="Customer SSN", required=False)
+    customer_address = forms.CharField(label="Customer Address", required=False)
+
+
 def set_or_message(result, key, dict, mapper=lambda x: x):
     if result:
         dict[key] = mapper(result)
@@ -40,9 +49,27 @@ class LandingView(View):
         set_or_message(api_get_data(user, manager, "get_exchange_count", {}), "exchange_count", headline, lambda x: list(x.values())[0])
         set_or_message(api_get_data(user, manager, "get_failed_transactions", {}), "failed_exchanges", headline, lambda x: list(x.values())[0])
         set_or_message(api_get_data(user, manager, "get_total_savings", {}), "total_balance", headline, lambda x: list(x.values())[0])
-
-        return render(request, "managerportal/landing.html", {"manager": manager, "headline":headline})
+        result = api_get_data(user, manager, "get_customers", {})
+        start_form = CustomersSearchForm(initial={"cust_table_query": str({}), "cust_table_page": 0})
+        return render(request, "managerportal/landing.html", {"manager": manager, "headline": headline,
+                                                              "customers_table": result,
+                                                              "form": start_form,
+                                                              "cust_table_page": 0,
+                                                              "cust_table_query": {}})
 
     def post(self, request):
-        pass
+        user = request.user
+        manager = get_manager(user)
+
+        form = CustomersSearchForm(request.POST)
+        result = api_get_data(user, manager, "get_customers", {})
+        if form.is_valid():
+            data = form.cleaned_data
+            params = form.cleaned_data.items()
+            if not result:
+                print("Request Failed")
+        else:
+            print("Invalid form data")
+        # if it's a new search, populate the customer table with the search results and keep the results section the same
+        # if it's a detail selection, populate the details section and keep the table the same
 

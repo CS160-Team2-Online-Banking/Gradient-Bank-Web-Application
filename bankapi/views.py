@@ -363,6 +363,7 @@ class AccountView(APIView):
 
 @method_decorator(csrf_exempt, name='dispatch')  # django requires all post requests to include a CSRF token by default
 class ReportView(View):
+    @returns_json_error
     def get(self, request, datatype):
         try:
             auth_token = decrypt_auth_token(request)
