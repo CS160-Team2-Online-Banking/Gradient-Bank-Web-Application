@@ -15,6 +15,7 @@ class CustomUserManager(UserManager):
 
     def _create_user(self, email, password, commit=True, **extra_fields):
         print("CUSTOM CUSTOM USER CALLED")
+        print(extra_fields)
         if not email:
             raise ValueError('The given email must be set')
 
@@ -22,7 +23,6 @@ class CustomUserManager(UserManager):
         # TODO: then save the data and set the primary key of that customer object to the bank_customer_id
         email = self.normalize_email(email)
         user = self.model(email=email, **extra_fields)
-        user.username = extra_fields["username"]
         user.set_password(password)
         if commit:
             user.save(using=self._db)
@@ -34,7 +34,6 @@ class CustomUserManager(UserManager):
         print(extra_fields)
         extra_fields.setdefault('is_staff', False)
         extra_fields.setdefault('is_superuser', False)
-        extra_fields = {}  # ignore the other extra fields, they'll only mess things up
         return self._create_user(email, password, **extra_fields)
 
     def create_superuser(self, email, password, commit=True, **extra_fields):

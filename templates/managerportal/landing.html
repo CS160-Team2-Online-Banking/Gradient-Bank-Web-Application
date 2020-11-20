@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" type="text/css" href="{% static 'css/accounts.css' %}">
+<link rel="stylesheet" type="text/css" href="{% static 'css/signup.css' %}">
+{% endblock %}
+
+{% block head_title %}Manager View{% endblock %}
+
+{% block contents %}
+<div class="row">
+<h1>Welcome {{request.user.username}}</h1>
+<p> Your Manager ID is {{manager.manager_id}}</p>
+</div>
+{% endblock %}

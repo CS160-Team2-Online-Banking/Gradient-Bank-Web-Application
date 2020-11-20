@@ -7,10 +7,12 @@ from django.contrib.auth import login, logout
 from .forms import *
 from .models import *
 
+
 class LogOut(View):
     def get(self, request, *args, **kwargs):
         logout(request)
         return redirect('/landing')
+
 
 class SignInView(View):
     def get(self, request):

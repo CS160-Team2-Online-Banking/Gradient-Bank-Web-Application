@@ -14,6 +14,7 @@ urlpatterns = [
     path('', views.index, name='index'),
     path('admin/', admin.site.urls),
     path('bankaccount/', include('bankaccount.urls')),
+    path('managerportal/', include('managerportal.urls'))
 ]
 
 # メディアファイル公開用のURL設定
