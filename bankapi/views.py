@@ -363,6 +363,7 @@ class AccountView(APIView):
 class ReportView(View):
     def post(self):
         pass
+
     def get(self):
         pass
 

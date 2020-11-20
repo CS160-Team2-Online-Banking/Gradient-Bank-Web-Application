@@ -7,7 +7,7 @@ from . import views
 # URLの全体設計
 urlpatterns = [
     path('landing/', include('landing.urls')),
-    path('accounts/', include('allauth.urls')),
+    path('accounts/', include('accounts.urls')),
     path('transaction/', include('transaction.urls')),
     path('atm/', include('atm.urls')),
     path('api/', include('bankapi.urls')),
