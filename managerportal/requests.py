@@ -55,7 +55,7 @@ def api_post_account(user, manager, account_type):
         return False
 
 
-def api_get_data(user, manager, datatype, query_params):
+def api_get_data(user, manager, datatype, query_params={}):
     param_str=""
     if len(query_params):
         param_str = "?{params}".format(params=

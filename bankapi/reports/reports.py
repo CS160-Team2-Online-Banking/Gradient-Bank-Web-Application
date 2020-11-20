@@ -56,7 +56,7 @@ def get_total_savings(auth_token):
 
     total_savings = Accounts.objects.aggregate(Sum('balance'))
 
-    return {"success": True, "data": {"total_savings": total_savings}}
+    return {"success": True, "data": {"total_savings": total_savings['balance__sum']}}
 
 
 def get_customers(auth_token):

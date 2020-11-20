@@ -9,8 +9,12 @@
 {% block head_title %}Manager View{% endblock %}
 
 {% block contents %}
-<div class="row">
-<h1>Welcome {{request.user.username}}</h1>
-<p> Your Manager ID is {{manager.manager_id}}</p>
+<div>
+    <h1>Today's Status</h1>
+    <ul>
+        <li>Number of Customers: {{headline.customer_count}}</li>
+        <li>Number of Transfer's Processed: {{headline.exchange_count}}</li>
+        <li>Money Managed by our Bank: ${{headline.total_balance}}</li>
+    </ul>
 </div>
 {% endblock %}
