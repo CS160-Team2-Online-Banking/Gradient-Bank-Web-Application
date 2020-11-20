@@ -65,27 +65,29 @@
                         </li>
                         <li class="nav-item">
                             <nav class="navbar navbar-light bg-light">
-                            <a  href="#manageSubemenu" id="manageDropdown" data-toggle="collapse" aria-expanded="true" class="navbar-brand dropdown-toggle">
-                                Money Management
-                            </a>
-                            <ul class="collapse list-unstyled" id="manageSubemenu">
-                                <li>
-                                    <a class='dropdown-item' href='/transaction/autopayments'>
-                                        <span data-feather="">Setup Automatic Bill Payment</span>
-                                    </a>
-                                </li>
-                                <li>
-                                    <a class='dropdown-item' href='/transaction/transfers/internal'>
-                                        <span data-feather="">Setup Internal Transfer</span>
-                                    </a>
-                                </li>
-                                <li>
-                                    <a class='dropdown-item' href='/transaction/transfers/external'>
-                                        <span data-feather="">Setup External Transfer</span>
-                                    </a>
-                                </li>
-                            </ul>
-                                </nav><!--
+                                <a href="#manageSubemenu" id="manageDropdown" data-toggle="collapse"
+                                    aria-expanded="true" class="navbar-brand dropdown-toggle">
+                                    Money Management
+                                </a>
+                                <ul class="collapse list-unstyled" id="manageSubemenu">
+                                    <li>
+                                        <a class='dropdown-item' href='/transaction/autopayments'>
+                                            <span data-feather="">Setup Automatic Bill Payment</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class='dropdown-item' href='/transaction/transfers/internal'>
+                                            <span data-feather="">Setup Internal Transfer</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class='dropdown-item' href='/transaction/transfers/external'>
+                                            <span data-feather="">Setup External Transfer</span>
+                                        </a>
+                                    </li>
+                                </ul>
+                            </nav>
+                            <!--
                             <div class="dropdown-menu bg-light" aria-labelledby="managementDropdown">
                                 <a class='dropdown-item navbar-brand' href='/transaction/autopayments'>
                                     <span data-feather="">Setup Automatic Bill Payment</span>
@@ -142,6 +144,7 @@
         </div>
     </div>
     </div>
+    {% include 'footer.html' %}
 </body>
 
 </html>
