@@ -2,7 +2,7 @@ from bankapi.models import *
 from accounts.models import *
 from django.conf import settings
 from django.core import serializers
-from django.db.models import Sum, Count, Avg
+from django.db.models import Sum, Count, Avg, Q
 from django.db.models.functions import *
 from bankapi.transfer.exchange_processor import ExchangeProcessor
 import json
@@ -120,10 +120,10 @@ def get_exchanges_over_time(auth_token, start_date, end_date, time_delta="MONTH"
         .values('posted_time')\
         .annotate(count=Count('pk'))
 
-    serialized_records = json.loads(serializers.serialize("json", exchanges_per_time))
+    #serialized_records = json.loads(serializers.serialize("json", exchanges_per_time))
     #serialized_records = list(map(lambda x: x["fields"], serialized_records))
 
-    return {"success":  True, "data": serialized_records}  # i'm not quite sure how to serialize this
+    return {"success":  True, "data": list(exchanges_per_time)}  # i'm not quite sure how to serialize this
 
 
 def get_spending(auth_token, customer_id, time_delta="MONTH"):
@@ -149,16 +149,18 @@ def get_spending(auth_token, customer_id, time_delta="MONTH"):
     #  calculate a users average spending on a monthly basis
     spending_per_time = ExchangeHistory\
         .objects\
-        .filter(from_routing_no=settings.BANK_ROUTING_NUMBER,
+        .filter(~Q(to_account_no__in=account_nos),
+                from_routing_no=settings.BANK_ROUTING_NUMBER,
                 from_account_no__in=account_nos,
                 status=ExchangeHistory.ExchangeHistoryStatus.FINISHED)\
-        .annotate(posted_time=truncFunc('posted'))\
-        .annotate(total_spending=Sum("amount"))
+        .annotate(posted_time=truncFunc('posted')) \
+        .annotate(total_spending=Sum("amount")) \
+        .values('posted_time', 'total_spending')
 
-    serialized_records = json.loads(serializers.serialize("json", spending_per_time))
+    #serialized_records = json.loads(serializers.serialize("json", spending_per_time))
     #serialized_records = list(map(lambda x: x["fields"], serialized_records))
 
-    return {"success":  True, "data": serialized_records}  # i'm not quite sure how to serialize this
+    return {"success":  True, "data": list(spending_per_time)}  # i'm not quite sure how to serialize this
 
 
 def get_income(auth_token, customer_id, time_delta="MONTH"):
@@ -183,13 +185,33 @@ def get_income(auth_token, customer_id, time_delta="MONTH"):
 
     spending_per_time = ExchangeHistory\
         .objects\
-        .filter(from_routing_no=settings.BANK_ROUTING_NUMBER,
-                from_account_no__in=account_nos,
+        .filter(~Q(from_account_no__in=account_nos),
+                to_routing_no=settings.BANK_ROUTING_NUMBER,
+                to_account_no__in=account_nos,
                 status=ExchangeHistory.ExchangeHistoryStatus.FINISHED)\
         .annotate(posted_time=truncFunc('posted'))\
         .annotate(total_spending=Sum("amount"))
 
-    serialized_records = json.loads(serializers.serialize("json", spending_per_time))
+    #serialized_records = json.loads(serializers.serialize("json", spending_per_time))
     #serialized_records = list(map(lambda x: x["fields"], serialized_records))
 
-    return {"success":  True, "data": serialized_records}  # i'm not quite sure how to serialize this
+    return {"success":  True, "data": list(spending_per_time)}  # i'm not quite sure how to serialize this
+
+
+REPORT_DISPATCHER = {
+    "get_income": get_income,
+    "get_spending": get_spending,
+    "get_exchanges_over_time": get_exchanges_over_time,
+    "get_account_transactions": get_account_transactions,
+    "get_customers": get_customers,
+    "get_total_savings": get_total_savings,
+    "get_failed_transactions": get_failed_transactions,
+    "get_exchange_count": get_exchange_count,
+    "get_customer_count": get_customer_count
+}
+
+def default_dipatcher():
+    return {"success": False, "msg": "The report type you requested doesn't exist"}
+
+def dispatch_report(report_name):
+    return REPORT_DISPATCHER.get(report_name, default_dipatcher)

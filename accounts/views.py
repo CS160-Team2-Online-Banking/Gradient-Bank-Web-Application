@@ -25,7 +25,7 @@ class EmployerSignIn(LoginView):
 
         if BankManagerUser.objects.filter(pk=user.pk).exists():
             login(self.request, user)
-            return redirect("/landing")
+            return redirect("/managerportal/landing")
         return render(self.request, "registration/login.html",
                       {"form": form, "error": "The Username or Password you entered is incorrect"})
 
@@ -51,7 +51,7 @@ class ManagerSignUp(CreateView):
     def form_valid(self, form):
         user = form.register_user()
         login(self.request, user)
-        return redirect('/landing')
+        return redirect('/managerportal/landing')
 
 
 class CustomerSignUp(CreateView):

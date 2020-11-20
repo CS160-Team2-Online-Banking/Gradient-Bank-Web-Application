@@ -14,6 +14,7 @@ from bankapi.logging.logging import log_event
 from bankapi.account.account_process import AccountProcess
 from bankapi.autopayment.autopayment import AutopaymentBuilder
 from django.utils.decorators import classonlymethod
+from bankapi.reports.reports import *
 import traceback
 
 
@@ -360,12 +361,23 @@ class AccountView(APIView):
         #pass
 
 
+@method_decorator(csrf_exempt, name='dispatch')  # django requires all post requests to include a CSRF token by default
 class ReportView(View):
-    def post(self):
-        pass
+    def get(self, request, datatype):
+        try:
+            auth_token = decrypt_auth_token(request)
+        except json.decoder.JSONDecodeError:
+            return JsonResponse({"success": False, "msg": "Error: JSON could not be parsed"}, status=400)
 
-    def get(self):
-        pass
+        manager_id = auth_token.get("manager_id", None)
+        if manager_id is None:
+            return JsonResponse({"success": False, "msg": "Error: Access Denied"}, status=400)
+
+        executor = dispatch_report(datatype)
+        result = executor(auth_token, **request.GET.dict())
+        return JsonResponse(result, status=200)
+
+        # select our query parameter
 
 
 # This class is depricated and should be deleted

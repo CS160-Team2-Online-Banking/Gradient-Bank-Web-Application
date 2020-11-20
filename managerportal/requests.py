@@ -55,17 +55,17 @@ def api_post_account(user, manager, account_type):
         return False
 
 
-def api_get_data(user, manager, datatype, params):
-    params_str=""
-    if len(params):
-        params_str = "?{params}".format(params=
+def api_get_data(user, manager, datatype, query_params):
+    param_str=""
+    if len(query_params):
+        param_str = "?{params}".format(params=
                                         "&".join(list(map(
                                             lambda x: "{name}={value}".format(name=x[0], value=x[1]),
-                                            params.items()))
+                                            query_params.items()))
                                             )
                                         )
     req = Request(url="{path}/reports/{datatype}{param_str}".format(path=API_PATH, datatype=datatype,
-                                                                    params_str=params_str))
+                                                                    param_str=param_str))
     attach_manager_token(user, manager, req)
     try:
         response = urlopen(req)
