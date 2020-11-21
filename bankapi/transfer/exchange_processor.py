@@ -39,7 +39,6 @@ def external_transfer_handler(auth_token, from_account_no, to_account_no, to_rou
                                             inbound=False,
                                             debit_transfer=False,
                                             exchange_obj=ex)
-            raise Exception("DAJDSJADS")
             ext_pool.save()
 
             return {"success": True, "data": {"transfer_id": ex.pk}}
