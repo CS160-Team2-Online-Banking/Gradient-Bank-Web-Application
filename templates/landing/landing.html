@@ -50,11 +50,13 @@
     </div>
 
     {% else %}
-    <div>
-        <h1>Hello, {{ username }}!</h1>
-        <h1>Welcome to Online Bank</h1>
-        <p>We don't pay interest. You've been warned.</p>
-        <p>To start using online bank, please login or signup.</p>
+    <div class="row">
+        <div class="col-md-5 md-offset-3 mx-auto">
+            <h1>Hello, {{ username }}!</h1>
+            <h1>Welcome to Online Bank</h1>
+            <p>We don't pay interest. You've been warned.</p>
+            <p>To start using online bank, please login or signup.</p>
+        </div>
     </div>
     {% endif %}
 </div>
