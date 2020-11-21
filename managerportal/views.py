@@ -69,11 +69,12 @@ class LandingView(View):
         customer_activity = api_get_data(request, manager, "get_customer_activity", {"customer_id": customer_id})
         income_history = api_get_data(request, manager, "get_income", {"customer_id": customer_id, "time_delta": "WEEK"})
         spending_history = api_get_data(request, manager, "get_spending", {"customer_id": customer_id, "time_delta": "WEEK"})
+        print(income_history)
         return {
-            "customer_accounts": customer_accounts if customer_accounts else {},
-            "customer_activity": customer_activity if customer_activity else {},
-            "income_history": income_history if income_history else {},
-            "spending_history": spending_history if spending_history else {}
+            "customer_accounts": customer_accounts if customer_accounts else [],
+            "customer_activity": customer_activity if customer_activity else [],
+            "income_history": income_history if income_history else [],
+            "spending_history": spending_history if spending_history else []
         }
 
     @staticmethod

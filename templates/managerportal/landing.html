@@ -117,23 +117,78 @@
         {{customers_table.page_count}}
     </form>
     {% if customer_details %}
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.3/dist/Chart.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.4/dist/Chart.min.js"></script>
+
     <script>
-            console.log({{ customer_details.income_history }});
+            let data_set1 = {{ customer_details.spending_history|safe }};
+            let data_set2 = {{ customer_details.income_history|safe }};
+            let dataum1 = [];
+            let dataum2 = [];
+            data_set1.forEach((x)=>
+            {
+                dataum1.push({t:new Date(x.posted_delta_time), y:Number(x.total_spending)});
+            });
+            data_set2.forEach((x)=>
+            {
+                dataum2.push({t:new Date(x.posted_delta_time), y:Number(x.total_spending)});
+            });
+            console.log(dataum1);
             var chart1_config = {
                 type:'line',
                 data: {
-                    labels:[],
-                    datasets: []
+                    datasets:[{
+                        label: "Spending Over Time",
+                        data: dataum1,
+                        showLine: true,
+                        fill: false,
+                    }],
                 },
-            }
+
+                options: {
+                    scales: {
+                        xAxes: [{
+                            type: 'time',
+                            time: {
+                                unit: 'week'
+                            }
+                        }],
+                    }
+                }
+            };
+            var chart2_config = {
+                type:'line',
+                data: {
+                    datasets:[{
+                        label: "Income Over Time",
+                        data: dataum2,
+                        showLine: true,
+                        fill: false,
+                    }],
+                },
+
+                options: {
+                    scales: {
+                        xAxes: [{
+                            type: 'time',
+                            time: {
+                                unit: 'week'
+                            }
+                        }],
+                    }
+                }
+            };
             window.onload = function() {
                 var context1 = document.getElementById('chart1').getContext('2d');
+                var context2 = document.getElementById('chart2').getContext('2d');
                 window.chart1 = new Chart(context1, chart1_config);
+                window.chart2 = new Chart(context2, chart2_config);
             }
     </script>
     <h2>Customer Details</h2>
     <div class="row">
+        <div class="col" style="width:50%"><canvas id="chart1"></canvas></div>
+        <div class="col" style="width:50%"><canvas id="chart2"></canvas></div>
     </div>
     <div class="row">
         <div class="col">

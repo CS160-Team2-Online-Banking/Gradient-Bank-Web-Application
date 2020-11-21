@@ -167,12 +167,14 @@ def get_spending(auth_token, customer_id, time_delta="MONTH"):
     spending_per_time = ExchangeHistory\
         .objects\
         .filter(~Q(to_account_no__in=account_nos),
+                Q(status=ExchangeHistory.ExchangeHistoryStatus.FINISHED)|
+                Q(status=ExchangeHistory.ExchangeHistoryStatus.POSTED),
                 from_routing_no=settings.BANK_ROUTING_NUMBER,
-                from_account_no__in=account_nos,
-                status=ExchangeHistory.ExchangeHistoryStatus.FINISHED)\
-        .annotate(posted_time=truncFunc('posted')) \
+                from_account_no__in=account_nos) \
+        .annotate(posted_delta_time=truncFunc('posted')) \
+        .values('posted_delta_time') \
         .annotate(total_spending=Sum("amount")) \
-        .values('posted_time', 'total_spending')
+        .values('posted_delta_time', 'total_spending')
 
     #serialized_records = json.loads(serializers.serialize("json", spending_per_time))
     #serialized_records = list(map(lambda x: x["fields"], serialized_records))
@@ -200,19 +202,22 @@ def get_income(auth_token, customer_id, time_delta="MONTH"):
 
     account_nos = list(map(lambda x: x.account_number, accounts))
 
-    spending_per_time = ExchangeHistory\
+    income_per_time = ExchangeHistory\
         .objects\
         .filter(~Q(from_account_no__in=account_nos),
+                Q(status=ExchangeHistory.ExchangeHistoryStatus.FINISHED)|
+                Q(status=ExchangeHistory.ExchangeHistoryStatus.POSTED),
                 to_routing_no=settings.BANK_ROUTING_NUMBER,
-                to_account_no__in=account_nos,
-                status=ExchangeHistory.ExchangeHistoryStatus.FINISHED)\
-        .annotate(posted_time=truncFunc('posted'))\
-        .annotate(total_spending=Sum("amount"))
+                to_account_no__in=account_nos)\
+        .annotate(posted_delta_time=truncFunc('posted')) \
+        .values('posted_delta_time') \
+        .annotate(total_income=Sum("amount")) \
+        .values('posted_delta_time', 'total_income')
 
     #serialized_records = json.loads(serializers.serialize("json", spending_per_time))
     #serialized_records = list(map(lambda x: x["fields"], serialized_records))
 
-    return {"success":  True, "data": list(spending_per_time)}  # i'm not quite sure how to serialize this
+    return {"success":  True, "data": list(income_per_time)}  # i'm not quite sure how to serialize this
 
 
 def get_customer_activity(auth_token, customer_id):
