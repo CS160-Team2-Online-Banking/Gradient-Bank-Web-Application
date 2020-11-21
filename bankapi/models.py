@@ -26,9 +26,10 @@ class Customer(models.Model):
     event_id = models.IntegerField(blank=True, null=True)
     autopayment_id = models.IntegerField(blank=True, null=True)
     customer_name = models.CharField(max_length=50)
-    customer_phone = models.IntegerField()
+    customer_phone = models.BigIntegerField()
     customer_email = models.CharField(max_length=50)
-    customer_ssn = models.IntegerField(db_column='customer_SSN')  # Field name made lowercase.
+    # Field name made lowercase.
+    customer_ssn = models.IntegerField(db_column='customer_SSN')
     customer_address = models.CharField(max_length=50)
 
     class Meta:
@@ -53,7 +54,8 @@ class Accounts(models.Model):
     account_number = models.BigIntegerField(unique=True)
     account_type = models.ForeignKey(AccountTypes, related_name="acct_to_actyp", db_column='account_type_id',
                                      on_delete=models.RESTRICT)
-    owner = models.ForeignKey(Customer, related_name="acct_to_cstmr", db_column="owner_id", on_delete=models.RESTRICT)
+    owner = models.ForeignKey(Customer, related_name="acct_to_cstmr",
+                              db_column="owner_id", on_delete=models.RESTRICT)
 
     class Meta:
         managed = False
@@ -72,6 +74,7 @@ class ExternalAccount(models.Model):
         managed = True
         db_table = 'external_accounts'
 
+
 """
 class EventTypes(models.Model):
     use_db = 'bank_data'
@@ -84,6 +87,7 @@ class EventTypes(models.Model):
         db_table = 'event_types'
 """
 
+
 class EventLog(models.Model):
     use_db = 'bank_data'
     event_id = models.AutoField(primary_key=True)
@@ -91,7 +95,7 @@ class EventLog(models.Model):
                                       on_delete=models.RESTRICT)
     ip6_address = models.BinaryField(max_length=16, blank=True, null=True)
     ip4_address = models.BinaryField(max_length=4, blank=True, null=True)
-    #event_type = models.ForeignKey(EventTypes, related_name="event_type", db_column="event_type",
+    # event_type = models.ForeignKey(EventTypes, related_name="event_type", db_column="event_type",
     #                               on_delete=models.RESTRICT)
     event_type = models.IntegerField()
     event_time = models.DateTimeField()
@@ -111,6 +115,7 @@ class EventTypes:
     CLOSE_ACCOUNT = (5, "CLOSE ACCOUNT", "")
     DEPOSIT_CHECK = (6, "DEPOSIT CHECK", "")
     SUSPICIOUS_TRANSFER = (7, "SUS TRANSFER", "")
+    EVENT_ARR = [CREATE_ACCOUNT, REQUEST_TRANSFER, SETUP_AUTOPAYMENT, EDIT_AUTOPAYMENT, CANCEL_AUTOPAYMENT, CLOSE_ACCOUNT, DEPOSIT_CHECK, SUSPICIOUS_TRANSFER]
 
 
 class PaymentSchedules(models.Model):
@@ -130,7 +135,8 @@ class PaymentFrequencies:
     MONTHLY = 'MONTHLY'
     WEEKLY = 'WEEKLY'
     DAILY = 'DAILY'
-    REGEX = '({y})|({m})|({w})|({d})'.format(y=YEARLY, m=MONTHLY, w=WEEKLY, d=DAILY)
+    REGEX = '({y})|({m})|({w})|({d})'.format(
+        y=YEARLY, m=MONTHLY, w=WEEKLY, d=DAILY)
 
     @staticmethod
     def validate_string(str):
@@ -228,7 +234,8 @@ class ExchangeHistory(models.Model):
     posted = models.DateTimeField()
     finished = models.DateTimeField(null=True)
     type = models.CharField(max_length=16, default=ExchangeTypes.TRANSFER)
-    status = models.CharField(max_length=16, default=ExchangeHistoryStatus.POSTED)
+    status = models.CharField(
+        max_length=16, default=ExchangeHistoryStatus.POSTED)
 
     class Meta:
         managed = True
@@ -243,10 +250,13 @@ class ExternalTransferPool(models.Model):
     external_account_routing_no = models.IntegerField(default=0)
     external_account_no = models.BigIntegerField(default=0)
     amount = models.DecimalField(max_digits=18, decimal_places=2)
-    inbound = models.BooleanField()  # indicates whether money should be moved to the internal account
-    debit_transfer = models.BooleanField(default=False)  # debit indicates it's a debit transfer (we're pulling money)
+    # indicates whether money should be moved to the internal account
+    inbound = models.BooleanField()
+    # debit indicates it's a debit transfer (we're pulling money)
+    debit_transfer = models.BooleanField(default=False)
     exchange_obj = models.ForeignKey(ExchangeHistory, related_name="etp_to_exch", db_column="exchange_obj_id",
                                      on_delete=models.RESTRICT, null=True)
+
     class Meta:
         managed = True
         db_table = 'external_transfer_pool'
@@ -255,10 +265,12 @@ class ExternalTransferPool(models.Model):
 class DebitHistory(models.Model):
     use_db = 'bank_data'
     id = models.AutoField(primary_key=True)
-    debit_intiator = models.ForeignKey(Customer, related_name="dbt_to_cstmr", db_column="debit_initator_id", on_delete=models.RESTRICT)
+    debit_intiator = models.ForeignKey(
+        Customer, related_name="dbt_to_cstmr", db_column="debit_initator_id", on_delete=models.RESTRICT)
     from_account_no = models.BigIntegerField()
     from_routing_no = models.IntegerField()
-    to_account = models.ForeignKey(Accounts, related_name="dbt_to_acct", db_column="to_account_id", on_delete=models.RESTRICT)
+    to_account = models.ForeignKey(
+        Accounts, related_name="dbt_to_acct", db_column="to_account_id", on_delete=models.RESTRICT)
     amount = models.DecimalField(max_digits=18, decimal_places=2)
     time_started = models.DateTimeField()
     time_processed = models.DateTimeField(null=True)
@@ -359,12 +371,14 @@ class SuspiciousExchange(models.Model):
         managed = True
         db_table = 'suspicious_exchanges'
 
-
+        
 SAVING_ACCOUNT_ID = 1
 if AccountTypes.objects.filter(pk=SAVING_ACCOUNT_ID).first() is None:
-    saving = AccountTypes(account_type_id=SAVING_ACCOUNT_ID, account_type_name='SAVING')
+    saving = AccountTypes(account_type_id=SAVING_ACCOUNT_ID,
+                          account_type_name='SAVING')
     saving.save()
 CHECKING_ACCOUNT_ID = 2
 if AccountTypes.objects.filter(pk=CHECKING_ACCOUNT_ID).first() is None:
-    checking = AccountTypes(account_type_id=CHECKING_ACCOUNT_ID, account_type_name='CHECKING')
+    checking = AccountTypes(
+        account_type_id=CHECKING_ACCOUNT_ID, account_type_name='CHECKING')
     checking.save()

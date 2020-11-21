@@ -17,7 +17,7 @@ class DebitProcess:
             self.amount = data["amount"]
             self.eventInfo = data["event_info"]
 
-    @transaction.atomic
+    @transaction.atomic(using="bank_data")
     def queue_debit(self, decrypted_auth_token):
         requesting_user_id = decrypted_auth_token["user_id"]
         debit_authorization_key = decrypted_auth_token["debit_auth_key"]
@@ -58,7 +58,7 @@ class DebitProcess:
         return False
 
     @staticmethod
-    @transaction.atomic
+    @transaction.atomic(using="bank_data")
     def approve_debit(debit_id=None):
         if debit_id:
             debit_obj = DebitHistory.objects.filter(pk=debit_id).first()
@@ -80,7 +80,7 @@ class DebitProcess:
             return True
 
     @staticmethod
-    @transaction.atomic
+    @transaction.atomic(using="bank_data")
     def decline_debit(debit_id=None):
         if debit_id:
             debit_obj = DebitHistory.objects.filter(pk=debit_id).first()

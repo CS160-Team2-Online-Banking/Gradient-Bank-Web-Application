@@ -76,7 +76,7 @@ class TransferForm(forms.Form):
 class Transaction(View):
     def get(self, request, *args, **kwargs):
         if request.user.is_authenticated:
-            from_accounts = api_get_accounts(request.user)
+            from_accounts = api_get_accounts(request)
             if not from_accounts:
                 from_accounts = []
         else:
@@ -92,14 +92,14 @@ class Transaction(View):
 
     def post(self, request):
         if request.user.is_authenticated:
-            from_accounts = api_get_accounts(request.user)
+            from_accounts = api_get_accounts(request)
             if not from_accounts:
                 from_accounts = []
 
         form = AutopaymentForm(request.POST, from_accounts=from_accounts)
         if form.is_valid():
             data = form.cleaned_data
-            result = api_setup_autopayment(request.user, data["to_account_no"], data["to_routing_no"],
+            result = api_setup_autopayment(request, data["to_account_no"], data["to_routing_no"],
                                            data["from_account"], str(
                                                data["amount"]), data["start_date"].isoformat(),
                                            data["end_date"].isoformat(), data["frequency"])
@@ -113,7 +113,7 @@ class Transaction(View):
 class TransferView(View):
     def get(self, request, type=None):
         if request.user.is_authenticated:
-            from_accounts = api_get_accounts(request.user)
+            from_accounts = api_get_accounts(request)
             form = PersonalTransferForm(from_accounts=from_accounts)
             if type == "/external":
                 form = TransferForm(from_accounts=from_accounts)
@@ -126,7 +126,7 @@ class TransferView(View):
 
     def post(self, request, type=None):
         if request.user.is_authenticated:
-            from_accounts = api_get_accounts(request.user)
+            from_accounts = api_get_accounts(request)
 
             if type == "/external":
                 form = TransferForm(request.POST, from_accounts=from_accounts)
@@ -138,7 +138,7 @@ class TransferView(View):
                 data = form.cleaned_data
                 to_routing_no = data.get(
                     "to_routing_no", settings.BANK_ROUTING_NUMBER)
-                result = api_post_transfer(request.user, data["to_account_no"], to_routing_no,
+                result = api_post_transfer(request, data["to_account_no"], to_routing_no,
                                            data["from_account"], str(data["amount"]))
                 if not result:
                     print("Request Failed")

@@ -10,7 +10,7 @@ import json
 SUSPICIOUS_TRANSFER_AMOUNT_MAX = 10_000
 
 
-@transaction.atomic
+@transaction.atomic(using="bank_data")
 def flag_suspicious_exchange(exchange, event):
     exchange.status = ExchangeHistory.ExchangeHistoryStatus.FLAGGED
     exchange.save()
@@ -36,8 +36,7 @@ def is_exchange_suspicious(exchange, create_event=None):
     return (not len(events_with_same_ip)) or exchange.amount > SUSPICIOUS_TRANSFER_AMOUNT_MAX
 
 
-
-@transaction.atomic
+@transaction.atomic(using="bank_data")
 def external_transfer_handler(auth_token, from_account_no, to_account_no, to_routing_no, amount, event=None) -> dict:
     user_id = auth_token["user_id"]
     from_account = Accounts.objects.filter(account_number=from_account_no).first()
@@ -70,16 +69,17 @@ def external_transfer_handler(auth_token, from_account_no, to_account_no, to_rou
                                             external_account_no=to_account_no,
                                             amount=amount,
                                             inbound=False,
-                                            debit=False,
+                                            debit_transfer=False,
                                             exchange_obj=ex)
             ext_pool.save()
+
             return {"success": True, "data": {"transfer_id": ex.pk}}
         else:
             return {"success": False, "msg": "insufficient funds"}
         return {"success": False, "msg": "insufficient permission"}
 
 
-@transaction.atomic
+@transaction.atomic(using="bank_data")
 def internal_transfer_handler(auth_token, from_account_no, to_account_no, amount, event=None) -> dict:
     user_id = auth_token["user_id"]
     from_account = Accounts.objects.filter(account_number=from_account_no).first()
@@ -122,7 +122,7 @@ def internal_transfer_handler(auth_token, from_account_no, to_account_no, amount
     return {"success": False, "msg": "insufficient permission"}
 
 
-@transaction.atomic
+@transaction.atomic(using="bank_data")
 def deposit_handler(auth_token, from_account_no, from_routing_no, to_account_no, amount, event=None) -> dict:
     requesting_user_id = auth_token["user_id"]
     debit_authorization_key = auth_token["debit_auth_key"]
@@ -146,12 +146,13 @@ def deposit_handler(auth_token, from_account_no, from_routing_no, to_account_no,
                              type=ExchangeHistory.ExchangeTypes.DEPOSIT,
                              status=ExchangeHistory.ExchangeHistoryStatus.POSTED)
         ex.save()
+
         ext_pool = ExternalTransferPool(internal_account=to_account,
                                         external_account_routing_no=from_routing_no,
                                         external_account_no=from_account_no,
                                         amount=amount,
                                         inbound=True,
-                                        debit=True,
+                                        debit_transfer=True,
                                         exchange_obj=ex)
         ext_pool.save()
         return {"success": True, "data": {"transfer_id": ex.pk}}
@@ -185,15 +186,17 @@ class ExchangeProcessor:
     def get_exchange_history(account_no, auth_token) -> list:
         # using an account number, retrieve all exchanges involving that account to date
         requesting_user_id = auth_token["user_id"]
+        user_is_manager = auth_token.get("manager_id", False)
         target_account = Accounts.objects.filter(account_number=account_no).first()
 
         if target_account is None:
             return {"success": False, "msg": "the accounts specified does not exist"}
 
-        if target_account.owner_id == requesting_user_id:
+        if target_account.owner_id == requesting_user_id or user_is_manager:
             exchange_records = ExchangeHistory.objects.filter((Q(to_account_no=account_no, to_routing_no=settings.BANK_ROUTING_NUMBER)|
                                                                Q(from_account_no=account_no, from_routing_no=settings.BANK_ROUTING_NUMBER)))
             serialized_records = json.loads(serializers.serialize("json", exchange_records))
+            for record in serialized_records: record["fields"]["pk"] = record["pk"]
             serialized_records = list(map(lambda x: x["fields"], serialized_records))
             for i, record in enumerate(serialized_records):
                 if (int(record["from_account_no"]) == target_account.account_number and

@@ -1,5 +1,5 @@
 from django.urls import include, path, re_path
-from bankapi.views import TransferView, AutoPaymentView, TransactionView, AccountView, AuthView
+from bankapi.views import TransferView, AutoPaymentView, TransactionView, AccountView, AuthView, ReportView
 
 urlpatterns = [
     path('transfers', TransferView.as_view()),
@@ -10,5 +10,6 @@ urlpatterns = [
     path('accounts', AccountView.as_post_view()),
     re_path(r'^accounts/(?P<account_no>[0-9]+)?', AccountView.as_access_view()),
 
-    path('transaction', TransactionView.as_view())
+    path('transaction', TransactionView.as_view()),
+    path('reports/<str:datatype>', ReportView.as_view())
 ]
