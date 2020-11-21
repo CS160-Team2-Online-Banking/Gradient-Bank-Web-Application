@@ -5,9 +5,12 @@
     <title>Sign In</title>
 </head>
 
-<div>
-<h1>Choose A Login</h1>
-<a href="customer/login"><button type="button" class="btn btn-secondary">Customer Login</button></a>
-<a href="employee/login"><button type="button" class="btn btn-secondary">Employee Login</button></a>
+<div class="row">
+    <div class="col-md-4 md-offset-3 mx-auto">
+        <h1>Choose A Login</h1>
+        <a href="{% url 'accounts:cus_login' %}"><button type="button" class="btn btn-primary">Customer
+                Login</button></a>
+        <a class="btn btn-primary" href="{% url 'accounts:emp_login' %}">Employee Login</a>
+    </div>
 </div>
 {% endblock %}
