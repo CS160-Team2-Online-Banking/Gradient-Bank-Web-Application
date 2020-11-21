@@ -28,11 +28,11 @@ class CustomersSearchForm(forms.Form):
     customer_email = forms.CharField(label="Customer Email", required=False)
     customer_ssn = forms.CharField(label="Customer SSN", required=False)
     customer_address = forms.CharField(label="Customer Address", required=False)
+    selected_customer_id = forms.IntegerField(required=False, initial=-1, widget=forms.HiddenInput())
 
     def __init__(self, *args, **kwargs):
         super(CustomersSearchForm, self).__init__(*args, **kwargs)
         #self.fields['page_number'].validators = [MinValueValidator(1), MaxValueValidator(self.fields['page_count'].initial)]
-
 
 
 def set_or_message(result, key, dict, mapper=lambda x: x):
@@ -43,27 +43,38 @@ def set_or_message(result, key, dict, mapper=lambda x: x):
 
 
 class LandingView(View):
-    def get(self, request, *args, **kwargs):
-        user = request.user
-        manager = get_manager(user)
-        """
+    @staticmethod
+    def get_headline(request, manager):
         start_date = datetime.utcnow() - timedelta(days=60)
         end_date = datetime.utcnow()
-        result = api_get_data(user, manager, "get_income", {"customer_id": 4, "time_delta": "WEEK"})
-        print(result)
-        """
         headline = {}
-        set_or_message(api_get_data(user, manager, "get_customer_count", {}), "customer_count", headline, lambda x: list(x.values())[0])
-        set_or_message(api_get_data(user, manager, "get_exchange_count", {}), "exchange_count", headline, lambda x: list(x.values())[0])
-        set_or_message(api_get_data(user, manager, "get_failed_transactions", {}), "failed_exchanges", headline, lambda x: list(x.values())[0])
-        set_or_message(api_get_data(user, manager, "get_total_savings", {}), "total_balance", headline, lambda x: list(x.values())[0])
-        result = api_get_data(user, manager, "get_customers", {})
-        start_form = CustomersSearchForm(initial={"page_count": result["page_count"]})
-        return render(request, "managerportal/landing.html", {"manager": manager, "headline": headline,
-                                                              "customers_table": result,
-                                                              "form": start_form,
-                                                              "cust_table_page": 0,
-                                                              "cust_table_query": {}})
+        set_or_message(api_get_data(request, manager, "get_customer_count", {}), "customer_count", headline,
+                       lambda x: list(x.values())[0])
+        set_or_message(api_get_data(request, manager, "get_exchange_count", {}), "exchange_count", headline,
+                       lambda x: list(x.values())[0])
+        set_or_message(api_get_data(request, manager, "get_failed_transactions", {}), "failed_exchanges", headline,
+                       lambda x: list(x.values())[0])
+        set_or_message(api_get_data(request, manager, "get_total_savings", {}), "total_balance", headline,
+                       lambda x: list(x.values())[0])
+        return headline
+
+    @staticmethod
+    def prepare_customer_report(request, manager, customer_id):
+        customer_accounts = api_get_data(request, manager, "get_customer_account_info", {"customer_id":customer_id})
+        if customer_accounts:
+            for account in customer_accounts:
+                transactions = api_get_data(request, manager, "get_account_transactions", {"account_no": account["account_number"]})
+                account["exchange_history"] = transactions if transactions else []
+
+        customer_activity = api_get_data(request, manager, "get_customer_activity", {"customer_id": customer_id})
+        income_history = api_get_data(request, manager, "get_income", {"customer_id": customer_id, "time_delta": "WEEK"})
+        spending_history = api_get_data(request, manager, "get_spending", {"customer_id": customer_id, "time_delta": "WEEK"})
+        return {
+            "customer_accounts": customer_accounts if customer_accounts else {},
+            "customer_activity": customer_activity if customer_activity else {},
+            "income_history": income_history if income_history else {},
+            "spending_history": spending_history if spending_history else {}
+        }
 
     @staticmethod
     def prep_post_params(data):
@@ -84,38 +95,45 @@ class LandingView(View):
         add_param('order_by')
         data['page_number'] = str(int(data['page_number'])-1)
         add_param('page_number')
-        #data['page_number'] = str(int(data['page_number'])+1)  # AHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH
         return params
 
+    def get(self, request, *args, **kwargs):
+        user = request.user
+        manager = get_manager(user)
+
+        headline = self.get_headline(request, manager)
+        result = api_get_data(request, manager, "get_customers", {})
+        start_form = CustomersSearchForm(initial={"page_count": result["page_count"]})
+        return render(request, "managerportal/landing.html", {"manager": manager, "headline": headline,
+                                                              "customers_table": result,
+                                                              "form": start_form,
+                                                              "cust_table_page": 0,
+                                                              "cust_table_query": {},
+                                                              "customer_details": {}})
 
     def post(self, request):
         user = request.user
         manager = get_manager(user)
-        headline = {}
 
-        set_or_message(api_get_data(user, manager, "get_customer_count", {}), "customer_count", headline,
-                       lambda x: list(x.values())[0])
-        set_or_message(api_get_data(user, manager, "get_exchange_count", {}), "exchange_count", headline,
-                       lambda x: list(x.values())[0])
-        set_or_message(api_get_data(user, manager, "get_failed_transactions", {}), "failed_exchanges", headline,
-                       lambda x: list(x.values())[0])
-        set_or_message(api_get_data(user, manager, "get_total_savings", {}), "total_balance", headline,
-                       lambda x: list(x.values())[0])
-
+        headline = self.get_headline(request, manager)
         form = CustomersSearchForm(request.POST)
+        customer_details = {}
         if form.is_valid():
             data = form.cleaned_data
             params = self.prep_post_params(data)
-            result = api_get_data(user, manager, "get_customers", params)
+            result = api_get_data(request, manager, "get_customers", params)
+            if data["selected_customer_id"] > 0:
+                customer_details = self.prepare_customer_report(request, manager, data["selected_customer_id"])
             if not result:
-                result = api_get_data(user, manager, "get_customers", {})
+                result = api_get_data(request, manager, "get_customers", {})
         else:
-            result = api_get_data(user, manager, "get_customers", {})
+            result = api_get_data(request, manager, "get_customers", {})
         return render(request, "managerportal/landing.html", {"manager": manager, "headline": headline,
                                                               "customers_table": result,
                                                               "form": form,
                                                               "cust_table_page": 0,
-                                                              "cust_table_query": {}})
+                                                              "cust_table_query": {},
+                                                              "customer_details": customer_details})
 
         # if it's a new search, populate the customer table with the search results and keep the results section the same
         # if it's a detail selection, populate the details section and keep the table the same

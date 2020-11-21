@@ -5,6 +5,7 @@ from django.core import serializers
 from django.core.paginator import Paginator
 from django.db.models import Sum, Count, Avg, Q
 from django.db.models.functions import *
+import ipaddress
 from bankapi.transfer.exchange_processor import ExchangeProcessor
 import json
 
@@ -60,7 +61,7 @@ def get_total_savings(auth_token):
     return {"success": True, "data": {"total_savings": total_savings['balance__sum']}}
 
 
-def get_customers(auth_token, page_size=10, page_number=0, order_by='customer_name', **search_criteria):
+def get_customers(auth_token, verbose=False, page_size=10, page_number=0, order_by='customer_name', **search_criteria):
     manager_id = auth_token.get("manager_id", None)
     page_size = int(page_size)
     page_number = int(page_number)
@@ -83,16 +84,20 @@ def get_customers(auth_token, page_size=10, page_number=0, order_by='customer_na
     serialized_records = list(map(lambda x: x["fields"], serialized_records))
 
     for user in serialized_records:  # get customers and their account information
-        if not user.get("pk", False):
-            print("get_customers isn't attaching the primary key")
         owner_id = user["pk"]
-        customer_accounts = Accounts.objects.filter(owner_id=owner_id)
+        if verbose:
+            if not user.get("pk", False):
+                print("get_customers isn't attaching the primary key")
 
-        account_records = json.loads(serializers.serialize("json", customer_accounts))
-        for record in account_records: record["fields"]["pk"] = record["pk"]
-        account_records = list(map(lambda x: x["fields"], account_records))
+            customer_accounts = Accounts.objects.filter(owner_id=owner_id)
 
-        user["accounts"] = account_records
+            account_records = json.loads(serializers.serialize("json", customer_accounts))
+            for record in account_records: record["fields"]["pk"] = record["pk"]
+            account_records = list(map(lambda x: x["fields"], account_records))
+
+            user["accounts"] = account_records
+        else:
+            user["accounts"] = len(Accounts.objects.filter(owner_id=owner_id))
 
     # add each customer's accounts
     return {"success": True, "data": {"users": serialized_records, "page_count": page_count}}
@@ -106,7 +111,7 @@ def get_account_transactions(auth_token, account_no):
 
     exchange_history = ExchangeProcessor.get_exchange_history(account_no=account_no, auth_token=auth_token)
 
-    return {"success": True, "data": {"account_exchanges": exchange_history}}
+    return exchange_history
 
 
 ### ADVANCED QUERIES ###
@@ -210,6 +215,49 @@ def get_income(auth_token, customer_id, time_delta="MONTH"):
     return {"success":  True, "data": list(spending_per_time)}  # i'm not quite sure how to serialize this
 
 
+def get_customer_activity(auth_token, customer_id):
+    manager_id = auth_token.get("manager_id", None)
+
+    if manager_id is None:
+        return {"success": False, "msg": "Access Denied"}
+
+    activity_log = EventLog.objects.filter(intiator_user_id=customer_id)
+    pk_ip_info = {}
+    for record in activity_log:
+         pk_ip_info[record.pk] = (None if not record.ip4_address else ipaddress.ip_address(record.ip4_address).compressed,
+         None if not record.ip6_address else ipaddress.ip_address(record.ip6_address).compressed)
+
+    serialized_records = json.loads(serializers.serialize("json", activity_log))
+    for record in serialized_records: record["fields"]["pk"] = record["pk"]
+    serialized_records = list(map(lambda x: x["fields"], serialized_records))
+    for record in serialized_records:
+        record["event_type"] = EventTypes.EVENT_ARR[int(record["event_type"])][1]
+        record["ip4_address"] = pk_ip_info[record["pk"]][0]
+        record["ip6_address"] = pk_ip_info[record["pk"]][1]
+    # add each customer's accounts
+    return {"success": True, "data": serialized_records}
+
+
+def get_customer_account_info(auth_token, customer_id):
+    manager_id = auth_token.get("manager_id", None)
+
+    if manager_id is None:
+        return {"success": False, "msg": "Access Denied"}
+
+    customer_accounts = Accounts.objects.filter(owner_id=customer_id)
+    account_records = json.loads(serializers.serialize("json", customer_accounts))
+    for record in account_records: record["fields"]["pk"] = record["pk"]
+    account_records = list(map(lambda x: x["fields"], account_records))
+
+    for i, entry in enumerate(account_records):
+        account_type_id = int(entry["account_type"])
+        account_type = AccountTypes.objects.get(pk=account_type_id)
+        entry["account_type"] = {"account_type_id": account_type.pk,
+                                 "account_type_name": account_type.account_type_name}
+
+    return {"success": True, "data": account_records}
+
+
 REPORT_DISPATCHER = {
     "get_income": get_income,
     "get_spending": get_spending,
@@ -219,11 +267,15 @@ REPORT_DISPATCHER = {
     "get_total_savings": get_total_savings,
     "get_failed_transactions": get_failed_transactions,
     "get_exchange_count": get_exchange_count,
-    "get_customer_count": get_customer_count
+    "get_customer_count": get_customer_count,
+    "get_customer_activity": get_customer_activity,
+    "get_customer_account_info": get_customer_account_info
 }
+
 
 def default_dipatcher():
     return {"success": False, "msg": "The report type you requested doesn't exist"}
+
 
 def dispatch_report(report_name):
     return REPORT_DISPATCHER.get(report_name, default_dipatcher)

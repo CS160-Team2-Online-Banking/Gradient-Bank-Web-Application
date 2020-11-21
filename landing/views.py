@@ -10,7 +10,7 @@ class Landing(View):
         if request.user.is_authenticated:
             username = request.user.username
 
-            result = api_get_accounts(request.user)
+            result = api_get_accounts(request)
             if not result:
                 result = []
         else:

@@ -24,12 +24,14 @@ class DummyUser:
 '''
 
 
-def attach_manager_token(user, manager, request):
+def attach_manager_token(user_request, manager, request):
+    user = user_request.user
     if user.is_authenticated:
         userid = user.id
         expiration = datetime.utcnow() + EXPIRE_TIME
+        ip = user_request.META.get('REMOTE_ADDR')
         encrpyted_token = jwt.encode({"user_id": userid, "manager_id": manager.manager_id,
-                                      "expires": expiration.isoformat()}, settings.JWT_SECRET,
+                                      "expires": expiration.isoformat(), "REMOTE_ADDR": ip}, settings.JWT_SECRET,
                                      algorithm=settings.JWT_ALGO).decode('utf-8')
         request.add_header("Cookie", "auth_token={token}".format(token=encrpyted_token))
         return request
@@ -37,13 +39,13 @@ def attach_manager_token(user, manager, request):
         raise ValueError("User object must be authenticated")
 
 
-def api_post_account(user, manager, account_type):
+def api_post_account(user_request, manager, account_type):
     req = Request
     payload = {"data": {
             "account_type": account_type
     }}
     req = Request(url="{path}/accounts".format(path=API_PATH), method='POST')
-    attach_manager_token(user, manager, req)
+    attach_manager_token(user_request, manager, req)
     add_json_body(req, payload)
     try:
         response = urlopen(req)

@@ -21,11 +21,14 @@ class DummyUser:
     id = 1
 '''
 
-def attach_auth_token(user, request):
+def attach_auth_token(user_request, request):
+    user = user_request.user
     if user.is_authenticated:
         userid = user.id
         expiration = datetime.utcnow() + EXPIRE_TIME
-        encrpyted_token = jwt.encode({"user_id": userid, "expires": expiration.isoformat()}, settings.JWT_SECRET,
+
+        ip = user_request.META.get('REMOTE_ADDR')
+        encrpyted_token = jwt.encode({"user_id": userid, "expires": expiration.isoformat(), "REMOTE_ADDR": ip}, settings.JWT_SECRET,
                                      algorithm=settings.JWT_ALGO).decode('utf-8')
         request.add_header("Cookie", "auth_token={token}".format(token=encrpyted_token))
         return request
@@ -40,13 +43,13 @@ def add_json_body(request, data: dict):
     return request
 
 
-def api_post_account(user, account_type):
+def api_post_account(user_request, account_type):
     req = Request
     payload = {"data": {
             "account_type": account_type
     }}
     req = Request(url="{path}/accounts".format(path=API_PATH), method='POST')
-    attach_auth_token(user, req)
+    attach_auth_token(user_request, req)
     add_json_body(req, payload)
     try:
         response = urlopen(req)
@@ -59,9 +62,9 @@ def api_post_account(user, account_type):
         return False
 
 
-def api_get_accounts(user):
+def api_get_accounts(user_request):
     req = Request(url="{path}/accounts/".format(path=API_PATH))
-    attach_auth_token(user, req)
+    attach_auth_token(user_request, req)
     try:
         response = urlopen(req)
         if response.status < 300:
@@ -73,9 +76,9 @@ def api_get_accounts(user):
         return False
 
 
-def api_get_account_details(user, account_no):
+def api_get_account_details(user_request, account_no):
     req = Request(url="{path}/accounts/{id}".format(path=API_PATH, id=account_no))
-    attach_auth_token(user, req)
+    attach_auth_token(user_request, req)
     try:
         response = urlopen(req)
         if response.status < 300:
@@ -87,10 +90,10 @@ def api_get_account_details(user, account_no):
         return False
 
 
-def api_setup_autopayment(user, to_account_no, to_account_routing, from_account_no, amount, start_date, end_date,
+def api_setup_autopayment(user_request, to_account_no, to_account_routing, from_account_no, amount, start_date, end_date,
                           frequency):
     req = Request(url="{path}/autopayments".format(path=API_PATH), method='POST')
-    attach_auth_token(user, req)
+    attach_auth_token(user_request, req)
     payload = {"data": {
         "to_account_no": to_account_no,
         "to_routing_no": to_account_routing,
@@ -116,9 +119,9 @@ def api_setup_autopayment(user, to_account_no, to_account_routing, from_account_
 
 
 
-def api_get_autopayments(user):
+def api_get_autopayments(user_request):
     req = Request(url="{path}/autopayments/".format(path=API_PATH))
-    attach_auth_token(user, req)
+    attach_auth_token(user_request, req)
     try:
         response = urlopen(req)
         if response.status < 300:
@@ -130,9 +133,9 @@ def api_get_autopayments(user):
         return False
 
 
-def api_get_autopayment_details(user, id):
+def api_get_autopayment_details(user_request, id):
     req = Request(url="{path}/autopayments/{id}".format(path=API_PATH, id=id))
-    attach_auth_token(user, req)
+    attach_auth_token(user_request, req)
     try:
         response = urlopen(req)
         if response.status < 300:
@@ -144,9 +147,9 @@ def api_get_autopayment_details(user, id):
         return False
 
 
-def api_post_transfer(user, to_account_no, to_account_routing, from_account_no, amount):
+def api_post_transfer(user_request, to_account_no, to_account_routing, from_account_no, amount):
     req = Request(url="{path}/transfers".format(path=API_PATH), method='POST')
-    attach_auth_token(user, req)
+    attach_auth_token(user_request, req)
     payload = {"data": {
         "to_account_no": to_account_no,
         "to_routing_no": to_account_routing,

@@ -3,8 +3,10 @@ from django.db.models.functions import Now
 import ipaddress
 
 
-def get_request_ip(request):
-    return ipaddress.ip_address(request.META.get('REMOTE_ADDR'))  # just get the remote address
+def get_request_ip(request, auth_token):
+    ip = auth_token.get("REMOTE_ADDR", request.META.get('REMOTE_ADDR'))
+    return ipaddress.ip_address(ip)  # just get the remote address
+    #return ipaddress.ip_address(request.META.get('REMOTE_ADDR'))  # just get the remote address
 
 
 def ip6_to_string(ip6):
@@ -17,7 +19,7 @@ def ip4_to_string(ip4):
 
 def log_event(request, auth_token, event_type, data_id=None):
     user_id = auth_token["user_id"]
-    ip = get_request_ip(request)
+    ip = get_request_ip(request, auth_token)
 
     user = Customer.objects.filter(pk=user_id).first()
     if user is None:

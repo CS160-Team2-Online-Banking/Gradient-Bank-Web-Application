@@ -25,7 +25,7 @@
 
         <div class="form-row">
             <div class="col">
-            {{form.customer_name.label}}{{ form.customer_name }}
+                {{form.customer_name.label}}{{ form.customer_name }}
                 {% if form.customer_name.errors %}
                 <div class="alert-message">
                     {{ form.customer_name.errors }}
@@ -33,7 +33,7 @@
                 {% endif %}
             </div>
             <div class="col">
-            {{form.customer_phone.label}}{{ form.customer_phone }}
+                {{form.customer_phone.label}}{{ form.customer_phone }}
                 {% if form.customer_phone.errors %}
                 <div class="alert-message">
                     {{ form.customer_phone.errors }}
@@ -41,7 +41,7 @@
                 {% endif %}
             </div>
             <div class="col">
-            {{form.customer_email.label}}{{ form.customer_email }}
+                {{form.customer_email.label}}{{ form.customer_email }}
                 {% if form.customer_email.errors %}
                 <div class="alert-message">
                     {{ form.customer_email.errors }}
@@ -49,7 +49,7 @@
                 {% endif %}
             </div>
             <div class="col">
-            {{form.customer_ssn.label}}{{ form.customer_ssn }}
+                {{form.customer_ssn.label}}{{ form.customer_ssn }}
                 {% if form.customer_ssn.errors %}
                 <div class="alert-message">
                     {{ form.customer_ssn.errors }}
@@ -57,14 +57,16 @@
                 {% endif %}
             </div>
             <div class="col">
-            {{form.customer_address.label}}{{ form.customer_address }}
+                {{form.customer_address.label}}{{ form.customer_address }}
                 {% if form.customer_address.errors %}
                 <div class="alert-message">
                     {{ form.customer_address.errors }}
                 </div>
                 {% endif %}
             </div>
-            <div class="col"><button type="submit" name="search_customers" class="btn-block btn btn-lg btn-primary">Search</button></div>
+            <div class="col">
+                <button type="submit" name="search_customers" class="btn-block btn btn-lg btn-primary">Search</button>
+            </div>
         </div>
         <script>
             var order_by_toggle = {
@@ -83,31 +85,128 @@
                 document.getElementsByName('order_by')[0].value = asc ? `${field}` : `-${field}`;
                 document.getElementById("customer_search_form").submit();
             }
-        </script>
-    <table class="table">
-        <tr>
-            <th onclick="set_ordering('customer_name')" style="cursor:pointer;">Customer Name</th>
-            <th onclick="set_ordering('customer_phone')" style="cursor:pointer;">Phone No.</th>
-            <th onclick="set_ordering('customer_email')" style="cursor:pointer;">Email</th>
-            <th onclick="set_ordering('customer_ssn')" style="cursor:pointer;">SSN</th>
-            <th onclick="set_ordering('customer_address')" style="cursor:pointer;">Address</th>
-            <th>Account Count.</th>
-        </tr>
-        {% for entry in customers_table.users %}
-        <tr> <!--onclick="// send a request to get this customers details report" >-->
-            <td>{{entry.customer_name}}</td>
-            <td>{{entry.customer_phone}}</td>
-            <td>{{entry.customer_email}}</td>
-            <td>{{entry.customer_ssn}}</td>
-            <td>{{entry.customer_address}}</td>
-            <td>{{entry.accounts|length}}</td>
-        </tr>
-        {% endfor %}
-    </table>
-    Page <input type="number" style="width:80px" id="page_number" name="page_number" min="1" step="1" max="{{customers_table.page_count}}" value="{{form.page_number.value}}"> of {{customers_table.page_count}}
-    </form>
 
+            function set_selected(id) {
+                document.getElementsByName('selected_customer_id')[0].value = id;
+                document.getElementById("customer_search_form").submit();
+            }
+        </script>
+        <table class="table table-hover">
+            <tr style="cursor:pointer;">
+                <th onclick="set_ordering('customer_name')">Customer Name</th>
+                <th onclick="set_ordering('customer_phone')">Phone No.</th>
+                <th onclick="set_ordering('customer_email')">Email</th>
+                <th onclick="set_ordering('customer_ssn')">SSN</th>
+                <th onclick="set_ordering('customer_address')">Address</th>
+                <th>Account Count.</th>
+            </tr>
+            {% for entry in customers_table.users %}
+            <tr onclick="set_selected('{{entry.pk}}')" style="cursor:pointer;">
+                <!--onclick="// send a request to get this customers details report" >-->
+                <td>{{entry.customer_name}}</td>
+                <td>{{entry.customer_phone}}</td>
+                <td>{{entry.customer_email}}</td>
+                <td>{{entry.customer_ssn}}</td>
+                <td>{{entry.customer_address}}</td>
+                <td>{{entry.accounts}}</td>
+            </tr>
+            {% endfor %}
+        </table>
+        Page <input type="number" style="width:80px" id="page_number" name="page_number" min="1" step="1"
+                    max="{{customers_table.page_count}}" value="{{form.page_number.value}}"> of
+        {{customers_table.page_count}}
+    </form>
+    {% if customer_details %}
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.3/dist/Chart.min.js"></script>
+    <script>
+            console.log({{ customer_details.income_history }});
+            var chart1_config = {
+                type:'line',
+                data: {
+                    labels:[],
+                    datasets: []
+                },
+            }
+            window.onload = function() {
+                var context1 = document.getElementById('chart1').getContext('2d');
+                window.chart1 = new Chart(context1, chart1_config);
+            }
+    </script>
     <h2>Customer Details</h2>
-    AHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH
+    <div class="row">
+    </div>
+    <div class="row">
+        <div class="col">
+            <h2>Customer Account Info</h2>
+            <table class="table">
+                <thead class="thead-dark">
+                <tr>
+                    <th colspan="2">Account Type</th>
+                    <th colspan="2">Account No.</th>
+                    <th colspan="2">Acount Balance.</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for account in customer_details.customer_accounts %}
+                <thead  class="thead-light">
+                <tr>
+                    <th colspan="2">{{account.account_type.account_type_name}}</th>
+                    <th colspan="2">{{account.account_number}}</th>
+                    <th colspan="2">${{account.balance}}</th>
+                </tr>
+                <tr>
+                    <th>Type</th>
+                    <th>To Account</th>
+                    <th>From Account</th>
+                    <th>Amount</th>
+                    <th>Posted Date</th>
+                    <th>Status</th>
+                </tr>
+                </thead>
+                {% for transaction in account.exchange_history %}
+                <tr>
+                    <td>{{transaction.type}}</td>
+                    <td>{{transaction.to_account_no}}</td>
+                    <td>{{transaction.from_account_no}}</td>
+                    <td>${{transaction.amount}}</td>
+                    <td>{{transaction.finished}}</td>
+                    <td>{{transaction.status}}</td>
+                </tr>
+                {% empty %}
+                <tr><th colspan="6">No Transactions</th></tr>
+                {% endfor %}
+                {% empty %}
+                <tr><th colspan="6">No Accounts</th></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="col">
+            <h2>Customer Activity</h2>
+        <table class="table">
+            <thead class="thead-dark">
+                <tr>
+                    <th>Event Type</th>
+                    <th>Ip4</th>
+                    <th>Ip6</th>
+                    <th>Event Time</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for event in customer_details.customer_activity %}
+                <tr>
+                    <td>{{event.event_type}}</td>
+                    <td>{{event.ip4_address}}</td>
+                    <td>{{event.ip6_address}}</td>
+                    <td>{{event.event_time}}</td>
+                </tr>
+                {% empty %}
+                <tr><th colspan="4">No Activity</th></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        </div>
+    </div>
+    {% endif %}
 </div>
 {% endblock %}

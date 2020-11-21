@@ -37,9 +37,11 @@ def external_transfer_handler(auth_token, from_account_no, to_account_no, to_rou
                                             external_account_no=to_account_no,
                                             amount=amount,
                                             inbound=False,
-                                            debit=False,
+                                            debit_transfer=False,
                                             exchange_obj=ex)
+            raise Exception("DAJDSJADS")
             ext_pool.save()
+
             return {"success": True, "data": {"transfer_id": ex.pk}}
         else:
             return {"success": False, "msg": "insufficient funds"}
@@ -107,12 +109,13 @@ def deposit_handler(auth_token, from_account_no, from_routing_no, to_account_no,
                              type=ExchangeHistory.ExchangeTypes.DEPOSIT,
                              status=ExchangeHistory.ExchangeHistoryStatus.POSTED)
         ex.save()
+
         ext_pool = ExternalTransferPool(internal_account=to_account,
                                         external_account_routing_no=from_routing_no,
                                         external_account_no=from_account_no,
                                         amount=amount,
                                         inbound=True,
-                                        debit=True,
+                                        debit_transfer=True,
                                         exchange_obj=ex)
         ext_pool.save()
         return {"success": True, "data": {"transfer_id": ex.pk}}
@@ -145,7 +148,7 @@ class ExchangeProcessor:
     def get_exchange_history(account_no, auth_token) -> list:
         # using an account number, retrieve all exchanges involving that account to date
         requesting_user_id = auth_token["user_id"]
-        user_is_manager = auth_token.get("is_manager", False)
+        user_is_manager = auth_token.get("manager_id", False)
         target_account = Accounts.objects.filter(account_number=account_no).first()
 
         if target_account is None:
