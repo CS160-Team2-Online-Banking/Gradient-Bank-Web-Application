@@ -8,6 +8,7 @@
 
 
 {% block contents %}
+
 <h1 class="text-center">{{form_title}}</h1>
 <form class="signup" action="{{action}}" method="post" enctype="multipart/form-data">
     {% csrf_token %}
@@ -31,4 +32,5 @@
         </div>
     </div>
 </form>
+
 {% endblock %}

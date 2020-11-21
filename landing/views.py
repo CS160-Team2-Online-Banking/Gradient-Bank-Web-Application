@@ -12,6 +12,7 @@ class Landing(View):
         """
         username = ""
         result = []
+        auto_pay_list = []
         if request.user.is_authenticated:
             username = request.user.username
             # if user is not a customer -> add to customer
@@ -22,8 +23,6 @@ class Landing(View):
                     print(f'Fail to add {request.user.username} into Customer')
                     print('>>>>>>>>>>>>>>>>')
             # customer will contains user at this point
-            token = utils.get_bankapi_token(request.user, 5)
-            request = utils.add_bankapi_token(request, token)
 
             #TODO: Here is the old stuffs which gets the result from account
             # but when I try it, it keep giving me "connection refuse"
@@ -31,13 +30,18 @@ class Landing(View):
             # need to confirm on the following code later
 
             result = api_get_accounts(request.user)
+            # auto payment list
+            auto_pay_list = api_get_autopayment_details(request.user, None)
+
             if not result:
                 result = []
             
         else:
             username = 'Guest'
         
-        return render(request, 'landing/landing.html', {"account_list": result, "username": username})
+        return render(request, 'landing/landing.html', {"account_list": result, 
+                                                        "auto_list": auto_pay_list, 
+                                                        "username": username})
 
 
 landing = Landing.as_view()

@@ -5,6 +5,7 @@ urlpatterns = [
     path('transfers', TransferView.as_view()),
     path('authentication', AuthView.as_view()),
     path('autopayments', AutoPaymentView.as_post_view()),
+    re_path(r'^autopayments/delete/(?P<autopayment_id>[0-9]+)?', AutoPaymentView.as_delete_view()),
     re_path(r'^autopayments/(?P<autopayment_id>[0-9]+)?', AutoPaymentView.as_access_view()),
 
     path('accounts', AccountView.as_post_view()),

@@ -73,12 +73,6 @@ def api_get_accounts(user):
     except HTTPError as e:
         return False
 
-def api_get_autopayments(user):
-    pass
-
-def api_get_autopayment(user):
-    pass
-
 def api_get_account_details(user, account_no):
     req = Request(url="{path}/accounts/{id}".format(path=API_PATH, id=account_no))
     attach_auth_token(user, req)
@@ -136,8 +130,28 @@ def api_get_autopayments(user):
         return False
 
 
+def api_delete_autopayment(user, id):
+    req = Request(url="{path}/autopayments/delete/{id}".format(path=API_PATH, id=id), 
+                  method='DELETE')
+
+    attach_auth_token(user, req)
+    
+    try:
+        response = urlopen(req)
+        print(">>>>>>>>>>>>>")
+        print("response: ", response)
+        print(">>>>>>>>>>>>>")
+        if response.status < 300:
+            data = json.loads(response.read())
+            return data["success"]
+        return False
+    except HTTPError as e:
+        return False
+
+
 def api_get_autopayment_details(user, id):
     req = Request(url="{path}/autopayments/{id}".format(path=API_PATH, id=id))
+
     attach_auth_token(user, req)
     try:
         response = urlopen(req)

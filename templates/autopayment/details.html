@@ -1,0 +1,19 @@
+{% extends 'base.html' %} 
+{% block contents %}
+
+<head>
+    <title>Auto Payment Details</title>
+</head>
+<div>
+    <h1>Auto Payment Details</h1>
+    <h3>Auto Payment ID: {{ payment.autopayment_id }}</h3>
+    <h3>Amount: ${{payment.transfer_amount}}</h3>
+</div>
+<!-- delete this auto payment -->
+<div class="d-flex">
+    <form action="{{ action }}" method="post">
+        {% csrf_token %}
+        <input type="submit" value="Delete">
+    </form>
+</div>
+{% endblock %}

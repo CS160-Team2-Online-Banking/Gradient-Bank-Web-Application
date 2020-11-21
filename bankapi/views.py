@@ -98,6 +98,41 @@ class APIView(View):
 
         return view
 
+    @classonlymethod
+    def as_delete_view(cls, **initkwargs):
+        """nothing but delete"""
+
+        for key in initkwargs:
+            if key in cls.http_method_names:
+                raise TypeError(
+                    'The method name %s is not accepted as a keyword argument '
+                    'to %s().' % (key, cls.__name__)
+                )
+            if not hasattr(cls, key):
+                raise TypeError("%s() received an invalid keyword %r. as_view "
+                                "only accepts arguments that are already "
+                                "attributes of the class." % (cls.__name__, key))
+
+        def view(request, *args, **kwargs):
+            self = cls(**initkwargs)
+            self.request = request
+            self.args = args
+            self.kwargs = kwargs
+            if request.method.lower() == "delete":
+                handler = getattr(self, request.method.lower(),
+                                  self.http_method_not_allowed)
+            else:
+                handler = self.http_method_not_allowed
+            return handler(request, *args, **kwargs)
+
+        view.view_class = cls
+        view.view_initkwargs = initkwargs
+
+        update_wrapper(view, cls, updated=())
+        update_wrapper(view, cls.dispatch, assigned=())
+
+        return view
+
     def access_dispatcher(self, request, *args, **kwargs):
         if request.method.lower() in self.restful_access_names:
             handler = getattr(self, request.method.lower(), self.http_method_not_allowed)
@@ -148,6 +183,8 @@ class TransferView(APIView):
 
 @method_decorator(csrf_exempt, name='dispatch')  # django requires all post requests to include a CSRF token by default
 class AutoPaymentView(APIView):
+    """process HTTP action for auto payment"""
+
     @returns_json_error
     def post(self, request):
         try:
@@ -261,6 +298,8 @@ class AutoPaymentView(APIView):
 
     @returns_json_error
     def get(self, request, autopayment_id=None):
+        """Get auto payment object
+        """
         try:
             auth_token = decrypt_auth_token(request)
         except json.decoder.JSONDecodeError:
