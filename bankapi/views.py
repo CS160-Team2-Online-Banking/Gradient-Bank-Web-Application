@@ -353,8 +353,9 @@ class AccountView(APIView):
             return JsonResponse({"success": False, "msg": "Error: Body is missing parameters"}, status=400)
         except ValueError:
             return JsonResponse({"success": False, "msg": "Error: Invalid parameter type"}, status=400)
-        result = AccountProcess.account_add(self, auth_token, account_data)
+        result = AccountProcess.account_add(auth_token, account_data)
         if result["success"]:
+            log_event(request, auth_token, EventTypes.CREATE_ACCOUNT, result["data"]["account_id"])
             return JsonResponse({"success": True, "data": result["data"]}, status=200)
         return JsonResponse({"success": False, "msg": "Error: Server failed to process request"}, status=500)
         #pass
