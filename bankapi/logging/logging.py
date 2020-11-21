@@ -15,7 +15,7 @@ def ip4_to_string(ip4):
     return ipaddress.ip_address(ip4).compressed
 
 
-def log_event(request, auth_token, event_type, data_id=None):
+def create_event(request, auth_token, event_type, data_id=None):
     user_id = auth_token["user_id"]
     ip = get_request_ip(request)
 
@@ -35,4 +35,9 @@ def log_event(request, auth_token, event_type, data_id=None):
     elif ip.version == 6:
         event.ip6_address = ip.packed
 
+    return event
+
+
+def log_event(request, auth_token, event_type, data_id=None):
+    event = create_event(request, auth_token, event_type, data_id)
     event.save()

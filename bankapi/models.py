@@ -108,6 +108,9 @@ class EventTypes:
     SETUP_AUTOPAYMENT = (2, "SETUP AUTOPAYMENT", "")
     EDIT_AUTOPAYMENT = (3, "EDIT AUTOPAYMENT", "")
     CANCEL_AUTOPAYMENT = (4, "CANCEL AUTOPAYMENT", "")
+    CLOSE_ACCOUNT = (5, "CLOSE ACCOUNT", "")
+    DEPOSIT_CHECK = (6, "DEPOSIT CHECK", "")
+    SUSPICIOUS_TRANSFER = (7, "SUS TRANSFER", "")
 
 
 class PaymentSchedules(models.Model):
@@ -213,6 +216,7 @@ class ExchangeHistory(models.Model):
         POSTED = "POSTED"
         FAILED = "FAILED"
         CANCELED = "CANCELED"
+        FLAGGED = "FLAGGED"
 
     id = models.AutoField(primary_key=True)
     to_account_no = models.BigIntegerField(null=True)
@@ -341,6 +345,20 @@ class FailedTransactions(models.Model):
     class Meta:
         managed = True
         db_table = 'failed_transactions_log'
+
+
+class SuspiciousExchange(models.Model):
+    use_db = 'bank_data'
+    exchange = models.OneToOneField(ExchangeHistory, related_name="s_susexch_to_exch", primary_key=True,
+                                    db_column="exchange_id", on_delete=models.CASCADE)
+    flag_date = models.DateTimeField()
+    resolve_date = models.DateTimeField(null=True)
+    reviewer = models.IntegerField(null=True)
+
+    class Meta:
+        managed = True
+        db_table = 'suspicious_exchanges'
+
 
 SAVING_ACCOUNT_ID = 1
 if AccountTypes.objects.filter(pk=SAVING_ACCOUNT_ID).first() is None:
