@@ -82,7 +82,7 @@ class AccountProcess:
                                account_type=account_type,
                                owner_id=requesters_account.pk)
         new_account.save()
-        return {"success": True, "data": {"account_no": new_account.account_number}}
+        return {"success": True, "data": {"account_no": new_account.account_number, "account_id": new_account.pk}}
 
     # redundant, just use account_lookup
     def get_account_info(self) -> dict:
