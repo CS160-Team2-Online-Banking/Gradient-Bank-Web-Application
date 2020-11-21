@@ -8,7 +8,7 @@ from django.core import serializers
 import json
 
 
-@transaction.atomic
+@transaction.atomic(using="bank_data")
 def external_transfer_handler(auth_token, from_account_no, to_account_no, to_routing_no, amount) -> dict:
     user_id = auth_token["user_id"]
     from_account = Accounts.objects.filter(account_number=from_account_no).first()
@@ -48,7 +48,7 @@ def external_transfer_handler(auth_token, from_account_no, to_account_no, to_rou
         return {"success": False, "msg": "insufficient permission"}
 
 
-@transaction.atomic
+@transaction.atomic(using="bank_data")
 def internal_transfer_handler(auth_token, from_account_no, to_account_no, amount) -> dict:
     user_id = auth_token["user_id"]
     from_account = Accounts.objects.filter(account_number=from_account_no).first()
@@ -85,7 +85,7 @@ def internal_transfer_handler(auth_token, from_account_no, to_account_no, amount
     return {"success": False, "msg": "insufficient permission"}
 
 
-@transaction.atomic
+@transaction.atomic(using="bank_data")
 def deposit_handler(auth_token, from_account_no, from_routing_no, to_account_no, amount) -> dict:
     requesting_user_id = auth_token["user_id"]
     debit_authorization_key = auth_token["debit_auth_key"]
