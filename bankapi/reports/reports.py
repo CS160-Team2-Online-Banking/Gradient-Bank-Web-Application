@@ -60,8 +60,10 @@ def get_total_savings(auth_token):
     return {"success": True, "data": {"total_savings": total_savings['balance__sum']}}
 
 
-def get_customers(auth_token, page_size=20, page_number=0, order_by='customer_name', **search_criteria):
+def get_customers(auth_token, page_size=10, page_number=0, order_by='customer_name', **search_criteria):
     manager_id = auth_token.get("manager_id", None)
+    page_size = int(page_size)
+    page_number = int(page_number)
 
     if manager_id is None:
         return {"success":  False, "msg": "Access Denied"}
@@ -70,11 +72,12 @@ def get_customers(auth_token, page_size=20, page_number=0, order_by='customer_na
         customers = Customer.objects.filter(**search_criteria).order_by(order_by)
     else:
         customers = Customer.objects.all().order_by(order_by)
+    paginator = Paginator(customers, per_page=page_size)
+    page_count = len(paginator.page_range)
+    page = paginator.get_page(page_count-1-page_number)
 
-    paginator = Paginator(customers, page_size)
-    page = paginator.get_page(page_number)
     serialized_records = json.loads(serializers.serialize("json", page.object_list))
-    serialized_records.reverse()
+    #serialized_records.reverse()
     #serialized_records = page.object_list
     for record in serialized_records: record["fields"]["pk"] = record["pk"]
     serialized_records = list(map(lambda x: x["fields"], serialized_records))
@@ -92,7 +95,7 @@ def get_customers(auth_token, page_size=20, page_number=0, order_by='customer_na
         user["accounts"] = account_records
 
     # add each customer's accounts
-    return {"success": True, "data": {"users": serialized_records, "page_count":paginator.count}}
+    return {"success": True, "data": {"users": serialized_records, "page_count": page_count}}
 
 
 def get_account_transactions(auth_token, account_no):

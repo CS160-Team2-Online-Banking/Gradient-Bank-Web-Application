@@ -5,6 +5,7 @@ from django.shortcuts import redirect
 from django import forms
 from accounts.models import BankManagerUser
 from .requests import api_get_data
+from django.core.validators import MaxValueValidator, MinValueValidator
 from datetime import datetime
 
 
@@ -20,12 +21,18 @@ def get_manager(user):
 
 class CustomersSearchForm(forms.Form):
     order_by = forms.CharField(label=None, widget=forms.HiddenInput(), initial='customer_name', required=False)
-    page_number = forms.IntegerField(label=None, widget=forms.HiddenInput(), initial=0, required=False)
+    page_number = forms.IntegerField(label=None, initial=1, required=False, validators=[])
+    page_count = forms.IntegerField(widget=forms.HiddenInput(), label=None, initial=1, required=False)
     customer_name = forms.CharField(label="Customer Name", required=False)
     customer_phone = forms.IntegerField(label="Phone Number", required=False)
     customer_email = forms.CharField(label="Customer Email", required=False)
     customer_ssn = forms.CharField(label="Customer SSN", required=False)
     customer_address = forms.CharField(label="Customer Address", required=False)
+
+    def __init__(self, *args, **kwargs):
+        super(CustomersSearchForm, self).__init__(*args, **kwargs)
+        #self.fields['page_number'].validators = [MinValueValidator(1), MaxValueValidator(self.fields['page_count'].initial)]
+
 
 
 def set_or_message(result, key, dict, mapper=lambda x: x):
@@ -51,7 +58,7 @@ class LandingView(View):
         set_or_message(api_get_data(user, manager, "get_failed_transactions", {}), "failed_exchanges", headline, lambda x: list(x.values())[0])
         set_or_message(api_get_data(user, manager, "get_total_savings", {}), "total_balance", headline, lambda x: list(x.values())[0])
         result = api_get_data(user, manager, "get_customers", {})
-        start_form = CustomersSearchForm(initial={"cust_table_query": str({}), "cust_table_page": 0})
+        start_form = CustomersSearchForm(initial={"page_count": result["page_count"]})
         return render(request, "managerportal/landing.html", {"manager": manager, "headline": headline,
                                                               "customers_table": result,
                                                               "form": start_form,
@@ -75,7 +82,9 @@ class LandingView(View):
         add_contains_search('customer_email')
         add_contains_search('customer_address')
         add_param('order_by')
+        data['page_number'] = str(int(data['page_number'])-1)
         add_param('page_number')
+        #data['page_number'] = str(int(data['page_number'])+1)  # AHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH
         return params
 
 
@@ -94,7 +103,6 @@ class LandingView(View):
                        lambda x: list(x.values())[0])
 
         form = CustomersSearchForm(request.POST)
-
         if form.is_valid():
             data = form.cleaned_data
             params = self.prep_post_params(data)
@@ -103,7 +111,6 @@ class LandingView(View):
                 result = api_get_data(user, manager, "get_customers", {})
         else:
             result = api_get_data(user, manager, "get_customers", {})
-
         return render(request, "managerportal/landing.html", {"manager": manager, "headline": headline,
                                                               "customers_table": result,
                                                               "form": form,
