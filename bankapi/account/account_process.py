@@ -60,8 +60,9 @@ class AccountProcess:
 
             return {"success": True, "data": json_arr}
 
+    @staticmethod
     @transaction.atomic(using="bank_data")
-    def account_add(self, decrypted_auth_token, data) -> bool:
+    def account_add(decrypted_auth_token, data) -> bool:
         requesting_user_id = decrypted_auth_token["user_id"]
         requesters_account = Customer.objects.filter(pk=requesting_user_id).first()
 
