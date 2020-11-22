@@ -7,13 +7,20 @@
 <div>
     <h1>Auto Payment Details</h1>
     <h3>Auto Payment ID: {{ payment.autopayment_id }}</h3>
+    <h3>Scheduled from {{ payment.payment_schedule.start_date }} to {{ payment.payment_schedule.end_date }}</h3>
     <h3>Amount: ${{payment.transfer_amount}}</h3>
+    <h3>Payment frequency: {{ payment.payment_schedule.payment_frequency }}</h3>
+    <h3>From account: {{ payment.from_account }}</h3>
+    <h3>To account: {{ payment.to_account_no }}</h3>
+    <h3>To Routing: {{ payment.to_routing_no }}</h3>
+
+
 </div>
 <!-- delete this auto payment -->
 <div class="d-flex">
     <form action="{{ action }}" method="post">
         {% csrf_token %}
-        <input type="submit" value="Delete">
+        <button type="submit" class="btn btn-danger">Delete</button>
     </form>
 </div>
 {% endblock %}

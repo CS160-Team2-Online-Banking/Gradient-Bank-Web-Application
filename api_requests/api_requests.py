@@ -138,9 +138,6 @@ def api_delete_autopayment(user, id):
     
     try:
         response = urlopen(req)
-        print(">>>>>>>>>>>>>")
-        print("response: ", response)
-        print(">>>>>>>>>>>>>")
         if response.status < 300:
             data = json.loads(response.read())
             return data["success"]

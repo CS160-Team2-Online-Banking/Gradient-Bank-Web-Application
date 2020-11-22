@@ -32,7 +32,7 @@ class Landing(View):
             result = api_get_accounts(request.user)
             # auto payment list
             auto_pay_list = api_get_autopayment_details(request.user, None)
-
+            print('auto_pay_list', auto_pay_list)
             if not result:
                 result = []
             
