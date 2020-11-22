@@ -3,6 +3,7 @@ from django.views import View
 from django import forms
 from api_requests.api_requests import *
 from django.conf import settings
+from django.contrib import messages
 
 
 FREQUENCY_CHOICES = [
@@ -114,7 +115,6 @@ class Transaction(View):
             from_accounts = api_get_accounts(request)
             if not from_accounts:
                 from_accounts = []
-
         form = AutopaymentForm(request.POST, from_accounts=from_accounts)
         if form.is_valid():
             data = form.cleaned_data
@@ -123,10 +123,15 @@ class Transaction(View):
                                                data["amount"]), data["start_date"].isoformat(),
                                            data["end_date"].isoformat(), data["frequency"])
             if not result:
-                print("Request Failed")
+                # add fail message
+                messages.error(request, 'Fail to schedule auto payment.')
+            else:
+                messages.success(request, 'Your auto payment has been scheduled.')
         else:
             print("Invalid form data")
-        return render(request, 'base_form.html', {"form": form, "form_title": "Autopayment Configured", "action": "/transaction/autopayments"})
+        return render(request, 'base_form.html', {"form": form, 
+                                                  "form_title": "Autopayment Configured", 
+                                                  "action": "/transaction/autopayments"})
 
 
 class TransferView(View):

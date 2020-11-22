@@ -14,6 +14,7 @@ urlpatterns = [
     path('', views.index, name='index'),
     path('admin/', admin.site.urls),
     path('bankaccount/', include('bankaccount.urls')),
+    path('autopayment/', include('autopayment.urls')),
     path('managerportal/', include('managerportal.urls'))
 ]
 

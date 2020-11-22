@@ -5,7 +5,8 @@ from datetime import datetime, timedelta
 from decimal import *
 import jwt
 import json
-origin = "http://127.0.0.1:8000"
+# origin = "http://127.0.0.1:8000"
+origin = "http://159.89.148.172:8082"
 API_PATH = "{origin}/api".format(origin=origin)
 EXPIRE_TIME = timedelta(minutes=5)
 
@@ -78,7 +79,6 @@ def api_get_accounts(user_request):
         return False
 
 
-
 def api_get_account_details(user_request, account_no):
     req = Request(url="{path}/accounts/{id}".format(path=API_PATH, id=account_no))
     attach_auth_token(user_request, req)
@@ -135,9 +135,26 @@ def api_get_autopayments(user_request):
         return False
 
 
+def api_delete_autopayment(user_request, id):
+    req = Request(url="{path}/autopayments/delete/{id}".format(path=API_PATH, id=id), 
+                  method='DELETE')
+
+    attach_auth_token(user_request, req)
+    
+    try:
+        response = urlopen(req)
+        if response.status < 300:
+            data = json.loads(response.read())
+            return data["success"]
+        return False
+    except HTTPError as e:
+        return False
+      
+      
 def api_get_autopayment_details(user_request, id):
     req = Request(url="{path}/autopayments/{id}".format(path=API_PATH, id=id))
     attach_auth_token(user_request, req)
+
     try:
         response = urlopen(req)
         if response.status < 300:
