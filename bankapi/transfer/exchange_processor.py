@@ -1,7 +1,7 @@
 from bankapi.models import *
 from decimal import *
 from django.conf import settings
-from django.db import transaction
+from django.db import IntegrityError, transaction
 from django.db.models import Q
 from django.db.models.functions import Now
 from django.core import serializers
@@ -134,6 +134,14 @@ def deposit_handler(auth_token, from_account_no, from_routing_no, to_account_no,
     if to_account is None:
         return {"success": False, "msg": "one of the accounts specified does not exist"}
 
+    internal = from_routing_no == settings.BANK_ROUTING_NUMBER
+    if internal:
+        from_account = Accounts.objects.filter(account_number=from_account_no).first()
+        if from_account is None:
+            return {"success": False, "msg": "one of the accounts specified does not exist"}
+        if from_account.balance < amount:
+            return {"success": False, "msg": "insufficient funds in checking account"}
+
     to_owner_id = to_account.owner_id
 
     if requesting_user_id == to_owner_id and debit_authorization_key == settings.DEBIT_AUTH_KEY:
@@ -146,22 +154,25 @@ def deposit_handler(auth_token, from_account_no, from_routing_no, to_account_no,
                              type=ExchangeHistory.ExchangeTypes.DEPOSIT,
                              status=ExchangeHistory.ExchangeHistoryStatus.POSTED)
         ex.save()
+        to_account.balance = to_account.balance + amount
+        to_account.save()
 
         if is_exchange_suspicious(ex, event):
             flag_suspicious_exchange(ex, event)
             return {"success": False, "msg": "This transfer was flagged as suspicious"}
 
-        to_account.balance = to_account.balance + amount
-        to_account.save()
-
-        ext_pool = ExternalTransferPool(internal_account=to_account,
-                                        external_account_routing_no=from_routing_no,
-                                        external_account_no=from_account_no,
-                                        amount=amount,
-                                        inbound=True,
-                                        debit_transfer=True,
-                                        exchange_obj=ex)
-        ext_pool.save()
+        if internal:
+            from_account.balance = from_account.balance - amount
+            from_account.save()
+        else:
+            ext_pool = ExternalTransferPool(internal_account=to_account,
+                                            external_account_routing_no=from_routing_no,
+                                            external_account_no=from_account_no,
+                                            amount=amount,
+                                            inbound=True,
+                                            debit_transfer=True,
+                                            exchange_obj=ex)
+            ext_pool.save()
         return {"success": True, "data": {"transfer_id": ex.pk}}
     return {"success": False, "msg": "insufficient permission"}
 
@@ -178,9 +189,12 @@ class ExchangeProcessor:
         amount = exchange_data["amount"]
 
         if from_routing_no == settings.BANK_ROUTING_NUMBER:
-            if to_routing_no == settings.BANK_ROUTING_NUMBER:
-                result = internal_transfer_handler(auth_token, from_account_no, to_account_no, amount, event)
-            else:
+            if to_routing_no == settings.BANK_ROUTING_NUMBER:  # If both accounts are under our bank
+                if "debit_auth_key" in auth_token:
+                    result = deposit_handler(auth_token, from_account_no, from_routing_no, to_account_no, amount, event)
+                else:
+                    result = internal_transfer_handler(auth_token, from_account_no, to_account_no, amount, event)
+            else:  # If the from account belongs to us but not the to
                 result = external_transfer_handler(auth_token, from_account_no, to_account_no, to_routing_no, amount, event)
         else:
             if to_routing_no == settings.BANK_ROUTING_NUMBER:
