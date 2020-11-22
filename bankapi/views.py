@@ -420,7 +420,7 @@ class ReportView(View):
 
         # select our query parameter
 
-
+"""
 # This class is depricated and should be deleted
 @method_decorator(csrf_exempt, name='dispatch')  # django requires all post requests to include a CSRF token by default
 class AuthView(View):
@@ -441,3 +441,4 @@ class AuthView(View):
             return response
         else:
             return JsonResponse({"success": False, "msg": "Error: No password or username provided"}, status=400)
+"""
