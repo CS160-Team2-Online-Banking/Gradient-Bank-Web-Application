@@ -4,6 +4,7 @@
 {% block extra_css %}
 <link rel="stylesheet" type="text/css" href="{% static 'css/accounts.css' %}">
 <link rel="stylesheet" type="text/css" href="{% static 'css/signup.css' %}">
+
 {% endblock %}
 
 
@@ -17,13 +18,14 @@
 <div id="map"></div>
 <div id="dir_box"></div>
 <!-- Replace the value of the key parameter with your own API key. -->
+<script src="https://polyfill.io/v3/polyfill.min.js?features=default"></script>
 <script async defer
     src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAqLzAMqgeVjFb9sf1LLL2heFhLjy8NEYY&callback=initMap&libraries=places">
     </script>
 
 <script>
     var map, infoWindow, service, directionsServ, directionsRend, userMarker, atmLocations, userPos;
-
+    
     function initMap(listener) {
         directionsServ = new google.maps.DirectionsService();
         directionsRend = new google.maps.DirectionsRenderer();
@@ -36,54 +38,59 @@
         });
         google.maps.event.trigger(map, 'resize');
         infoWindow = new google.maps.InfoWindow;
-
         directionsRend.setMap(map); // tell the direction renderer to draw on our map
+        
+        const locationButton = document.createElement("button");
+        locationButton.textContent = "Current Location";
+        locationButton.classList.add("custom-map-control-button");
+        map.controls[google.maps.ControlPosition.TOP_CENTER].push(locationButton);
+        locationButton.addEventListener("click", () => {
+            // Try HTML5 geolocation.
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(function (position) {
+                    var pos = {
+                        lat: position.coords.latitude,
+                        lng: position.coords.longitude
+                    };
+                    userPos = pos;
 
-        // Try HTML5 geolocation.
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(function (position) {
-                var pos = {
-                    lat: position.coords.latitude,
-                    lng: position.coords.longitude
-                };
-                userPos = pos;
+
+                    map.setCenter(pos);
+                    //Put marker of the Geolocated user location
+                    userMarker = new google.maps.Marker({
+                        map: map,
+                        position: pos
+                    });
+
+                    google.maps.event.addListener(userMarker, 'click', function () {
+                        infoWindow.setContent('Your location');
+                        infoWindow.open(map, this);
+                    });
+
+                    //Put request in here there are 3 requests since nearbysearch only has one type to be specified
+
+                    var requestAtm = {
+                        location: pos,
+                        radius: '8000',
+                        name: "Chase ATM",
+                        //type: ['atm']
+                    };
 
 
-                map.setCenter(pos);
-                //Put marker of the Geolocated user location
-                userMarker = new google.maps.Marker({
-                    map: map,
-                    position: pos
+                    //Make Places Service requests here
+                    service = new google.maps.places.PlacesService(map);
+                    //service.nearbySearch(requestHosp, callback);
+                    service.nearbySearch(requestAtm, callback);
+                    //service.nearbySearch(requestPolice, callback);
+
+                }, function () {
+                    handleLocationError(true, infoWindow, map.getCenter());
                 });
-
-                google.maps.event.addListener(userMarker, 'click', function () {
-                    infoWindow.setContent('Your location');
-                    infoWindow.open(map, this);
-                });
-
-                //Put request in here there are 3 requests since nearbysearch only has one type to be specified
-
-                var requestAtm = {
-                    location: pos,
-                    radius: '8000',
-                    name: "Chase ATM",
-                    //type: ['atm']
-                };
-
-
-                //Make Places Service requests here
-                service = new google.maps.places.PlacesService(map);
-                //service.nearbySearch(requestHosp, callback);
-                service.nearbySearch(requestAtm, callback);
-                //service.nearbySearch(requestPolice, callback);
-
-            }, function () {
-                handleLocationError(true, infoWindow, map.getCenter());
-            });
-        } else {
-            // Browser doesn't support Geolocation
-            handleLocationError(false, infoWindow, map.getCenter());
-        }
+            } else {
+                // Browser doesn't support Geolocation
+                handleLocationError(false, infoWindow, map.getCenter());
+            }
+        });
     }
 
     function handleLocationError(browserHasGeolocation, infoWindow, pos) {
@@ -223,6 +230,20 @@
         margin: 0;
         padding: 0;
     }
+    .custom-map-control-button { 
+        appearance: button;
+        background-color: #fff;
+        border: 0; 
+        border-radius: 2px; 
+        box-shadow: 0 1px 4px -1px rgba(0, 0, 0, 0.3);
+        cursor: pointer; 
+        margin: 10px; 
+        padding: 0 0.5em; 
+        height: 40px;
+        font: 400 18px Roboto, Arial, sans-serif; 
+        overflow: hidden; 
+    } 
+    .custom-map-control-button:hover { background: #559395; }
 </style>
 
 {% endblock %}
