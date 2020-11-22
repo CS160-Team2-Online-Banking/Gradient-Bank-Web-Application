@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" type="text/css" href="{% static 'css/accounts.css' %}">
+<link rel="stylesheet" type="text/css" href="{% static 'css/signup.css' %}">
+{% endblock %}
+
+
+
+{% block head_title %}Create Account{% endblock %}
+
+{% block contents %}
+<div class="row">
+    <div class="col-md-6 md-offset-3 mx-auto">
+        <h3>Create Account</h3>
+
+        <form class="signup" id="signup_form" method="post">
+            {% csrf_token %}
+
+            {% for field in form %}
+
+
+            <div class="form-group field">
+                {{field.label}} {{ field }}
+                {% if field.errors %}
+                <div class="alert-message">
+                    {{ field.errors }}
+                </div>
+                {% endif %}
+            </div>
+
+            {% endfor %}
+            <button type="submit" class="btn-block btn btn-lg btn-primary">Sign up</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

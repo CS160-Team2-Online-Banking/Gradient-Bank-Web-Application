@@ -8,7 +8,7 @@ class TransferValidator:
 
 
 class ExternalValidator(TransferValidator):
-    @transaction.atomic
+    @transaction.atomic(using="bank_data")
     def verify_transfer(self, transfer_info, authentication_token):
         request_user_id = authentication_token["user_id"]
         from_results = Accounts.objects.filter(pk=transfer_info["from_account"])
@@ -22,7 +22,7 @@ class ExternalValidator(TransferValidator):
 
 
 class InternalValidator(TransferValidator):
-    @transaction.atomic
+    @transaction.atomic(using="bank_data")
     def verify_transfer(self, transfer_info, authentication_token):
         request_user_id = authentication_token["user_id"]
         from_results = Accounts.objects.filter(pk=self.from_account)

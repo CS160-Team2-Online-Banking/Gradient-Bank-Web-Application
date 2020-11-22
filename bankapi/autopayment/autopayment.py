@@ -9,7 +9,7 @@ import json
 class AutopaymentBuilder:
 
     @staticmethod
-    @transaction.atomic
+    @transaction.atomic(using="bank_data")
     def build_autopayment(decrypted_auth_token, payment_data):
         owner_id = decrypted_auth_token["user_id"]
         payment_schedule_data = payment_data["payment_schedule_data"]
@@ -63,7 +63,7 @@ class AutopaymentBuilder:
         return None
 
     @staticmethod
-    @transaction.atomic
+    @transaction.atomic(using="bank_data")
     def modify_autopayment(decrypted_auth_token, payment_data):
         owner_id = decrypted_auth_token["user_id"]
         payment_id = payment_data["autopayment_id"]
