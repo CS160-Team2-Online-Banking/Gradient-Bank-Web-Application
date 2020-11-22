@@ -153,7 +153,7 @@ def deposit_handler(auth_token, from_account_no, from_routing_no, to_account_no,
                              posted=Now(),
                              type=ExchangeHistory.ExchangeTypes.DEPOSIT,
                              status=ExchangeHistory.ExchangeHistoryStatus.POSTED)
-        ex.save()
+
         to_account.balance = to_account.balance + amount
         to_account.save()
 
@@ -164,6 +164,8 @@ def deposit_handler(auth_token, from_account_no, from_routing_no, to_account_no,
         if internal:
             from_account.balance = from_account.balance - amount
             from_account.save()
+            ex.status = ExchangeHistory.ExchangeHistoryStatus.FINISHED
+            ex.save()
         else:
             ext_pool = ExternalTransferPool(internal_account=to_account,
                                             external_account_routing_no=from_routing_no,
@@ -172,6 +174,7 @@ def deposit_handler(auth_token, from_account_no, from_routing_no, to_account_no,
                                             inbound=True,
                                             debit_transfer=True,
                                             exchange_obj=ex)
+            ex.save()
             ext_pool.save()
         return {"success": True, "data": {"transfer_id": ex.pk}}
     return {"success": False, "msg": "insufficient permission"}
