@@ -107,12 +107,18 @@ class CustomerManager(CustomUserManager):
         customer_phone = extra_fields["phone"]
         customer_ssn = extra_fields["ssn"]
         customer_address = extra_fields["address"]
+        customer_zip = extra_fields["zip"]
+        customer_city = extra_fields["city"]
+        customer_state = extra_fields["state"]
         extra_fields.pop('ssn', None)
         extra_fields.pop('address', None)
         extra_fields.pop('first_name', None)
         extra_fields.pop('middle_initial', None)
         extra_fields.pop('last_name', None)
         extra_fields.pop('phone', None)
+        extra_fields.pop('zip', None)
+        extra_fields.pop('city', None)
+        extra_fields.pop('state', None)
         extra_fields.pop('password1', None)
         extra_fields.pop('password2', None)
         user = super().create_user(email, password, commit=False, **extra_fields)
@@ -121,7 +127,10 @@ class CustomerManager(CustomUserManager):
                                  customer_phone=customer_phone,
                                  customer_email=user.email,
                                  customer_ssn=customer_ssn,
-                                 customer_address=customer_address)
+                                 customer_address=customer_address,
+                                 customer_zip=customer_zip,
+                                 customer_city=customer_city,
+                                 customer_state=customer_state)
         bank_customer.save()
         user.bank_customer_id = bank_customer.pk
         user.save(using=self._db)

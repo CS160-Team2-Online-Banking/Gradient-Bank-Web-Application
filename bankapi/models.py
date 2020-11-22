@@ -31,6 +31,9 @@ class Customer(models.Model):
     # Field name made lowercase.
     customer_ssn = models.IntegerField(db_column='customer_SSN')
     customer_address = models.CharField(max_length=50)
+    customer_zip = models.CharField(max_length=5, null=True)
+    customer_city = models.CharField(max_length=45, null=True)
+    customer_state = models.CharField(max_length=2, null=True)
 
     class Meta:
         managed = False
