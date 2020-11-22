@@ -1,26 +1,35 @@
-{% extends 'base.html' %} 
+{% extends 'base.html' %}
 {% block contents %}
 
 <head>
     <title>Auto Payment Details</title>
 </head>
-<div>
-    <h1>Auto Payment Details</h1>
-    <h3>Auto Payment ID: {{ payment.autopayment_id }}</h3>
-    <h3>Scheduled from {{ payment.payment_schedule.start_date }} to {{ payment.payment_schedule.end_date }}</h3>
-    <h3>Amount: ${{payment.transfer_amount}}</h3>
-    <h3>Payment frequency: {{ payment.payment_schedule.payment_frequency }}</h3>
-    <h3>From account: {{ payment.from_account }}</h3>
-    <h3>To account: {{ payment.to_account_no }}</h3>
-    <h3>To Routing: {{ payment.to_routing_no }}</h3>
-
+<div class="row">
+    <div class="col-md-6 md-offset-3 mx-auto">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="text-center">Auto Payment Details</h5>
+            </div>
+            <div class="card-body">
+                <h5>Auto Payment ID: {{ payment.autopayment_id }}</h5>
+                <h5>Scheduled from {{ payment.payment_schedule.start_date }} to {{ payment.payment_schedule.end_date }}
+                </h5>
+                <h5>Amount: ${{payment.transfer_amount}}</h5>
+                <h5>Payment frequency: {{ payment.payment_schedule.payment_frequency }}</h5>
+                <h5>From account: {{ payment.from_account }}</h5>
+                <h5>To account: {{ payment.to_account_no }}</h5>
+                <h5>Tpo Routing: {{ payment.to_routing_no }}</h5>
+                <div class="float-right">
+                    <form action="{{ action }}" method="post">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger">Delete</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
 
 </div>
+
 <!-- delete this auto payment -->
-<div class="d-flex">
-    <form action="{{ action }}" method="post">
-        {% csrf_token %}
-        <button type="submit" class="btn btn-danger">Delete</button>
-    </form>
-</div>
 {% endblock %}
