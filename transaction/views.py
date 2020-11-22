@@ -1,4 +1,5 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
+from django.urls import reverse
 from django.views import View
 from django import forms
 from api_requests.api_requests import *
@@ -126,11 +127,12 @@ class Transaction(View):
                 # add fail message
                 messages.error(request, 'Fail to schedule auto payment.')
             else:
-                messages.success(request, 'Your auto payment has been scheduled.')
+                messages.success(
+                    request, 'Your auto payment has been scheduled.')
         else:
             print("Invalid form data")
-        return render(request, 'base_form.html', {"form": form, 
-                                                  "form_title": "Autopayment Configured", 
+        return render(request, 'base_form.html', {"form": form,
+                                                  "form_title": "Autopayment Configured",
                                                   "action": "/transaction/autopayments"})
 
 
@@ -166,8 +168,7 @@ class TransferView(View):
                 if not result:
                     print("Request Failed")
 
-            return render(request, 'base_form.html', {"form": form, "form_title": "Transfer Money",
-                                                          "action": "/transaction/transfers{type}".format(type=type)})
+            return redirect(reverse('bankaccount:accountdetails', kwargs={"account_no": data["to_account_no"]}))
         else:
             return render(request, 'feature_access_message.html', {"title": "Account Details",
                                                                    "message": "Please Login before transferring money"})
@@ -200,8 +201,8 @@ class DepositView(View):
         else:
             return render(request, 'feature_access_message.html', {"title": "Account Details",
                                                                    "message": "Please Login before transferring money"})
-
-        form = DepositForm(request.POST, request.FILES, from_accounts=from_accounts)
+        form = DepositForm(request.POST, request.FILES,
+                           from_accounts=from_accounts)
 
         if form.is_valid():
             data = form.cleaned_data
@@ -216,9 +217,8 @@ class DepositView(View):
             else:
                 print("Request Failed")
 
-        return render(request, 'base_form.html', {"form": form, "form_title": "Check Deposit",
-                                                  "action": "/transaction/deposit".format(type=type)})
-
+            # render(request, 'base_form.html', {"form": form, "form_title": "Check Deposit","action": "/transaction/deposit".format(type=type)})
+        return redirect(reverse('bankaccount:accountdetails', kwargs={"account_no": data["to_account"]}))
 
 transaction = Transaction.as_view()
 transfer = TransferView.as_view()

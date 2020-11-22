@@ -11,8 +11,10 @@
     <meta charset="utf-8">
     <link rel="stylesheet" type='text/css' href="{% static 'css/base.css'%}">
     <link rel="stylesheet" href="https://cccabinet.jpn.org/bootstrap4/css/style.css">
-    <title> Online Banking </title>
-    {% block extra_css %}{% endblock %}
+    <<link rel="stylesheet" type="text/css" href="{% static 'css/accounts.css' %}">
+        <link rel="stylesheet" type="text/css" href="{% static 'css/signup.css' %}">
+        <title> Online Banking </title>
+        {% block extra_css %}{% endblock %}
 </head>
 
 <body>
@@ -137,15 +139,15 @@
 
             <!-- ↓↓ contetns ↓↓ -->
             <div class="col-10">
-                <!-- message on success/failure --> 
-                {% for message in messages %} 
-                    <div class="container-fluid p-0">
-                        <div class="alert {{ message.tags }} alert-dismissible" role="alert">
-                            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                                <span aria-hidden="true">&times;</span>
-                            </button> {{ message }} 
-                        </div>
-                    </div> 
+                <!-- message on success/failure -->
+                {% for message in messages %}
+                <div class="container-fluid p-0">
+                    <div class="alert {{ message.tags }} alert-dismissible" role="alert">
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button> {{ message }}
+                    </div>
+                </div>
                 {% endfor %}
                 {% block contents %}
                 {% endblock %}
