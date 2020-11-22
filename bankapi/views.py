@@ -178,7 +178,7 @@ class TransferView(APIView):
         event = create_event(request, auth_token, event_type=EventTypes.REQUEST_TRANSFER, data_id=None)
         result = ExchangeProcessor.start_exchange(request_info, auth_token, event)
         if result["success"]:
-            return JsonResponse({"success": True, "data": request_info}, status=200)
+            return JsonResponse({"success": True, "data": result["data"]}, status=200)
         return JsonResponse({"success": False, "msg": "Error: transfer could not be processed"}, status=500)
 
 

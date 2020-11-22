@@ -28,6 +28,13 @@
                 <td>{{exchange.status}}</td>
                 <td>{{exchange.posted}}</td>
             </tr>
+            {% if exchange.image %}
+            <tr>
+                <td colspan="4">
+                    <img src="data:img/jpeg;base64, {{exchange.image}}" alt="Check Image" width="400"/>
+                </td>
+            </tr>
+            {% endif %}
             {% endfor %}
         </tbody>
     </table>

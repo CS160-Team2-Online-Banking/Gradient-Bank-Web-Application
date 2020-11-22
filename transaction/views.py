@@ -5,7 +5,7 @@ from django import forms
 from api_requests.api_requests import *
 from django.conf import settings
 from django.contrib import messages
-
+from check_image_management import save_check_image
 
 FREQUENCY_CHOICES = [
     ("DAILY", "Daily"),
@@ -210,12 +210,15 @@ class DepositView(View):
                 "to_routing_no", settings.BANK_ROUTING_NUMBER)
             result = api_post_check_deposit(request, data["to_account"], data["from_account_no"],
                                             data["from_routing_no"], str(data["amount"]))
-            if not result:
+            if result:
+                file = request.FILES['image']
+                exchange_id = result["transfer_id"]
+                save_check_image(request.user, data["to_account"], exchange_id, file)
+            else:
                 print("Request Failed")
 
             # render(request, 'base_form.html', {"form": form, "form_title": "Check Deposit","action": "/transaction/deposit".format(type=type)})
         return redirect(reverse('bankaccount:accountdetails', kwargs={"account_no": data["to_account"]}))
-
 
 transaction = Transaction.as_view()
 transfer = TransferView.as_view()
