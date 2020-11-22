@@ -23,7 +23,7 @@ class InternalTransfer(TransferProcess):
 
         # ip information should also be collected here
 
-    @transaction.atomic
+    @transaction.atomic(using="bank_data")
     def queue_transfer(self, decrypted_auth_token):
         requesting_user_id = decrypted_auth_token["user_id"]
         request_ip4 = self.eventInfo["request_ip4"]
@@ -76,7 +76,7 @@ class InternalTransfer(TransferProcess):
         data["amount"] = self.amount
         return data
 
-    @transaction.atomic
+    @transaction.atomic(using="bank_data")
     def process_transfer(self, transfer_id=None):
         transfer = Transfers.objects.filter(pk=transfer_id).first()
         if transfer is None:
@@ -109,7 +109,7 @@ class InternalTransfer(TransferProcess):
             return True
         return False
 
-    @transaction.atomic
+    @transaction.atomic(using="bank_data")
     def cancel_transfer(self, transfer_id=None):
         pending_transfer = PendingTransfersQueue.object.filter(pk=transfer_id).first()
         transfer = Transfers.objects.filter(pk=transfer_id).first()

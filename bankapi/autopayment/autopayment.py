@@ -9,7 +9,7 @@ import json
 class AutopaymentBuilder:
 
     @staticmethod
-    @transaction.atomic
+    @transaction.atomic(using="bank_data")
     def build_autopayment(decrypted_auth_token, payment_data):
         owner_id = decrypted_auth_token["user_id"]
         payment_schedule_data = payment_data["payment_schedule_data"]
@@ -63,7 +63,7 @@ class AutopaymentBuilder:
         return None
 
     @staticmethod
-    @transaction.atomic
+    @transaction.atomic(using="bank_data")
     def modify_autopayment(decrypted_auth_token, payment_data):
         owner_id = decrypted_auth_token["user_id"]
         payment_id = payment_data["autopayment_id"]
@@ -116,6 +116,11 @@ class AutopaymentBuilder:
     def cancel_autopayment(decrypted_auth_token, autopayment_id):
         owner_id = decrypted_auth_token["user_id"]
         payment_id = autopayment_id
+        print('<<<<<<<<<<<<<<<<<')
+        print("i'm in bankapi autopayment deleteion")
+        print("payment_id: ", payment_id)
+        print("owner_id: ", owner_id)
+        print('<<<<<<<<<<<<<<<<<')
 
         owner = Customer.objects.filter(pk=owner_id).first()
         if owner is None:
@@ -152,7 +157,6 @@ class AutopaymentBuilder:
             entry["payment_schedule"] = json.loads(serializers.serialize("json", payment_schedule))[0]["fields"]
 
         return json_arr
-
 
 
 def is_payment_due(autopayment_obj) -> bool:

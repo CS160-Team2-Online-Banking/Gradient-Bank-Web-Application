@@ -10,10 +10,11 @@ from bankapi.transaction.transaction import TransactionProcess
 from functools import update_wrapper
 from bankapi.transfer.exchange_processor import *
 from bankapi.authentication.auth import *
-from bankapi.logging.logging import log_event
+from bankapi.logging.logging import log_event, create_event
 from bankapi.account.account_process import AccountProcess
 from bankapi.autopayment.autopayment import AutopaymentBuilder
 from django.utils.decorators import classonlymethod
+from bankapi.reports.reports import *
 import traceback
 
 
@@ -98,6 +99,41 @@ class APIView(View):
 
         return view
 
+    @classonlymethod
+    def as_delete_view(cls, **initkwargs):
+        """nothing but delete"""
+
+        for key in initkwargs:
+            if key in cls.http_method_names:
+                raise TypeError(
+                    'The method name %s is not accepted as a keyword argument '
+                    'to %s().' % (key, cls.__name__)
+                )
+            if not hasattr(cls, key):
+                raise TypeError("%s() received an invalid keyword %r. as_view "
+                                "only accepts arguments that are already "
+                                "attributes of the class." % (cls.__name__, key))
+
+        def view(request, *args, **kwargs):
+            self = cls(**initkwargs)
+            self.request = request
+            self.args = args
+            self.kwargs = kwargs
+            if request.method.lower() == "delete":
+                handler = getattr(self, request.method.lower(),
+                                  self.http_method_not_allowed)
+            else:
+                handler = self.http_method_not_allowed
+            return handler(request, *args, **kwargs)
+
+        view.view_class = cls
+        view.view_initkwargs = initkwargs
+
+        update_wrapper(view, cls, updated=())
+        update_wrapper(view, cls.dispatch, assigned=())
+
+        return view
+
     def access_dispatcher(self, request, *args, **kwargs):
         if request.method.lower() in self.restful_access_names:
             handler = getattr(self, request.method.lower(), self.http_method_not_allowed)
@@ -139,15 +175,17 @@ class TransferView(APIView):
             "to_account_no": to_account_no,
             "amount": Decimal(amount),
         }
-        result = ExchangeProcessor.start_exchange(request_info, auth_token)
+        event = create_event(request, auth_token, event_type=EventTypes.REQUEST_TRANSFER, data_id=None)
+        result = ExchangeProcessor.start_exchange(request_info, auth_token, event)
         if result["success"]:
-            log_event(request, auth_token, event_type=EventTypes.REQUEST_TRANSFER, data_id=result["data"]["transfer_id"])
             return JsonResponse({"success": True, "data": request_info}, status=200)
         return JsonResponse({"success": False, "msg": "Error: transfer could not be processed"}, status=500)
 
 
 @method_decorator(csrf_exempt, name='dispatch')  # django requires all post requests to include a CSRF token by default
 class AutoPaymentView(APIView):
+    """process HTTP action for auto payment"""
+
     @returns_json_error
     def post(self, request):
         try:
@@ -261,6 +299,8 @@ class AutoPaymentView(APIView):
 
     @returns_json_error
     def get(self, request, autopayment_id=None):
+        """Get auto payment object
+        """
         try:
             auth_token = decrypt_auth_token(request)
         except json.decoder.JSONDecodeError:
@@ -353,11 +393,32 @@ class AccountView(APIView):
             return JsonResponse({"success": False, "msg": "Error: Body is missing parameters"}, status=400)
         except ValueError:
             return JsonResponse({"success": False, "msg": "Error: Invalid parameter type"}, status=400)
-        result = AccountProcess.account_add(self, auth_token, account_data)
+        result = AccountProcess.account_add(auth_token, account_data)
         if result["success"]:
+            log_event(request, auth_token, EventTypes.CREATE_ACCOUNT, result["data"]["account_id"])
             return JsonResponse({"success": True, "data": result["data"]}, status=200)
         return JsonResponse({"success": False, "msg": "Error: Server failed to process request"}, status=500)
         #pass
+
+
+@method_decorator(csrf_exempt, name='dispatch')  # django requires all post requests to include a CSRF token by default
+class ReportView(View):
+    @returns_json_error
+    def get(self, request, datatype):
+        try:
+            auth_token = decrypt_auth_token(request)
+        except json.decoder.JSONDecodeError:
+            return JsonResponse({"success": False, "msg": "Error: JSON could not be parsed"}, status=400)
+
+        manager_id = auth_token.get("manager_id", None)
+        if manager_id is None:
+            return JsonResponse({"success": False, "msg": "Error: Access Denied"}, status=400)
+
+        executor = dispatch_report(datatype)
+        result = executor(auth_token, **request.GET.dict())
+        return JsonResponse(result, status=200)
+
+        # select our query parameter
 
 
 # This class is depricated and should be deleted
