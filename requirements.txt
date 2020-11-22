@@ -33,3 +33,4 @@ sqlparse==0.4.1
 toml==0.10.1
 urllib3==1.25.10
 zipp==3.3.0
+Pillow >=5.1.0
