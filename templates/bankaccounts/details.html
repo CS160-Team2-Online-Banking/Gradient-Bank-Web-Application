@@ -6,24 +6,33 @@
 </head>
 
 <div>
-<h1>Account Details</h1>
-<h2>{{account.account_type.account_type_name}} {{account.account_number}}</h2>
-<h3>Balance: ${{account.balance}}</h3>
-<h3>Transaction History</h3>
-{% if account.exchange_history %}
-    <table style="width:100%">
-        <tr><th>Type</th><th>Amount</th><th>Status</th><th>Posted</th></tr>
-    {% for exchange in account.exchange_history %}
-        <tr>
-            <td>{{exchange.type}}</td>
-            <td>{{exchange.amount}}</td>
-            <td>{{exchange.status}}</td>
-            <td>{{exchange.posted}}</td>
-        </tr>
-    {% endfor %}
+    <h1>Account Details</h1>
+    <h2>{{account.account_type.account_type_name}} {{account.account_number}}</h2>
+    <h3>Balance: ${{account.balance}}</h3>
+    <h3>Transaction History</h3>
+    {% if account.exchange_history %}
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Type</th>
+                <th>Amount</th>
+                <th>Status</th>
+                <th>Posted</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for exchange in account.exchange_history %}
+            <tr>
+                <td>{{exchange.type}}</td>
+                <td>{{exchange.amount}}</td>
+                <td>{{exchange.status}}</td>
+                <td>{{exchange.posted}}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
     </table>
-{% else %}
+    {% else %}
     <p>This account has not seen any withdraws or deposits</p>
-{% endif %}
+    {% endif %}
 </div>
 {% endblock %}

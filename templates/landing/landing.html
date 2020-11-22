@@ -54,7 +54,8 @@
         <tbody>
             {% if auto_list %}
             {% for payment in auto_list %}
-            <tr onclick="document.location = '../autopayment/details/{{payment.autopayment_id}}'" style="cursor:pointer;">
+            <tr onclick="document.location = '../autopayment/details/{{payment.autopayment_id}}'"
+                style="cursor:pointer;">
                 <td>{{payment.autopayment_id}}</td>
                 <td>{{payment.payment_schedule.start_date}} -- {{payment.payment_schedule.end_date}}</td>
                 <td>{{payment.payment_schedule.payment_frequency}}</td>
@@ -63,12 +64,12 @@
             {% empty %}
             <tr>
                 <td colspan="4">No Autopayment scheduled</td>
-            </tr> {% endfor %} 
+            </tr> {% endfor %}
             {% endif %}
         </tbody>
     </table>
 
-    
+
 
 
     <div class="d-flex justify-content-around">
