@@ -10,12 +10,35 @@
 
 {% block contents %}
 <div>
+    <div>
     <h1>Today's Status</h1>
-    <ul>
-        <li>Number of Customers: {{headline.customer_count}}</li>
-        <li>Number of Transfer's Processed: {{headline.exchange_count}}</li>
-        <li>Money Managed by our Bank: ${{headline.total_balance}}</li>
-    </ul>
+        <div class="row">
+            <div class="col-sm">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Our Customers</h5>
+                        <p class="card-text" style="color:#202020">We currently serve <b>{{headline.customer_count}}</b> customers</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Transfers to Date</h5>
+                        <p class="card-text" style="color:#202020">We have processed <b>{{headline.exchange_count}}</b> Transfers</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Total Funds</h5>
+                        <p class="card-text" style="color:#202020">We currently hold <b>${{headline.total_balance}}</b> of funds</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
     <h2>Search For Customers</h2>
     <form id="customer_search_form" method="post">
         {% csrf_token %}
@@ -65,6 +88,30 @@
                 {% endif %}
             </div>
             <div class="col">
+                {{form.customer_zip.label}}{{ form.customer_zip }}
+                {% if form.customer_zip.errors %}
+                <div class="alert-message">
+                    {{ form.customer_zip.errors }}
+                </div>
+                {% endif %}
+            </div>
+            <div class="col">
+                {{form.customer_city.label}}{{ form.customer_city }}
+                {% if form.customer_city.errors %}
+                <div class="alert-message">
+                    {{ form.customer_city.errors }}
+                </div>
+                {% endif %}
+            </div>
+            <div class="col">
+                {{form.customer_state.label}}{{ form.customer_state }}
+                {% if form.customer_state.errors %}
+                <div class="alert-message">
+                    {{ form.customer_state.errors }}
+                </div>
+                {% endif %}
+            </div>
+            <div class="col">
                 <button type="submit" name="search_customers" class="btn-block btn btn-lg btn-primary">Search</button>
             </div>
         </div>
@@ -73,6 +120,9 @@
                 customer_name: true,
                 customer_phone: true,
                 customer_address: true,
+                customer_zip: true,
+                customer_city: true,
+                customer_state: true,
                 customer_email: true,
                 customer_ssn: true,
                 accounts_count: true,
@@ -92,14 +142,20 @@
             }
         </script>
         <table class="table table-hover">
+            <thead>
             <tr style="cursor:pointer;">
                 <th onclick="set_ordering('customer_name')">Customer Name</th>
                 <th onclick="set_ordering('customer_phone')">Phone No.</th>
                 <th onclick="set_ordering('customer_email')">Email</th>
                 <th onclick="set_ordering('customer_ssn')">SSN</th>
                 <th onclick="set_ordering('customer_address')">Address</th>
+                <th onclick="set_ordering('customer_zip')">Zip</th>
+                <th onclick="set_ordering('customer_city')">City</th>
+                <th onclick="set_ordering('customer_state')">State</th>
                 <th>Account Count.</th>
             </tr>
+            </thead>
+            <tbody>
             {% for entry in customers_table.users %}
             <tr onclick="set_selected('{{entry.pk}}')" style="cursor:pointer;">
                 <!--onclick="// send a request to get this customers details report" >-->
@@ -108,9 +164,13 @@
                 <td>{{entry.customer_email}}</td>
                 <td>{{entry.customer_ssn}}</td>
                 <td>{{entry.customer_address}}</td>
+                <td>{{entry.customer_zip}}</td>
+                <td>{{entry.customer_city}}</td>
+                <td>{{entry.customer_state}}</td>
                 <td>{{entry.accounts}}</td>
             </tr>
             {% endfor %}
+            </tbody>
         </table>
         Page <input type="number" style="width:80px" id="page_number" name="page_number" min="1" step="1"
                     max="{{customers_table.page_count}}" value="{{form.page_number.value}}"> of

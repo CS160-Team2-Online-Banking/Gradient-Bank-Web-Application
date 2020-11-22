@@ -28,6 +28,9 @@ class CustomersSearchForm(forms.Form):
     customer_email = forms.CharField(label="Customer Email", required=False)
     customer_ssn = forms.CharField(label="Customer SSN", required=False)
     customer_address = forms.CharField(label="Customer Address", required=False)
+    customer_zip = forms.CharField(label="Customer Zip", required=False)
+    customer_city = forms.CharField(label="Customer City", required=False)
+    customer_state = forms.CharField(label="Customer State", required=False)
     selected_customer_id = forms.IntegerField(required=False, initial=-1, widget=forms.HiddenInput())
 
     def __init__(self, *args, **kwargs):
@@ -93,6 +96,9 @@ class LandingView(View):
         add_contains_search('customer_ssn')
         add_contains_search('customer_email')
         add_contains_search('customer_address')
+        add_contains_search('customer_zip')
+        add_contains_search('customer_city')
+        add_contains_search('customer_state')
         add_param('order_by')
         data['page_number'] = str(int(data['page_number'])-1)
         add_param('page_number')
