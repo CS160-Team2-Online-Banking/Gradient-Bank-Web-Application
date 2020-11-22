@@ -7,7 +7,8 @@ from decimal import *
 import jwt
 import json
 from api_requests.api_requests import add_json_body
-origin = "http://127.0.0.1:8000"
+# origin = "http://127.0.0.1:8000"
+origin = "http://159.89.148.172:8083"
 API_PATH = "{origin}/api".format(origin=origin)
 EXPIRE_TIME = timedelta(minutes=5)
 
