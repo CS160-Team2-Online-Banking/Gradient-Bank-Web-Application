@@ -176,6 +176,7 @@ def deposit_handler(auth_token, from_account_no, from_routing_no, to_account_no,
         return {"success": True, "data": {"transfer_id": ex.pk}}
     return {"success": False, "msg": "insufficient permission"}
 
+
 class ExchangeProcessor:
     @staticmethod
     def start_exchange(exchange_data, auth_token, event=None) -> dict:
