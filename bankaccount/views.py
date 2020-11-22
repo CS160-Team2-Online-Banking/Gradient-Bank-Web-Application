@@ -23,7 +23,7 @@ class OpenAccountView(View):
     def post(self, request):
         form = OpenAccountForm(request.POST)
         if form.is_valid():
-            api_post_account(request.user, form.cleaned_data["account_type"])
+            api_post_account(request, form.cleaned_data["account_type"])
         else:
             print("Invalid form data")
         return redirect(to="/landing/")
@@ -32,7 +32,7 @@ class OpenAccountView(View):
 class ViewAccountDetails(View):
     def get(self, request, account_no):
         if request.user.is_authenticated:
-            result = api_get_account_details(request.user, account_no)
+            result = api_get_account_details(request, account_no)
             if not result or not len(result):
                 return render(request, 'feature_access_message.html', {"title": "Account Details",
                                                                        "message": "Account could not be found"})

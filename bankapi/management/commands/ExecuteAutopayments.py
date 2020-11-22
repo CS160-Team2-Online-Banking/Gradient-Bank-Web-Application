@@ -15,15 +15,15 @@ class Command(BaseCommand):
         for auto_obj in autopayment_objects:
             if is_payment_due(auto_obj):  # if we are due to make a payment
 
-                data = {"to_account_id": auto_obj.to_account_id,
+                data = {"to_account_no": auto_obj.to_account_no,
                         "to_routing_no": auto_obj.to_routing_no,
                         "from_account_no": auto_obj.from_account.account_number,
                         "from_routing_no": settings.BANK_ROUTING_NUMBER,
                         "amount": auto_obj.transfer_amount}
 
-                print('preparing for transfer')
-                with transaction.atomic():
-                    result = ExchangeProcessor.start_exchange({"user_id": auto_obj.owner_user_id}, data)
+                print('preparing for transfer for autopayment {autopayment}'.format(autopayment=auto_obj.pk))
+                with transaction.atomic(using='bank_data'):
+                    result = ExchangeProcessor.start_exchange(data, {"user_id": auto_obj.owner_user_id})
                     if result["success"]:  # if the payment went through
                         auto_obj.last_payment = Now()
                         auto_obj.save()

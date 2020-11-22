@@ -1,4 +1,13 @@
 {% extends 'base.html' %}
+
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" type="text/css" href="{% static 'css/accounts.css' %}">
+<link rel="stylesheet" type="text/css" href="{% static 'css/signup.css' %}">
+{% endblock %}
+
+
 {% block contents %}
 
 <div>
@@ -42,10 +51,12 @@
     </div>
 
     {% else %}
-    <h1>Hello, {{ username }}!</h1>
-    <h1>Welcome to Online Bank</h1>
-    <p>We don't pay interest. You've been warned.</p>
-    <p>To start using online bank, please login or signup.</p>
+    <div>
+        <h1>Hello, {{ username }}!</h1>
+        <h1>Welcome to Online Bank</h1>
+        <p>We don't pay interest. You've been warned.</p>
+        <p>To start using online bank, please login or signup.</p>
+    </div>
     {% endif %}
 </div>
 

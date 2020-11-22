@@ -1,0 +1,266 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" type="text/css" href="{% static 'css/accounts.css' %}">
+<link rel="stylesheet" type="text/css" href="{% static 'css/signup.css' %}">
+{% endblock %}
+
+{% block head_title %}Manager View{% endblock %}
+
+{% block contents %}
+<div>
+    <h1>Today's Status</h1>
+    <ul>
+        <li>Number of Customers: {{headline.customer_count}}</li>
+        <li>Number of Transfer's Processed: {{headline.exchange_count}}</li>
+        <li>Money Managed by our Bank: ${{headline.total_balance}}</li>
+    </ul>
+    <h2>Search For Customers</h2>
+    <form id="customer_search_form" method="post">
+        {% csrf_token %}
+
+        {% for hidden in form.hidden_fields %}{{ hidden }}{% endfor %}
+
+
+        <div class="form-row">
+            <div class="col">
+                {{form.customer_name.label}}{{ form.customer_name }}
+                {% if form.customer_name.errors %}
+                <div class="alert-message">
+                    {{ form.customer_name.errors }}
+                </div>
+                {% endif %}
+            </div>
+            <div class="col">
+                {{form.customer_phone.label}}{{ form.customer_phone }}
+                {% if form.customer_phone.errors %}
+                <div class="alert-message">
+                    {{ form.customer_phone.errors }}
+                </div>
+                {% endif %}
+            </div>
+            <div class="col">
+                {{form.customer_email.label}}{{ form.customer_email }}
+                {% if form.customer_email.errors %}
+                <div class="alert-message">
+                    {{ form.customer_email.errors }}
+                </div>
+                {% endif %}
+            </div>
+            <div class="col">
+                {{form.customer_ssn.label}}{{ form.customer_ssn }}
+                {% if form.customer_ssn.errors %}
+                <div class="alert-message">
+                    {{ form.customer_ssn.errors }}
+                </div>
+                {% endif %}
+            </div>
+            <div class="col">
+                {{form.customer_address.label}}{{ form.customer_address }}
+                {% if form.customer_address.errors %}
+                <div class="alert-message">
+                    {{ form.customer_address.errors }}
+                </div>
+                {% endif %}
+            </div>
+            <div class="col">
+                <button type="submit" name="search_customers" class="btn-block btn btn-lg btn-primary">Search</button>
+            </div>
+        </div>
+        <script>
+            var order_by_toggle = {
+                customer_name: true,
+                customer_phone: true,
+                customer_address: true,
+                customer_email: true,
+                customer_ssn: true,
+                accounts_count: true,
+            };
+            current_order = document.getElementsByName('order_by')[0].value
+            order_by_toggle[current_order.replace('-','')] = current_order[0]!='-';
+            function set_ordering(field) {
+                order_by_toggle[field] = !order_by_toggle[field];
+                asc = order_by_toggle[field];
+                document.getElementsByName('order_by')[0].value = asc ? `${field}` : `-${field}`;
+                document.getElementById("customer_search_form").submit();
+            }
+
+            function set_selected(id) {
+                document.getElementsByName('selected_customer_id')[0].value = id;
+                document.getElementById("customer_search_form").submit();
+            }
+        </script>
+        <table class="table table-hover">
+            <tr style="cursor:pointer;">
+                <th onclick="set_ordering('customer_name')">Customer Name</th>
+                <th onclick="set_ordering('customer_phone')">Phone No.</th>
+                <th onclick="set_ordering('customer_email')">Email</th>
+                <th onclick="set_ordering('customer_ssn')">SSN</th>
+                <th onclick="set_ordering('customer_address')">Address</th>
+                <th>Account Count.</th>
+            </tr>
+            {% for entry in customers_table.users %}
+            <tr onclick="set_selected('{{entry.pk}}')" style="cursor:pointer;">
+                <!--onclick="// send a request to get this customers details report" >-->
+                <td>{{entry.customer_name}}</td>
+                <td>{{entry.customer_phone}}</td>
+                <td>{{entry.customer_email}}</td>
+                <td>{{entry.customer_ssn}}</td>
+                <td>{{entry.customer_address}}</td>
+                <td>{{entry.accounts}}</td>
+            </tr>
+            {% endfor %}
+        </table>
+        Page <input type="number" style="width:80px" id="page_number" name="page_number" min="1" step="1"
+                    max="{{customers_table.page_count}}" value="{{form.page_number.value}}"> of
+        {{customers_table.page_count}}
+    </form>
+    {% if customer_details %}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.4/dist/Chart.min.js"></script>
+
+    <script>
+            let data_set1 = {{ customer_details.spending_history|safe }};
+            let data_set2 = {{ customer_details.income_history|safe }};
+            let dataum1 = [];
+            let dataum2 = [];
+            data_set1.forEach((x)=>
+            {
+                dataum1.push({t:new Date(x.posted_delta_time), y:Number(x.total_spending)});
+            });
+            data_set2.forEach((x)=>
+            {
+                dataum2.push({t:new Date(x.posted_delta_time), y:Number(x.total_spending)});
+            });
+            var chart1_config = {
+                type:'line',
+                data: {
+                    datasets:[{
+                        label: "Spending Over Time",
+                        data: dataum1,
+                        showLine: true,
+                        fill: false,
+                    }],
+                },
+
+                options: {
+                    scales: {
+                        xAxes: [{
+                            type: 'time',
+                            time: {
+                                unit: 'week'
+                            }
+                        }],
+                    }
+                }
+            };
+            var chart2_config = {
+                type:'line',
+                data: {
+                    datasets:[{
+                        label: "Income Over Time",
+                        data: dataum2,
+                        showLine: true,
+                        fill: false,
+                    }],
+                },
+
+                options: {
+                    scales: {
+                        xAxes: [{
+                            type: 'time',
+                            time: {
+                                unit: 'week'
+                            }
+                        }],
+                    }
+                }
+            };
+            window.onload = function() {
+                var context1 = document.getElementById('chart1').getContext('2d');
+                var context2 = document.getElementById('chart2').getContext('2d');
+                window.chart1 = new Chart(context1, chart1_config);
+                window.chart2 = new Chart(context2, chart2_config);
+            }
+    </script>
+    <h2>Customer Details</h2>
+    <div class="row">
+        <div class="col" style="width:50%"><canvas id="chart1"></canvas></div>
+        <div class="col" style="width:50%"><canvas id="chart2"></canvas></div>
+    </div>
+    <div class="row">
+        <div class="col">
+            <h2>Customer Account Info</h2>
+            <table class="table">
+                <thead class="thead-dark">
+                <tr>
+                    <th colspan="2">Account Type</th>
+                    <th colspan="2">Account No.</th>
+                    <th colspan="2">Acount Balance.</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for account in customer_details.customer_accounts %}
+                <thead  class="thead-light">
+                <tr>
+                    <th colspan="2">{{account.account_type.account_type_name}}</th>
+                    <th colspan="2">{{account.account_number}}</th>
+                    <th colspan="2">${{account.balance}}</th>
+                </tr>
+                <tr>
+                    <th>Type</th>
+                    <th>To Account</th>
+                    <th>From Account</th>
+                    <th>Amount</th>
+                    <th>Posted Date</th>
+                    <th>Status</th>
+                </tr>
+                </thead>
+                {% for transaction in account.exchange_history %}
+                <tr>
+                    <td>{{transaction.type}}</td>
+                    <td>{{transaction.to_account_no}}</td>
+                    <td>{{transaction.from_account_no}}</td>
+                    <td>${{transaction.amount}}</td>
+                    <td>{{transaction.finished}}</td>
+                    <td>{{transaction.status}}</td>
+                </tr>
+                {% empty %}
+                <tr><th colspan="6">No Transactions</th></tr>
+                {% endfor %}
+                {% empty %}
+                <tr><th colspan="6">No Accounts</th></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="col">
+            <h2>Customer Activity</h2>
+        <table class="table">
+            <thead class="thead-dark">
+                <tr>
+                    <th>Event Type</th>
+                    <th>Ip4</th>
+                    <th>Ip6</th>
+                    <th>Event Time</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for event in customer_details.customer_activity %}
+                <tr>
+                    <td>{{event.event_type}}</td>
+                    <td>{{event.ip4_address}}</td>
+                    <td>{{event.ip6_address}}</td>
+                    <td>{{event.event_time}}</td>
+                </tr>
+                {% empty %}
+                <tr><th colspan="4">No Activity</th></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

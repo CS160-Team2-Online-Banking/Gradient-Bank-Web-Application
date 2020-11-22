@@ -11,7 +11,7 @@ class TransactionProcess:
         self.amount = transaction_data["amount"]
         self.time_stamp = transaction_data["time_stamp"]
 
-    @transaction.atomic
+    @transaction.atomic(using="bank_data")
     def queue_transaction(self, authentication_token):
         requesting_network_id = authentication_token["network_id"]
 
@@ -36,7 +36,7 @@ class TransactionProcess:
             return True
         return False
 
-    @transaction.atomic
+    @transaction.atomic(using="bank_data")
     def process_transaction(self, transaction_id=None):
         pending_transaction = PendingTransactionsQueue.objects.filter(pk=transaction_id).first()
         if pending_transaction is None:
@@ -60,7 +60,7 @@ class TransactionProcess:
             return True
         return False
 
-    @transaction.atomic
+    @transaction.atomic(using="bank_data")
     def cancel_transaction(self, transaction_id=None):
         pending_transaction = PendingTransactionsQueue.object.filter(pk=transaction_id).first()
         transaction_data = Transactions.objects.filter(pk=transaction_id).first()
