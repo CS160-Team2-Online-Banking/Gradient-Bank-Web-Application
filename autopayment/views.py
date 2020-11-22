@@ -8,7 +8,7 @@ from django.contrib import messages
 class ViewAutopaymentDetails(View):
     def get(self, request, autopayment_id):
         if request.user.is_authenticated:
-            result = api_get_autopayment_details(request.user, autopayment_id)
+            result = api_get_autopayment_details(request, autopayment_id)
 
             if not result or not len(result):
                 return render(request, 'feature_access_message.html', {"title": "Auopayment Details",
@@ -21,7 +21,7 @@ class ViewAutopaymentDetails(View):
 class AutopaymentDelete(View):
     def post(self, request, autopayment_id):
         if request.user.is_authenticated:
-            result = api_delete_autopayment(request.user, autopayment_id)
+            result = api_delete_autopayment(request, autopayment_id)
 
             if result:
                 messages.success(request, f'Auto payment {autopayment_id} has been deleted.')
