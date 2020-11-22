@@ -102,8 +102,8 @@ WSGI_APPLICATION = 'config.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'online_django_playground_1',
-        'USER': 'everettel',
+        'NAME': 'online_django_playground_2',
+        'USER': 'zackf',
         'PASSWORD': 'cs160Dev',
         'HOST': '159.89.148.172',
         'PORT': '3306',

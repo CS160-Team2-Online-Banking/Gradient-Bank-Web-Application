@@ -1,4 +1,13 @@
 {% extends 'base.html' %}
+
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" type="text/css" href="{% static 'css/accounts.css' %}">
+<link rel="stylesheet" type="text/css" href="{% static 'css/signup.css' %}">
+{% endblock %}
+
+
 {% block contents %}
 
 <div>
@@ -34,17 +43,20 @@
     <div class="d-flex justify-content-around">
         <a href="../atm/search"><button type="button" class="btn btn-primary">Withdraw</button></a>
         <!-- Withdraw will re-direct the user to the ATM search page -->
-        <a href="deposit_check.html"><button type="button" , class="btn btn-success">Deposit Check</button></a>
+        <a href="../transaction/deposit"><button type="button" , class="btn btn-success">Deposit
+                Check</button></a>
         <!-- Re-direct to the check deposit page -->
         <a href="../bankaccount"><button type="button" class="btn btn-secondary">Open Account</button></a>
         <!-- Re-direct to the open account page -->
     </div>
 
     {% else %}
-    <h1>Hello, {{ username }}!</h1>
-    <h1>Welcome to Online Bank</h1>
-    <p>We don't pay interest. You've been warned.</p>
-    <p>To start using online bank, please login or signup.</p>
+    <div>
+        <h1>Hello, {{ username }}!</h1>
+        <h1>Welcome to Online Bank</h1>
+        <p>We don't pay interest. You've been warned.</p>
+        <p>To start using online bank, please login or signup.</p>
+    </div>
     {% endif %}
 </div>
 
