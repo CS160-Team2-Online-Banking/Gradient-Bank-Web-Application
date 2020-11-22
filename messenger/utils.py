@@ -42,10 +42,6 @@ def add_customer(user):
     """
     try:
         this_user = CustomUser.objects.get(email=user.email)
-        print('>>>>>>>>>>>>>>>>')
-        print(f'type of user_model: {type(this_user)}')
-        print(f'customer_id: {this_user.id}')
-        print('>>>>>>>>>>>>>>>>')
     except CustomUser.DoesNotExist as e:
         # user not valid -> something wrong with the user authentication check
         return False
@@ -95,12 +91,7 @@ def get_bankapi_token(user, min_expire=5):
     # get user id
     user_id = user.id
     expiration = datetime.utcnow() + timedelta(minutes=min_expire)
-    print('>>>>>>>>>>>>>>>>>>')
-    print('getting token ...')
-    print(f'user_id: {user_id}')
-    print('>>>>>>>>>>>>>>>>>>')
     token = encrpyt_auth_token(user_id, expiration.isoformat())
-    print('BANK token: ', token)
     return token
 
 

@@ -9,9 +9,6 @@ class ViewAutopaymentDetails(View):
     def get(self, request, autopayment_id):
         if request.user.is_authenticated:
             result = api_get_autopayment_details(request.user, autopayment_id)
-            print('>>>>>>>>>>>>>>>>>>')
-            print('result: ', result)
-            print('>>>>>>>>>>>>>>>>>>')
 
             if not result or not len(result):
                 return render(request, 'feature_access_message.html', {"title": "Auopayment Details",
@@ -30,9 +27,6 @@ class AutopaymentDelete(View):
                 messages.success(request, f'Auto payment {autopayment_id} has been deleted.')
             else:
                 messages.error(request, f'Fail to delete auto payment {autopayment_id}.')
-            print('>>>>>>>>>>>>>>>>>>')
-            print('result: ', result)
-            print('>>>>>>>>>>>>>>>>>>')
             return redirect(to="/landing/")
 
 

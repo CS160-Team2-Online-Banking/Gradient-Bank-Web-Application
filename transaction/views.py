@@ -104,7 +104,6 @@ class Transaction(View):
                                                data["amount"]), data["start_date"].isoformat(),
                                            data["end_date"].isoformat(), data["frequency"])
             if not result:
-                # print("Request Failed")
                 # add fail message
                 messages.error(request, 'Fail to schedule auto payment.')
             else:
