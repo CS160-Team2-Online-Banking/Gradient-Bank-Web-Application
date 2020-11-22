@@ -218,7 +218,7 @@ def api_post_check_deposit(user_request, to_account_no, from_account_no, from_ac
         if response.status < 300:
             data = json.loads(response.read())
             if data["success"]:
-                return True
+                return data["data"]
         return False
     except HTTPError as e:
         return False

@@ -219,7 +219,8 @@ class ExchangeProcessor:
 
         if target_account.owner_id == requesting_user_id or user_is_manager:
             exchange_records = ExchangeHistory.objects.filter((Q(to_account_no=account_no, to_routing_no=settings.BANK_ROUTING_NUMBER)|
-                                                               Q(from_account_no=account_no, from_routing_no=settings.BANK_ROUTING_NUMBER)))
+                                                               Q(from_account_no=account_no, from_routing_no=settings.BANK_ROUTING_NUMBER)))\
+                                                                .order_by("-posted")
             serialized_records = json.loads(serializers.serialize("json", exchange_records))
             for record in serialized_records: record["fields"]["pk"] = record["pk"]
             serialized_records = list(map(lambda x: x["fields"], serialized_records))

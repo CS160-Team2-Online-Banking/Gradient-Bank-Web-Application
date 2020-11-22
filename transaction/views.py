@@ -4,7 +4,7 @@ from django import forms
 from api_requests.api_requests import *
 from django.conf import settings
 from django.contrib import messages
-
+from check_image_management import save_check_image
 
 FREQUENCY_CHOICES = [
     ("DAILY", "Daily"),
@@ -173,8 +173,6 @@ class TransferView(View):
                                                                    "message": "Please Login before transferring money"})
 
 
-
-
 class DepositView(View):
     def get(self, request):
         if request.user.is_authenticated:
@@ -202,6 +200,7 @@ class DepositView(View):
         else:
             return render(request, 'feature_access_message.html', {"title": "Account Details",
                                                                    "message": "Please Login before transferring money"})
+
         form = DepositForm(request.POST, request.FILES, from_accounts=from_accounts)
 
         if form.is_valid():
@@ -210,12 +209,15 @@ class DepositView(View):
                 "to_routing_no", settings.BANK_ROUTING_NUMBER)
             result = api_post_check_deposit(request, data["to_account"], data["from_account_no"],
                                             data["from_routing_no"], str(data["amount"]))
-            if not result:
+            if result:
+                file = request.FILES['image']
+                exchange_id = result["transfer_id"]
+                save_check_image(request.user, data["to_account"], exchange_id, file)
+            else:
                 print("Request Failed")
 
         return render(request, 'base_form.html', {"form": form, "form_title": "Check Deposit",
                                                   "action": "/transaction/deposit".format(type=type)})
-
 
 
 transaction = Transaction.as_view()

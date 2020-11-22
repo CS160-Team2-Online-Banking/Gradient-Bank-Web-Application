@@ -3,7 +3,7 @@ from django.views import View
 from api_requests.api_requests import *
 from django.shortcuts import redirect
 from django import forms
-
+from check_image_management import get_check_image
 
 class OpenAccountForm(forms.Form):
     account_type = forms.ChoiceField(choices=[("SAVING", "Savings Account"), ("CHECKING", "Checking Account")])
@@ -36,6 +36,11 @@ class ViewAccountDetails(View):
             if not result or not len(result):
                 return render(request, 'feature_access_message.html', {"title": "Account Details",
                                                                        "message": "Account could not be found"})
+            for exchange in result[0]["exchange_history"]:
+                if exchange["type"] == 'DEPOSIT':
+                    img = get_check_image(request.user, exchange["from_account_no"], exchange["pk"])
+                    if img:
+                        exchange["image"] = img.decode("utf-8")
             return render(request, 'bankaccounts/details.html', {"account": result[0]})
         else:
             return render(request, 'feature_access_message.html', {"title": "Account Details",
