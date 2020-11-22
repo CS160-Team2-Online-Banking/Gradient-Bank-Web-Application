@@ -171,7 +171,8 @@ def api_post_transfer(user_request, to_account_no, to_account_routing, from_acco
         return False
 
 
-def attach_deposit_auth_token(user, request):
+def attach_deposit_auth_token(user_request, request):
+    user = user_request.user
     if user.is_authenticated:
         userid = user.id
         expiration = datetime.utcnow() + EXPIRE_TIME
@@ -184,9 +185,9 @@ def attach_deposit_auth_token(user, request):
         raise ValueError("User object must be authenticated")
 
 
-def api_post_check_deposit(user, to_account_no, from_account_no, from_account_routing, amount):
+def api_post_check_deposit(user_request, to_account_no, from_account_no, from_account_routing, amount):
     req = Request(url="{path}/transfers".format(path=API_PATH), method='POST')
-    attach_deposit_auth_token(user, req)
+    attach_deposit_auth_token(user_request, req)
     payload = {"data": {
         "to_account_no": to_account_no,
         "to_routing_no": settings.BANK_ROUTING_NUMBER,

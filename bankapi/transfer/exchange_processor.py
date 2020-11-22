@@ -140,12 +140,19 @@ def deposit_handler(auth_token, from_account_no, from_routing_no, to_account_no,
         ex = ExchangeHistory(to_account_no=to_account_no,
                              from_account_no=from_account_no,
                              to_routing_no=settings.BANK_ROUTING_NUMBER,
-                             from_routing_no=settings.BANK_ROUTING_NUMBER,
+                             from_routing_no=from_routing_no,
                              amount=amount,
                              posted=Now(),
                              type=ExchangeHistory.ExchangeTypes.DEPOSIT,
                              status=ExchangeHistory.ExchangeHistoryStatus.POSTED)
         ex.save()
+
+        if is_exchange_suspicious(ex, event):
+            flag_suspicious_exchange(ex, event)
+            return {"success": False, "msg": "This transfer was flagged as suspicious"}
+
+        to_account.balance = to_account.balance + amount
+        to_account.save()
 
         ext_pool = ExternalTransferPool(internal_account=to_account,
                                         external_account_routing_no=from_routing_no,
