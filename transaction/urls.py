@@ -4,5 +4,7 @@ from . import views
 app_name = 'transaction'
 urlpatterns = [
     path('autopayments', views.transaction, name='transaction'),
-    re_path(r'^transfers(?P<type>/((internal)|(external)))$', views.transfer, name='transfer')
+    path('deposit', views.deposit, name='deposit'),
+    re_path(r'^transfers(?P<type>/((internal)|(external)))$',
+            views.transfer, name='transfer')
 ]
