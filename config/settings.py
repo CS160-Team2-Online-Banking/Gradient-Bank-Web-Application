@@ -105,18 +105,18 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'online_django_playground_2',
-        'USER': 'zackf',
+        'USER': 'online-bank-access',
         'PASSWORD': 'cs160Dev',
-        'HOST': '159.89.148.172',
+        'HOST': 'localhost',
         'PORT': '3306',
         'SUPPORTS_TRANSACTIONS': True,
     },
     'bank_data': {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'online_banking_playground_1',
-        'USER': 'everettel',
+        'USER': 'online-bank-access',
         'PASSWORD': 'cs160Dev',
-        'HOST': '159.89.148.172',
+        'HOST': 'localhost',
         'PORT': '3306',
         'SUPPORTS_TRANSACTIONS': True,
     }
@@ -173,6 +173,8 @@ PROJECT_NAME = os.path.basename(BASE_DIR)
 STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
 STATIC_ROOT = '{}/static'.format(PROJECT_NAME)
 
+BANK_API_ORIGIN = "http://127.0.0.1:8000"
+CHECK_IMAGE_LOCATION = "C:/"
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')

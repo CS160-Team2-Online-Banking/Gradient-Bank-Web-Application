@@ -3,8 +3,9 @@ from io import BytesIO
 from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
 from PIL import Image
+from django.conf import settings
 import os
-MEDIA_PATH = "C:/"
+MEDIA_PATH = settings.CHECK_IMAGE_LOCATION
 
 def get_check_image(user, account_no, exchange_id):
     try:

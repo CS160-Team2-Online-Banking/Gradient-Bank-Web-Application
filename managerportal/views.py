@@ -5,6 +5,7 @@ from django.shortcuts import redirect
 from django import forms
 from accounts.models import BankManagerUser
 from .requests import api_get_data
+from django.http import HttpResponseForbidden
 from django.core.validators import MaxValueValidator, MinValueValidator
 from datetime import datetime
 
@@ -108,6 +109,9 @@ class LandingView(View):
         user = request.user
         manager = get_manager(user)
 
+        if manager is None:
+            return HttpResponseForbidden()
+
         headline = self.get_headline(request, manager)
         result = api_get_data(request, manager, "get_customers", {})
         start_form = CustomersSearchForm(initial={"page_count": result["page_count"]})
@@ -121,6 +125,9 @@ class LandingView(View):
     def post(self, request):
         user = request.user
         manager = get_manager(user)
+
+        if manager is None:
+            return HttpResponseForbidden()
 
         headline = self.get_headline(request, manager)
         form = CustomersSearchForm(request.POST)
