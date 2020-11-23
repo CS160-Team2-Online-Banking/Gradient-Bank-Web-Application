@@ -5,7 +5,9 @@ from django import forms
 from api_requests.api_requests import *
 from django.conf import settings
 from django.contrib import messages
+from django.core.validators import *
 from check_image_management import save_check_image
+from decimal import *
 
 FREQUENCY_CHOICES = [
     ("DAILY", "Daily"),
@@ -18,9 +20,9 @@ FREQUENCY_CHOICES = [
 class AutopaymentForm(forms.Form):
     from_account = forms.ChoiceField(
         choices=[("None", "You have no accounts")])
-    amount = forms.DecimalField(label="Amount", decimal_places=2)
-    to_routing_no = forms.IntegerField(label="To Routing Number")
-    to_account_no = forms.IntegerField(label="To Account Number")
+    amount = forms.DecimalField(label="Amount", decimal_places=2, validators=[MinValueValidator(0)])
+    to_routing_no = forms.IntegerField(label="To Routing Number", validators=[MaxValueValidator(999_999_999), MinValueValidator(0)])
+    to_account_no = forms.IntegerField(label="To Account Number", validators=[MaxValueValidator(9999_9999_9999), MinValueValidator(0)])
     frequency = forms.ChoiceField(choices=FREQUENCY_CHOICES)
     start_date = forms.DateField(widget=forms.DateInput(
         format='%m-%d-%Y', attrs={'type': 'date'}))
@@ -41,9 +43,9 @@ class AutopaymentForm(forms.Form):
 class DepositForm(forms.Form):
     to_account = forms.ChoiceField(
         choices=[("None", "You have no accounts")])
-    from_routing_no = forms.IntegerField(label="Check Routing Number")
-    from_account_no = forms.IntegerField(label="Check Account Number")
-    amount = forms.DecimalField(label="Amount", decimal_places=2)
+    from_routing_no = forms.IntegerField(label="Check Routing Number", validators=[MaxValueValidator(999_999_999), MinValueValidator(0)])
+    from_account_no = forms.IntegerField(label="Check Account Number", validators=[MaxValueValidator(9999_9999_9999), MinValueValidator(0)])
+    amount = forms.DecimalField(label="Amount", decimal_places=2, validators=[MinValueValidator(0)])
     image = forms.ImageField()
 
     def __init__(self, *args, **kwargs):
@@ -62,7 +64,7 @@ class PersonalTransferForm(forms.Form):
         choices=[("None", "You have no accounts")])
     to_account_no = forms.ChoiceField(
         choices=[("None", "You have no accounts")])
-    amount = forms.DecimalField(label="Amount", decimal_places=2)
+    amount = forms.DecimalField(label="Amount", decimal_places=2, validators=[MinValueValidator(0)])
 
     def __init__(self, *args, **kwargs):
         from_accounts = kwargs.pop('from_accounts', [])
@@ -79,9 +81,9 @@ class PersonalTransferForm(forms.Form):
 class TransferForm(forms.Form):
     from_account = forms.ChoiceField(
         choices=[("None", "You have no accounts")])
-    to_routing_no = forms.IntegerField(label="To Routing Number")
-    to_account_no = forms.IntegerField(label="To Account Number")
-    amount = forms.DecimalField(label="Amount", decimal_places=2)
+    to_routing_no = forms.IntegerField(label="To Routing Number", validators=[MaxValueValidator(999_999_999), MinValueValidator(0)])
+    to_account_no = forms.IntegerField(label="To Account Number", validators=[MaxValueValidator(9999_9999_9999), MinValueValidator(0)])
+    amount = forms.DecimalField(label="Amount", decimal_places=2, validators=[MinValueValidator(0)])
 
     def __init__(self, *args, **kwargs):
         from_accounts = kwargs.pop('from_accounts', [])
@@ -168,7 +170,10 @@ class TransferView(View):
                 if not result:
                     print("Request Failed")
 
-            return redirect(reverse('bankaccount:accountdetails', kwargs={"account_no": data["to_account_no"]}))
+                return redirect(reverse('bankaccount:accountdetails', kwargs={"account_no": data["to_account_no"]}))
+            else:
+                return render(request, 'base_form.html', {"form": form, "form_title": "Transfer Money",
+                                                          "action": "/transaction/transfers{type}".format(type=type)})
         else:
             return render(request, 'feature_access_message.html', {"title": "Account Details",
                                                                    "message": "Please Login before transferring money"})
@@ -218,7 +223,10 @@ class DepositView(View):
                 print("Request Failed")
 
             # render(request, 'base_form.html', {"form": form, "form_title": "Check Deposit","action": "/transaction/deposit".format(type=type)})
-        return redirect(reverse('bankaccount:accountdetails', kwargs={"account_no": data["to_account"]}))
+            return redirect(reverse('bankaccount:accountdetails', kwargs={"account_no": data["to_account"]}))
+        return render(request, 'base_form.html',
+                      {"form": form, "form_title": "Check Deposit",
+                       "action": "/transaction/deposit"})
 
 transaction = Transaction.as_view()
 transfer = TransferView.as_view()
