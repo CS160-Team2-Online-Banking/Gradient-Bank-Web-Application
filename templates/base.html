@@ -23,12 +23,36 @@
             <div class="col-12">
                 <nav class="navbar navbar-expand-lg fixed-top navbar-dark bs-navbar" style='background-color:cadetblue;'
                     id="bs-navbar">
+
                     <a class="navbar-brand mr-md-2" href="/landing/">
                         Online Banking Service
                     </a>
+                    <div class="collapse navbar-collapse">
                     <ul class="navbar-nav mr-auto">
                         <li class="nav-item"><a class="nav-link" href="#"> </a></li>
                         <li class="nav-item"><a class="nav-link" href="#"> </a></li>
+                        <li class="nav-item dropdown">
+                            <a href="#manageSubemenu" id="manageDropdown" data-toggle="dropdown"
+                                    aria-expanded="true" class="nav-link dropdown-toggle">
+                                    Money Management
+                            </a>
+                            <div class="dropdown-menu" id="manageSubemenu">
+                                    <a class='dropdown-item' href='/transaction/autopayments'>
+                                        <span data-feather="">Setup Automatic Bill Payment</span>
+                                    </a>
+                                    <a class='dropdown-item' href='/transaction/transfers/internal'>
+                                        <span data-feather="">Setup Internal Transfer</span>
+                                    </a>
+                                    <a class='dropdown-item' href='/transaction/transfers/external'>
+                                        <span data-feather="">Setup External Transfer</span>
+                                    </a>
+                                </div>
+                        </li>
+                        <li class="nav-item">
+                            <a class='nav-link' href='/atm/search/'>
+                                <span data-feather="">Search ATM</span>
+                            </a>
+                        </li>
                     </ul>
                     <ul class="navbar-nav">
                         <!--
@@ -44,99 +68,16 @@
                         <li class="nav-item"><a class="nav-link" href="/accounts/login">Login</a></li>
                         {% endif %}
                     </ul>
+                    </div>
                 </nav>
             </div>
         </div>
     </div>
 
 
-    <!-- sidebar and contents -->
+    <!-- sidebar and contents  -->
     <div id="content" class="container-fluid">
         <div class="row flex-xl-nowrap" style="height:100%">
-
-            <!-- ↓↓ sidebar ↓↓ -->
-            <div id="sidemenu" class="col-2 d-none d-md-block bg-light sidebar align-self-start">
-                <div class="sidebar-sticky">
-                    <ul class="nav flex-column">
-                        <li class="nav-item">
-                            <nav class="navbar navbar-light bg-light">
-                                <a class="navbar-brand" href="/landing/">
-                                    <span data-feather="">Landing</span>
-                                </a>
-                            </nav>
-                        </li>
-                        <li class="nav-item">
-                            <nav class="navbar navbar-light bg-light">
-                                <a href="#manageSubemenu" id="manageDropdown" data-toggle="collapse"
-                                    aria-expanded="true" class="navbar-brand dropdown-toggle">
-                                    Money Management
-                                </a>
-                                <ul class="collapse list-unstyled" id="manageSubemenu">
-                                    <li>
-                                        <a class='dropdown-item' href='/transaction/autopayments'>
-                                            <span data-feather="">Setup Automatic Bill Payment</span>
-                                        </a>
-                                    </li>
-                                    <li>
-                                        <a class='dropdown-item' href='/transaction/transfers/internal'>
-                                            <span data-feather="">Setup Internal Transfer</span>
-                                        </a>
-                                    </li>
-                                    <li>
-                                        <a class='dropdown-item' href='/transaction/transfers/external'>
-                                            <span data-feather="">Setup External Transfer</span>
-                                        </a>
-                                    </li>
-                                </ul>
-                            </nav>
-                            <!--
-                            <div class="dropdown-menu bg-light" aria-labelledby="managementDropdown">
-                                <a class='dropdown-item navbar-brand' href='/transaction/autopayments'>
-                                    <span data-feather="">Setup Automatic Bill Payment</span>
-                                </a>
-                                <a class='dropdown-item navbar-brand' href='/transaction/transfers/internal'>
-                                    <span data-feather="">Setup Internal Transfer</span>
-                                </a>
-                                <a class='dropdown-item navbar-brand' href='/transaction/transfers/external'>
-                                    <span data-feather="">Setup External Transfer</span>
-                                </a>
-                            </div>-->
-                        </li>
-                        <li class="nav-item">
-                            <nav class="navbar navbar-light bg-light">
-                                <a class='navbar-brand' href='/atm/search/'>
-                                    <span data-feather="">Search ATM</span>
-                                </a>
-                            </nav>
-                        </li>
-                        <!--
-                        <li class="nav-item">
-                            <nav class="navbar navbar-light bg-light">
-                                <a class='navbar-brand' href='/accounts/signup/'>
-                                    <span data-feather="">Sign Up Page</span>
-                                </a>
-                            </nav>
-                        </li>
-                        <li class="nav-item">
-                            <nav class="navbar navbar-light bg-light">
-                                <a class='navbar-brand' href='/accounts/login/'>
-                                    <span data-feather="">Login Page</span>
-                                </a>
-                            </nav>
-                        </li>
-                        <li class="nav-item">
-                            <nav class="navbar navbar-light bg-light">
-                                <a class='navbar-brand' href='/accounts/logout/'>
-                                    <span data-feather="">Logout Page</span>
-                                </a>
-                            </nav>
-                        </li>
-                        -->
-                    </ul>
-                </div>
-            </div id="sidemenu">
-            <!-- ↑↑ sidebar end↑↑ -->
-
             <!-- ↓↓ contetns ↓↓ -->
             <div class="col-10">
                 <!-- message on success/failure -->
