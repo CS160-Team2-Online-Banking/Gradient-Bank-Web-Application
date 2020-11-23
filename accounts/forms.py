@@ -7,6 +7,7 @@ from .state_choices import STATE_CHOICES
 from django.core.validators import *
 from .models import CustomerUser, BankManagerUser
 
+
 class CustomerUserCreationForm(UserCreationForm):
     first_name = forms.CharField(max_length=50, label="First Name")
     middle_initial = forms.CharField(max_length=1, label="Middle Initial (Optional)", required=False)
@@ -33,6 +34,19 @@ class CustomerUserCreationForm(UserCreationForm):
     class Meta(UserCreationForm):
         model = CustomerUser
         fields = ('first_name', 'middle_initial', 'last_name', 'username', 'email', 'address', "zip", "city", "state", 'ssn', 'phone')
+
+
+class CustomerUserChangeForm(forms.Form):
+    first_name = forms.CharField(max_length=50, label="First Name")
+    middle_initial = forms.CharField(max_length=1, label="Middle Initial (Optional)", required=False)
+    last_name = forms.CharField(max_length=50, label="Last Name")
+    address = forms.CharField(max_length=50, label="Mailing Address")
+    ssn = forms.IntegerField(label="Social Security Number", validators=[MaxValueValidator(999_99_9999), MinValueValidator(0)])
+    phone = forms.IntegerField(label="Phone Number", validators=[MaxValueValidator(1_999_999_9999), MinValueValidator(0)])
+    username = forms.CharField(max_length=50, label="Username")
+    zip = forms.CharField(max_length=5, label="Zip Code", validators=[RegexValidator(regex=r'^[0-9]*$')])
+    city = forms.CharField(max_length=45, label="City")
+    state = forms.ChoiceField(choices=STATE_CHOICES, label="State")
 
 
 class BankManagerUserCreationForm(UserCreationForm):

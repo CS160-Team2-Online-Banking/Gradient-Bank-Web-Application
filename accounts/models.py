@@ -91,6 +91,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
 class CustomerManager(CustomUserManager):
     use_in_migrations = True
 
+    #TODO: Check this
     @atomic
     def create_user(self, email, password, **extra_fields):
         print("CUSTOMER USER WAS CALLED")
@@ -135,6 +136,54 @@ class CustomerManager(CustomUserManager):
         user.bank_customer_id = bank_customer.pk
         user.save(using=self._db)
         return user
+
+    @staticmethod
+    def update_user_info(user, **changes):
+        bank_customer = Customer.objects.filter(pk=user.pk).first()
+        if bank_customer is None:
+            return bank_customer
+
+        customer_ssn = changes.pop('ssn', None)
+        if customer_ssn:
+            bank_customer.customer_ssn = customer_ssn
+
+        customer_address = changes.pop('address', None)
+        if customer_address:
+            bank_customer.customer_address = customer_address
+
+        first_name = changes.pop('first_name', None)
+        middle_initial = changes.pop('middle_initial', None)
+        last_name = changes.pop('last_name', None)
+        if first_name and last_name:
+            if middle_initial:
+                customer_name = "{first_name} {middle_initial}{last_name}".format(first_name=first_name,
+                                                                                  middle_initial=middle_initial,
+                                                                                  last_name=last_name)
+            else:
+                customer_name = "{first_name} {last_name}".format(first_name=first_name,
+                                                                  last_name=last_name)
+            bank_customer.customer_name = customer_name
+
+        customer_phone = changes.pop('phone', None)
+        if customer_phone:
+            bank_customer.customer_phone = customer_phone
+
+        customer_zip = changes.pop('zip', None)
+        if customer_zip:
+            bank_customer.customer_zip = customer_zip
+
+        customer_city = changes.pop('city', None)
+        if customer_city:
+            bank_customer.customer_city = customer_city
+
+        customer_state = changes.pop('state', None)
+        if customer_state:
+            bank_customer.customer_state = customer_state
+
+        bank_customer.save()
+        return bank_customer
+
+
 
 
 class EmployeeManager(CustomUserManager):

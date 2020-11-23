@@ -66,5 +66,12 @@ class CustomerSignUp(CreateView):
         login(self.request, user)
         return redirect('/landing')
 
+class EditCustomerInfo(View):
+    def get(self, request):
+        pass
+
+    def post(self, request):
+        pass
+
 
 signup = CustomerSignUp.as_view()
