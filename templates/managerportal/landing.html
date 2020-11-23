@@ -188,10 +188,12 @@
             data_set1.forEach((x)=>
             {
                 dataum1.push({t:new Date(x.posted_delta_time), y:Number(x.total_spending)});
+                dataum1 = dataum1.sort((a,b)=>b.t-a.t)
             });
             data_set2.forEach((x)=>
             {
-                dataum2.push({t:new Date(x.posted_delta_time), y:Number(x.total_spending)});
+                dataum2.push({t:new Date(x.posted_delta_time), y:Number(x.total_income)});
+                dataum2 = dataum2.sort((a,b)=>b.t-a.t)
             });
             var chart1_config = {
                 type:'line',

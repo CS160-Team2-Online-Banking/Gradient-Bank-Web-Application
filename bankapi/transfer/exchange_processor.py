@@ -61,6 +61,7 @@ def external_transfer_handler(auth_token, from_account_no, to_account_no, to_rou
                 return {"success": False, "msg": "This transfer was flagged as suspicious"}
 
             if event is not None:
+                event.data_id = ex.pk
                 event.save()
 
             from_account.balance = from_account.balance - amount
@@ -113,6 +114,7 @@ def internal_transfer_handler(auth_token, from_account_no, to_account_no, amount
                 return {"success": False, "msg": "This transfer was flagged as suspicious"}
 
             if event is not None:
+                event.data_id = ex.pk
                 event.save()
 
             from_account.balance = from_account.balance - amount
@@ -168,6 +170,7 @@ def deposit_handler(auth_token, from_account_no, from_routing_no, to_account_no,
             return {"success": False, "msg": "This transfer was flagged as suspicious"}
 
         if event is not None:
+            event.data_id = ex.pk
             event.save()
 
         if internal:

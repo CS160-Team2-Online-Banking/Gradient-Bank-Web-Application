@@ -1,12 +1,13 @@
 {% extends 'base.html' %}
-
 {% load static %}
 
+<head>
 {% block extra_css %}
-<link rel="stylesheet" type="text/css" href="{% static 'css/accounts.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'css/signup.css' %}">
-{% endblock %}
-
+    <link rel="stylesheet" type="text/css" href="{% static 'css/accounts.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'css/signup.css' %}">
+    {% if request.user.is_authenticated %}{% else %}<link rel="stylesheet" type="text/css" href="{% static 'css/unauthlanding.css' %}">{% endif %}
+{% endblock extra_css %}
+</head>
 
 {% block contents %}
 
@@ -70,39 +71,41 @@
     <!-- add auto payment table -->
     <div class="row">
         <h3>Pending Autopayments</h3>
-        <table class="table table-hover">
-            <thead>
-                <tr>
-                    <th>Autopayment ID</th>
-                    <th>Schedule</th>
-                    <th>Frequency</th>
-                    <th>Amount</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% if auto_list %}
-                {% for payment in auto_list %}
-                <tr onclick="document.location = '../autopayment/details/{{payment.autopayment_id}}'"
-                    style="cursor:pointer;">
-                    <td>{{payment.autopayment_id}}</td>
-                    <td>{{payment.payment_schedule.start_date}} -- {{payment.payment_schedule.end_date}}</td>
-                    <td>{{payment.payment_schedule.payment_frequency}}</td>
-                    <td>${{payment.transfer_amount}}</td>
-                </tr>
-                {% empty %}
-                <tr>
-                    <td colspan="4">No Autopayment scheduled</td>
-                </tr> {% endfor %}
-                {% endif %}
-            </tbody>
-        </table>
+        {% if auto_list %}
+
+        <div class="row">
+            <div class="card-deck" style="padding:30px">
+                        {% for payment in auto_list %}
+
+                <div class="card" style="margin:5px;min-width:500px;min-height:300px">
+                    <div class="card-header">Payment To Acct No. {{payment.to_account_no}} <div class="float-right">
+                    <form action="../autopayment/delete/{{payment.autopayment_id}}" method="post">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger">Delete</button>
+                    </form>
+                </div></div>
+                    <div class="card-body landing-gradient">
+                        <h5 class="card-title" style="color:#ffffff">Scheduled for {{payment.payment_schedule.start_date}} to {{payment.payment_schedule.end_date}}</h5>
+                        <p class="card-text" style="color:#dfdfdf">To Routing No. {{payment.to_routing_no}}<br>
+                            Frequency: {{payment.payment_schedule.payment_frequency}}<br>
+                            Last Payment: {% if payment.last_payment %}{{payment.last_payment}}{% else %}None{% endif %}
+                        </p>
+                        <h3 style="text-align:left;color:#ffffff;bottom:0">Amount: ${{payment.transfer_amount}}</h3>
+                        <h3 style="text-align:left;color:#ffffff;bottom:0">From Account: {{payment.from_account_no}}</h3>
+                    </div>
+
+        </div>
+        {% endfor %}
+            </div>
+            {% endif %}
     </div>
     {% else %}
-    <div>
-        <h1>Hello, {{ username }}!</h1>
-        <h1>Welcome to Online Bank</h1>
-        <p>We don't pay interest. You've been warned.</p>
-        <p>To start using online bank, please login or signup.</p>
+    <div class="jumbotron" style="background-color:#0a0a0a;opacity:50%">
+        <h1 class="display-4" style="color:#ffffff">Hello, {{ username }}!</h1>
+        <h2 class="display-5" style="color:#ffffff">Welcome to Gradient Bank</h2>
+        <p class="lead" style="color:#dfdfdf">Optimize your finances with our streamlined online banking services.</p>
+        <hr class="my-4" style="background-color:#ffffff">
+        <p>Login or Sign-up to get started</p>
     </div>
     {% endif %}
 </div>

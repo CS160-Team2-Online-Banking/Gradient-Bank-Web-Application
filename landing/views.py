@@ -13,8 +13,14 @@ class Landing(View):
             result = api_get_accounts(request)
             # auto payment list
             auto_pay_list = api_get_autopayment_details(request, None)
-            print('auto_pay_list', auto_pay_list)
-
+            if auto_pay_list:
+                account_by_id = dict(map(lambda x: (x["pk"], x), result))
+                for payment in auto_pay_list:
+                    payment["from_account_no"] = account_by_id.get(payment["from_account"], None)
+                    if payment["from_account_no"]:
+                        payment["from_account_no"] = payment["from_account_no"]["account_number"]
+            else:
+                auto_pay_list = []
             if not result:
                 result = []
         else:
