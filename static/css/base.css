@@ -1,7 +1,10 @@
 
 body {
 	background: #fff;
+    padding: 120px;
     padding-top: 96px;
+    padding-bottom: 0px;
+	font-family: 'Roboto';
 }
 
 .container {
@@ -21,4 +24,44 @@ footer {
     padding: 17px 0;
     position: absolute;
     bottom: 0;
+}
+
+
+
+.hover-body .card-title {
+    padding-left: 25px;
+    padding-right: 25px;
+    white-space: nowrap;
+    text-align: center;
+    transition: 0.5s;
+}
+.hover-body:hover .card-title {
+    padding-left: 10px;
+    padding-right: 40px;
+    transition: 0.5s;
+}
+.hover-body:hover .card-text {
+    visibility: visible;
+    opacity: 100%;
+    transition: 0.5s;
+}
+.hover-body .card-text {
+    visibility:hidden;
+    opacity: 0%;
+    transition: 0.5s;
+}
+
+.gradient-bg {
+    background: rgb(46,177,223);
+    background: linear-gradient(288deg, rgba(46,177,223,1) 0%, rgba(30,232,215,1) 100%);
+}
+
+.gradient-bg1 {
+    background: rgb(223,46,182);
+    background: linear-gradient(288deg, rgba(223,46,182,1) 0%, rgba(30,178,232,1) 100%);
+}
+
+.gradient-bg2 {
+    background: rgb(46,177,223);
+    background: linear-gradient(288deg, rgba(46,177,223,1) 0%, rgba(232,160,30,1) 100%);
 }

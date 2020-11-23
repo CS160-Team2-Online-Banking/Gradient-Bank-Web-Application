@@ -45,7 +45,6 @@
 
         {% for hidden in form.hidden_fields %}{{ hidden }}{% endfor %}
 
-
         <div class="form-row">
             <div class="col">
                 {{form.customer_name.label}}{{ form.customer_name }}
@@ -141,6 +140,7 @@
                 document.getElementById("customer_search_form").submit();
             }
         </script>
+        <p style="color:#000000;">The search returned <b>{{customers_table.customer_count}}</b> customer records</p>
         <table class="table table-hover">
             <thead>
             <tr style="cursor:pointer;">

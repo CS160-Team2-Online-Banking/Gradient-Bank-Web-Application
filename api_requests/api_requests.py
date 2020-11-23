@@ -47,7 +47,6 @@ def add_json_body(request, data: dict):
 
 
 def api_post_account(user_request, account_type):
-    req = Request
     payload = {"data": {
         "account_type": account_type
     }}
@@ -74,6 +73,24 @@ def api_get_accounts(user_request):
             data = json.loads(response.read())
             if data["success"]:
                 return data["data"]
+        return False
+    except HTTPError as e:
+        return False
+
+
+def api_close_account(user_request, account_number):
+    payload = {"data": {
+        "account_number": account_number
+    }}
+    req = Request(url="{path}/accounts/{account_number}".format(path=API_PATH, account_number=account_number), method='DELETE')
+    attach_auth_token(user_request, req)
+    add_json_body(req, payload)
+    try:
+        response = urlopen(req)
+        if response.status < 300:
+            data = json.loads(response.read())
+            if data["success"]:
+                return True
         return False
     except HTTPError as e:
         return False

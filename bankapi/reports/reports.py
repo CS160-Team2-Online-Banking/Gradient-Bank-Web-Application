@@ -100,7 +100,7 @@ def get_customers(auth_token, verbose=False, page_size=10, page_number=0, order_
             user["accounts"] = len(Accounts.objects.filter(owner_id=owner_id))
 
     # add each customer's accounts
-    return {"success": True, "data": {"users": serialized_records, "page_count": page_count}}
+    return {"success": True, "data": {"users": serialized_records, "page_count": page_count, "customer_count": len(customers)}}
 
 
 def get_account_transactions(auth_token, account_no):

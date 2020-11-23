@@ -13,57 +13,63 @@
 <div>
     {% if request.user.is_authenticated %}
 
-    <div>
-        <h1 class="text-center">Welcome {{ username }}</h1>
+    <div class="jumbotron">
+        <h1 class="display-4">Welcome {{ username }}</h1>
     </div>
     <div class="row">
         <div class="panel-footer col-sm">
-            <a href="../atm/search">
-                <button type="button" class="btn btn-primary">Withdraw</button>
+            <a href="../atm/search" style="text-decoration:none;padding:10px;">
+                <div class="card" style="min-height:200px">
+                    <div class="card-body hover-body">
+                        <h5 class="card-title">Withdraw Cash</h5>
+                        <p class="card-text">Use our Chase ATM Locator Tool to find the closest ATM to withdraw money from.</p>
+                    </div>
+                </div>
             </a>
         </div>
         <!-- Withdraw will re-direct the user to the ATM search page -->
         <div class="panel-footer col-sm">
-            <a href="../transaction/deposit">
-                <button type="button" , class="btn btn-success">Deposit Check</button>
+            <a href="../transaction/deposit" style="text-decoration:none;padding:10px;">
+                <div class="card" style="min-height:200px">
+                    <div class="card-body hover-body">
+                        <h5 class="card-title">Deposit A Check</h5>
+                        <p class="card-text">Check Deposits have been made easy through our Digital Deposit System.</p>
+                    </div>
+                </div>
             </a>
         </div>
         <!-- Re-direct to the check deposit page -->
         <div class="panel-footer col-sm">
-            <a href="../bankaccount">
-                <button type="button" class="btn btn-secondary">Open Account</button>
+            <a href="../bankaccount" style="text-decoration:none;padding:10px;">
+                <div class="card" style="min-height:200px">
+                    <div class="card-body hover-body">
+                        <h5 class="card-title">Open A Bank Account</h5>
+                        <p class="card-text">We offer Checking and Savings Account options to meet our customer's needs.</p>
+                    </div>
+                </div>
             </a>
         </div>
         <!-- Re-direct to the open account page -->
     </div>
     <div class="row">
-        <table class="table table-hover">
-            <thead>
-                <tr>
-                    <th>Account No.</th>
-                    <th>Account Type</th>
-                    <th>Amount</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for account in account_list %}
-                <tr onclick="document.location = '../bankaccount/details/{{account.account_number}}'"
-                    style="cursor:pointer;">
-                    <td>{{account.account_number}}</td>
-                    <td>{{account.account_type.account_type_name}}</td>
-                    <td>${{account.balance}}</td>
-                </tr>
-                {% empty %}
-                <tr>
-                    <td colspan="3">No accounts</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+        <h3>Your Accounts</h3>
+        <div class="row">
+            <div class="card-deck" style="padding:30px">
+        {% for account in account_list %}<a href='../bankaccount/details/{{account.account_number}}' style="text-decoration:none;">
+        <div class="card" style="margin:5px;min-width:500px;min-height:300px">
+                    <div class="card-header">{{account.account_type.account_type_name}}{{account.account_number}}</div>
+                    <div class="card-body {% if account.account_type.account_type_name == 'SAVING' %}gradient-bg1{% else %}gradient-bg2{% endif %}">
+                        <h5 class="card-title" style="color:#ffffff">{{account.account_type.account_type_name}}</h5>
+                        <p class="card-text" style="color:#dfdfdf">Acct No.{{account.account_number}}<br> Routing No. 123456789</p>
+                        <h3 style="text-align:left;color:#ffffff;bottom:0">${{account.balance}}</h3>
+                    </div>
+
+        </div></a>
+        {% endfor %}</div></div>
     </div>
     <!-- add auto payment table -->
     <div class="row">
-        <h3>Autopayment list</h3>
+        <h3>Pending Autopayments</h3>
         <table class="table table-hover">
             <thead>
                 <tr>

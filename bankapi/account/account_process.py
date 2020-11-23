@@ -90,24 +90,24 @@ class AccountProcess:
         pass
 
     @staticmethod
-    def close_account(decrypted_auth_token, account_id):
+    @transaction.atomic(using="bank_data")
+    def close_account(decrypted_auth_token, data):
         owner_id = decrypted_auth_token["user_id"]
-        bank_id = account_id
+        account_number = data["account_number"]
 
         owner = Customer.objects.filter(pk=owner_id).first()
         if owner is None:
-            return None
+            return {"success": False, "msg": "Error: no such customer exists"}
 
-        bank_obj = AutopaymentObjects.objects.filter(owner_user_id=owner.pk, account_id=bank_id).first()
-        if bank_obj is None:
-            return None
+        account = Accounts.objects.filter(account_number=account_number, owner_id=owner.pk).first()
+        if account is None:
+            return {"success": False, "msg": "Error: no such account exists"}
 
-        bank_obj_save = Accounts(account_id=bank_obj.pk,
-                               balance=bank_obj.balance,
-                               account_number=bank_obj.account_number,
-                               account_type=bank_obj.account_type,
-                               owner=0
-                               )
-        bank_obj_save.save()
-
-        return True  # TODO: return something nicer here
+        if account.balance == 0:
+            account.owner_id = 0
+            account.save()
+            # delete all autopayments as well
+            autopayments = AutopaymentObjects.objects.filter(owner_user_id=owner.pk, from_account_id=account.pk).delete()
+            return {"success": True, "data": {"account_id": account.pk}}
+        else:
+            return {"success": False, "msg": "Error: you cannot close an account while it still has an active balance"}

@@ -1,4 +1,6 @@
 {% extends 'base.html' %}
+{% block extra_css %}
+{% endblock %}
 {% block contents %}
 
 <head>
@@ -6,9 +8,19 @@
 </head>
 
 <div>
-    <h1>Account Details</h1>
-    <h2>{{account.account_type.account_type_name}} {{account.account_number}}</h2>
-    <h3>Balance: ${{account.balance}}</h3>
+
+    <div class="jumbotron gradient-bg">
+        <h1 class="display-4">Account Details</h1>
+        <p class="lead">{{account.account_type.account_type_name}} {{account.account_number}}</p>
+        <p>Routing Number 123456789</p>
+        <hr class="my-4">
+        <p class="lead">Balance: ${{account.balance}}</p>
+        <form action="" method="post">
+            {% csrf_token %}
+            <input type="hidden" name="account_number" value="{{account.account_number}}"></input>
+            <input class="btn btn-danger" type="submit" name="type" value="Close Account">
+        </form>
+    </div>
     <h3>Transaction History</h3>
     {% if account.exchange_history %}
     <table class="table">
