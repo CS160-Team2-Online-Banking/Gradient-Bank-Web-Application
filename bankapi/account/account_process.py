@@ -40,7 +40,7 @@ class AccountProcess:
             return {"success": True, "data": json_arr}
         else:
             # return one specific account along with it's exchange history
-            accounts = Accounts.objects.filter(account_number=account_no_to_lookup)
+            accounts = Accounts.objects.filter(owner_id=owner.pk, account_number=account_no_to_lookup)
             result = ExchangeProcessor.get_exchange_history(account_no_to_lookup, decrypted_auth_token)
             exchange_history = list()
             if result["success"]:
