@@ -9,6 +9,7 @@
 {% block head_title %}Manager View{% endblock %}
 
 {% block contents %}
+
 <div>
     <div>
     <h1>Today's Status</h1>
@@ -157,7 +158,7 @@
             </thead>
             <tbody>
             {% for entry in customers_table.users %}
-            <tr onclick="set_selected('{{entry.pk}}')" style="cursor:pointer;">
+            <tr {% if entry.closed %}style="background-color:lightgray;cursor:pointer;"{% else %}style="cursor:pointer;"{% endif %} onclick="set_selected('{{entry.pk}}')">
                 <!--onclick="// send a request to get this customers details report" >-->
                 <td>{{entry.customer_name}}</td>
                 <td>{{entry.customer_phone}}</td>

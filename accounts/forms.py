@@ -6,6 +6,7 @@ from django.db import transaction
 from .state_choices import STATE_CHOICES
 from django.core.validators import *
 from .models import CustomerUser, BankManagerUser
+from bankapi.models import Customer
 
 
 class CustomerUserCreationForm(UserCreationForm):
@@ -19,6 +20,7 @@ class CustomerUserCreationForm(UserCreationForm):
     zip = forms.CharField(max_length=5, label="Zip Code", validators=[RegexValidator(regex=r'^[0-9]*$')])
     city = forms.CharField(max_length=45, label="City")
     state = forms.ChoiceField(choices=STATE_CHOICES, label="State")
+    pin = forms.CharField(label="PIN", max_length=4, validators=[RegexValidator(regex=r'^[0-9]{4}$')])
 
     def register_user(self):
         cleaned_data = self.cleaned_data
@@ -33,10 +35,10 @@ class CustomerUserCreationForm(UserCreationForm):
 
     class Meta(UserCreationForm):
         model = CustomerUser
-        fields = ('first_name', 'middle_initial', 'last_name', 'username', 'email', 'address', "zip", "city", "state", 'ssn', 'phone')
+        fields = ('first_name', 'middle_initial', 'last_name', 'username', 'email', 'address', "zip", "city", "state", 'ssn', "pin", 'phone')
 
 
-class CustomerUserChangeForm(forms.Form):
+class CustomerUserChangeForm(UserChangeForm):
     first_name = forms.CharField(max_length=50, label="First Name")
     middle_initial = forms.CharField(max_length=1, label="Middle Initial (Optional)", required=False)
     last_name = forms.CharField(max_length=50, label="Last Name")
@@ -47,7 +49,42 @@ class CustomerUserChangeForm(forms.Form):
     zip = forms.CharField(max_length=5, label="Zip Code", validators=[RegexValidator(regex=r'^[0-9]*$')])
     city = forms.CharField(max_length=45, label="City")
     state = forms.ChoiceField(choices=STATE_CHOICES, label="State")
+    pin = forms.CharField(label="PIN", max_length=4, validators=[RegexValidator(regex=r'^[0-9]{4}$')])
 
+    def __init__(self, *args, **kwargs):
+        super(CustomerUserChangeForm, self).__init__(*args, **kwargs)  # call parent's constructor
+        if self.instance:
+            user = self.instance
+            customer_data = Customer.objects.filter(pk=user.pk).first()
+            if customer_data:
+                namebits = customer_data.customer_name.split(" ")
+                if len(namebits)==3:
+                    self.initial["first_name"] = namebits[0]
+                    self.initial["middle_initial"] = namebits[1]
+                    self.initial["last_name"] = namebits[2]
+                elif len(namebits)==2:
+                    self.initial["first_name"] = namebits[0]
+                    self.initial["last_name"] = namebits[1]
+                self.initial["address"]=customer_data.customer_address
+                self.initial["ssn"]=customer_data.customer_ssn
+                self.initial["phone"]=customer_data.customer_phone
+                self.initial["zip"]=customer_data.customer_zip
+                self.initial["city"]=customer_data.customer_city
+                self.initial["state"]=customer_data.customer_state
+                self.initial["pin"]=customer_data.customer_pin
+
+    def save(self, commit=True):
+        m = super(CustomerUserChangeForm, self).save(commit=False)
+        bank_cust = CustomerUser.objects.update_user_info(m, commit=False, **self.cleaned_data)
+        # add change password here
+        #
+        if commit:
+            m.save()
+            bank_cust.save()
+
+    class Meta(UserCreationForm):
+        model = CustomerUser
+        fields = ('first_name', 'middle_initial', 'last_name', 'username', 'email', 'address', "zip", "city", "state", 'ssn', "pin", 'phone')
 
 class BankManagerUserCreationForm(UserCreationForm):
     def register_user(self):

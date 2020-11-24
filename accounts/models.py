@@ -111,6 +111,7 @@ class CustomerManager(CustomUserManager):
         customer_zip = extra_fields["zip"]
         customer_city = extra_fields["city"]
         customer_state = extra_fields["state"]
+        customer_pin = extra_fields["pin"]
         extra_fields.pop('ssn', None)
         extra_fields.pop('address', None)
         extra_fields.pop('first_name', None)
@@ -120,6 +121,7 @@ class CustomerManager(CustomUserManager):
         extra_fields.pop('zip', None)
         extra_fields.pop('city', None)
         extra_fields.pop('state', None)
+        extra_fields.pop('pin', None)
         extra_fields.pop('password1', None)
         extra_fields.pop('password2', None)
         user = super().create_user(email, password, commit=False, **extra_fields)
@@ -131,14 +133,15 @@ class CustomerManager(CustomUserManager):
                                  customer_address=customer_address,
                                  customer_zip=customer_zip,
                                  customer_city=customer_city,
-                                 customer_state=customer_state)
+                                 customer_state=customer_state,
+                                 customer_pin=customer_pin)
         bank_customer.save()
         user.bank_customer_id = bank_customer.pk
         user.save(using=self._db)
         return user
 
     @staticmethod
-    def update_user_info(user, **changes):
+    def update_user_info(user, commit=True, **changes):
         bank_customer = Customer.objects.filter(pk=user.pk).first()
         if bank_customer is None:
             return bank_customer
@@ -180,7 +183,11 @@ class CustomerManager(CustomUserManager):
         if customer_state:
             bank_customer.customer_state = customer_state
 
-        bank_customer.save()
+        customer_pin = changes.pop('pin', None)
+        if customer_pin:
+            bank_customer.customer_pin = customer_pin
+        if commit:
+            bank_customer.save()
         return bank_customer
 
 

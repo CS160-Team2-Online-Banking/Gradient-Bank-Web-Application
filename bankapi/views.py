@@ -14,7 +14,10 @@ from bankapi.logging.logging import log_event, create_event
 from bankapi.account.account_process import AccountProcess
 from bankapi.autopayment.autopayment import AutopaymentBuilder
 from django.utils.decorators import classonlymethod
+from django.shortcuts import render, redirect
 from bankapi.reports.reports import *
+from django.contrib import messages
+from .forms import *
 import traceback
 
 
@@ -347,6 +350,79 @@ class TransactionView(View):
             return JsonResponse({"success": False, "msg": "Error: server failed to process request"}, status=500)
         else:
             return JsonResponse({"success": True})
+
+
+class ATMProcessorView(View):
+    def get(self, request):
+        form = ATMForm()
+        return render(request, 'base_form.html', {"form": form, "form_title": "ATM Withdraw",
+                                                  "action": "/api/atm"})
+
+    @transaction.atomic(using='bank_data')
+    def post(self, request):
+        form = ATMForm(request.POST)
+        if form.is_valid():
+            data = form.cleaned_data
+        else:
+            messages.info(request, "One or more of the entered fields in invalid")
+            return render(request, 'base_form.html', {"form": form, "form_title": "ATM Withdraw",
+                                               "action": "/api/atm"})
+
+        username = data["bank_username"]
+        pin = data["bank_pin"]
+        account_number = data["account_no"]
+        amount = data["amount"]
+
+
+        user = CustomUser.objects.filter(username=username).first()
+        if user is None:
+            messages.info(request, "Username or Pin is Invalid")
+            return render(request, 'base_form.html', {"form": form, "form_title": "ATM Withdraw",
+                                                      "action": "/api/atm"})
+
+        customer_user = CustomerUser.objects.filter(pk=user.pk).first()
+        if customer_user is None:
+            messages.info(request, "Username or Pin is Invalid")
+            return render(request, 'base_form.html', {"form": form, "form_title": "ATM Withdraw",
+                                                      "action": "/api/atm"})
+
+        bank_customer = Customer.objects.filter(pk=customer_user.pk).first()
+        if bank_customer is None:
+            messages.info(request, "Username or Pin is Invalid")
+            return render(request, 'base_form.html', {"form": form, "form_title": "ATM Withdraw",
+                                                      "action": "/api/atm"})
+
+        if bank_customer.customer_pin == pin:
+            account = Accounts.objects.filter(owner_id=bank_customer.pk, account_number=account_number).first()
+            if account is None:
+                messages.info(request, "Account Number is Invalid")
+                return render(request, 'base_form.html', {"form": form, "form_title": "ATM Withdraw",
+                                                          "action": "/api/atm"})
+
+            if account.balance >= amount:
+                ex = ExchangeHistory(to_account_no=000000000000,
+                                     from_account_no=account.account_number,
+                                     to_routing_no=000000000,
+                                     from_routing_no=settings.BANK_ROUTING_NUMBER,
+                                     amount=amount,
+                                     posted=Now(),
+                                     finished=Now(),
+                                     atm_id=1,
+                                     type=ExchangeHistory.ExchangeTypes.WITHDRAWAL,
+                                     status=ExchangeHistory.ExchangeHistoryStatus.FINISHED)
+
+                account.balance = account.balance - amount
+                log_event(request, {"user_id": bank_customer.pk}, EventTypes.WITHDRAW_MONEY, ex.pk)
+                ex.save()
+                account.save()
+                return redirect(to="/landing")
+        else:
+            messages.info(request, "Username or Pin is Invalid")
+            return render(request, 'base_form.html', {"form": form, "form_title": "ATM Withdraw",
+                                                      "action": "/api/atm"})
+
+
+
 
 @method_decorator(csrf_exempt, name='dispatch')  # django requires all post requests to include a CSRF token by default
 class AccountView(APIView):

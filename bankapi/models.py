@@ -34,7 +34,8 @@ class Customer(models.Model):
     customer_zip = models.CharField(max_length=5, null=True)
     customer_city = models.CharField(max_length=45, null=True)
     customer_state = models.CharField(max_length=2, null=True)
-
+    customer_pin = models.CharField(max_length=4, null=True)
+    closed = models.BooleanField(default=False)
     class Meta:
         managed = False
         db_table = 'Customer'
@@ -118,7 +119,9 @@ class EventTypes:
     CLOSE_ACCOUNT = (5, "CLOSE ACCOUNT", "")
     DEPOSIT_CHECK = (6, "DEPOSIT CHECK", "")
     SUSPICIOUS_TRANSFER = (7, "SUS TRANSFER", "")
-    EVENT_ARR = [CREATE_ACCOUNT, REQUEST_TRANSFER, SETUP_AUTOPAYMENT, EDIT_AUTOPAYMENT, CANCEL_AUTOPAYMENT, CLOSE_ACCOUNT, DEPOSIT_CHECK, SUSPICIOUS_TRANSFER]
+    WITHDRAW_MONEY = (8, "WITHDRAW", "")
+    EVENT_ARR = [CREATE_ACCOUNT, REQUEST_TRANSFER, SETUP_AUTOPAYMENT, EDIT_AUTOPAYMENT, CANCEL_AUTOPAYMENT,
+                 CLOSE_ACCOUNT, DEPOSIT_CHECK, SUSPICIOUS_TRANSFER, WITHDRAW_MONEY]
 
 
 class PaymentSchedules(models.Model):
