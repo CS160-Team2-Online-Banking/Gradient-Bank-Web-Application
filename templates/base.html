@@ -24,14 +24,20 @@
             <div class="col-12">
                 <nav class="navbar navbar-expand-lg fixed-top navbar-dark bs-navbar" style='background-color:black;'
                     id="bs-navbar">
+                    {% if request.user.is_authenticated and request.user.type is 2 %}
+                    <a class="navbar-brand mr-md-2" href="/managerportal/landing">
+                        Gradient Bank
+                    </a>
+                    {% else %}
                     <a class="navbar-brand mr-md-2" href="/landing/">
                         Gradient Bank
                     </a>
+                    {% endif %}
                     <div class="collapse navbar-collapse">
                     <ul class="navbar-nav mr-auto">
                         <li class="nav-item"><a class="nav-link" href="#"> </a></li>
                         <li class="nav-item"><a class="nav-link" href="#"> </a></li>
-                        {% if request.user.is_authenticated %}
+                        {% if request.user.is_authenticated and request.user.type is 1 %}
                         <li class="nav-item dropdown">
                             <a href="#manageSubemenu" id="manageDropdown" data-toggle="dropdown"
                                     aria-expanded="true" class="nav-link dropdown-toggle">
@@ -65,7 +71,9 @@
                         </li>
                         -->
                         {% if request.user.is_authenticated %}
+                        {% if request.user.type is 1 %}
                         <li class="nav-item"><a class="nav-link" href="/accounts/customer/edit/0">{{request.user}}</a></li>
+                        {% endif %}
                         <li class="nav-item"><a class="nav-link" href="/accounts/logout">Logout</a></li>
                         {% else %}
                         <li class="nav-item"><a class="nav-link" href="/accounts/signup/">Sign Up</a></li>

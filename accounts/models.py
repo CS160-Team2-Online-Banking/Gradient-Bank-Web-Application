@@ -47,6 +47,9 @@ class CustomUserManager(UserManager):
 
 
 class CustomUser(AbstractBaseUser, PermissionsMixin):
+    class UserTypes:
+        TYPE_MANAGER = 2
+        TYPE_CUSTOMER = 1
     password = models.CharField(max_length=255, null=True, blank=True)
     username = models.CharField(
         max_length=255, null=True, unique=True, blank=True)
@@ -56,14 +59,16 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
 
     # Flags for permission to access the admin site
 
+    type = models.IntegerField(default=UserTypes.TYPE_CUSTOMER)
+
     is_staff = models.BooleanField(
         _('staff status'),
         default=False,
         help_text=_(
             'Designates whether the user can log into this admin site.'),
     )
-
     # Flag of whether the user is in the main registration status, False is temporary registration.
+
     is_active = models.BooleanField(
         _('active'),
         default=True,
@@ -74,10 +79,10 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     )
 
     objects = CustomUserManager()
-
     EMAIL_FIELD = 'email'
     USERNAME_FIELD = 'username'
     PASSWORD_FIELD = 'password'
+
     REQUIRED_FIELDS = [EMAIL_FIELD]
 
     class Meta:
@@ -191,14 +196,13 @@ class CustomerManager(CustomUserManager):
         return bank_customer
 
 
-
-
 class EmployeeManager(CustomUserManager):
     use_in_migrations = True
 
     def create_user(self, email, password=None, **extra_fields):
         extra_fields.pop('password1', None)
         extra_fields.pop('password2', None)
+        extra_fields["type"] = CustomerUser.UserTypes.TYPE_MANAGER
         user = super()._create_user(email, password, commit=False, **extra_fields)
         new_manager_id = self.latest('manager_id')
         if new_manager_id is None:
