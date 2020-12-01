@@ -37,7 +37,6 @@ class CustomerUserCreationForm(UserCreationForm):
     middle_initial = forms.CharField(max_length=1, label="Middle Initial (Optional)", required=False)
     last_name = forms.CharField(max_length=50, label="Last Name")
     address = forms.CharField(max_length=50, label="Mailing Address")
-    #ssn = forms.IntegerField(label="Social Security Number", validators=[MaxValueValidator(999_99_9999), MinValueValidator(0)])
     ssn = forms.CharField(label="Social Security Number", validators=[RegexValidator(regex=r'^[0-9]*$'), MinLengthValidator(9)])
     phone = forms.CharField(label="Phone Number", validators=[RegexValidator(regex=phone_regex)])
     username = forms.CharField(max_length=50, label="Username")
@@ -70,7 +69,6 @@ class CustomerUserChangeForm(UserChangeForm):
     middle_initial = forms.CharField(max_length=1, label="Middle Initial (Optional)", required=False)
     last_name = forms.CharField(max_length=50, label="Last Name")
     address = forms.CharField(max_length=50, label="Mailing Address")
-    #ssn = forms.IntegerField(label="Social Security Number", validators=[MaxValueValidator(999_99_9999), MinValueValidator(0)])
     ssn = forms.CharField(label="Social Security Number",
                           validators=[RegexValidator(regex=r'^[0-9]*$'), MinLengthValidator(9)])
     phone = forms.CharField(label="Phone Number", validators=[RegexValidator(regex=phone_regex)])
