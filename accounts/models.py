@@ -184,6 +184,10 @@ class CustomerManager(CustomUserManager):
         if customer_city:
             bank_customer.customer_city = customer_city
 
+        customer_email = changes.get('email', None)
+        if customer_email:
+            bank_customer.customer_email = customer_email
+
         customer_state = changes.pop('state', None)
         if customer_state:
             bank_customer.customer_state = customer_state
