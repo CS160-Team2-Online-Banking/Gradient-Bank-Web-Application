@@ -21,6 +21,7 @@ class CustomerUserCreationForm(UserCreationForm):
     city = forms.CharField(max_length=45, label="City")
     state = forms.ChoiceField(choices=STATE_CHOICES, label="State")
     pin = forms.CharField(label="PIN", max_length=4, validators=[RegexValidator(regex=r'^[0-9]{4}$')])
+    email = forms.EmailField()
 
     def register_user(self):
         cleaned_data = self.cleaned_data
@@ -50,6 +51,7 @@ class CustomerUserChangeForm(UserChangeForm):
     city = forms.CharField(max_length=45, label="City")
     state = forms.ChoiceField(choices=STATE_CHOICES, label="State")
     pin = forms.CharField(label="PIN", max_length=4, validators=[RegexValidator(regex=r'^[0-9]{4}$')])
+    email = forms.EmailField()
 
     def __init__(self, *args, **kwargs):
         super(CustomerUserChangeForm, self).__init__(*args, **kwargs)  # call parent's constructor
