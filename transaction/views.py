@@ -19,10 +19,12 @@ FREQUENCY_CHOICES = [
 
 class AutopaymentForm(forms.Form):
     from_account = forms.ChoiceField(
-        choices=[("None", "You have no accounts")])
+        choices=[])
     amount = forms.DecimalField(label="Amount", decimal_places=2, validators=[MinValueValidator(0)])
-    to_routing_no = forms.IntegerField(label="To Routing Number", validators=[MaxValueValidator(999_999_999), MinValueValidator(0)])
-    to_account_no = forms.IntegerField(label="To Account Number", validators=[MaxValueValidator(9999_9999_9999), MinValueValidator(0)])
+    #to_routing_no = forms.IntegerField(label="To Routing Number", validators=[MaxValueValidator(999_999_999), MinValueValidator(0)])
+    to_routing_no = forms.CharField(max_length=9, min_length=9, label="To Routing Number", validators=[RegexValidator(regex=r'^[0-9]*$')])
+    #to_account_no = forms.IntegerField(label="To Account Number", validators=[MaxValueValidator(9999_9999_9999), MinValueValidator(0)])
+    to_account_no = forms.CharField(max_length=12, min_length=10, label="To Account Number", validators=[RegexValidator(regex=r'^[0-9]*$')])
     frequency = forms.ChoiceField(choices=FREQUENCY_CHOICES)
     start_date = forms.DateField(widget=forms.DateInput(
         format='%m-%d-%Y', attrs={'type': 'date'}))
@@ -42,9 +44,13 @@ class AutopaymentForm(forms.Form):
 
 class DepositForm(forms.Form):
     to_account = forms.ChoiceField(
-        choices=[("None", "You have no accounts")])
-    from_routing_no = forms.IntegerField(label="Check Routing Number", validators=[MaxValueValidator(999_999_999), MinValueValidator(0)])
-    from_account_no = forms.IntegerField(label="Check Account Number", validators=[MaxValueValidator(9999_9999_9999), MinValueValidator(0)])
+        choices=[])
+    #from_routing_no = forms.IntegerField(label="Check Routing Number", validators=[MaxValueValidator(999_999_999), MinValueValidator(0)])
+    from_routing_no = forms.CharField(max_length=9, min_length=9, label="Check Routing Number",
+                                    validators=[RegexValidator(regex=r'^[0-9]*$')])
+    #from_account_no = forms.IntegerField(label="Check Account Number", validators=[MaxValueValidator(9999_9999_9999), MinValueValidator(0)])
+    from_account_no = forms.CharField(max_length=12, min_length=10, label="Check Account Number",
+                                    validators=[RegexValidator(regex=r'^[0-9]*$')])
     amount = forms.DecimalField(label="Amount", decimal_places=2, validators=[MinValueValidator(0)])
     image = forms.ImageField()
 
@@ -61,9 +67,9 @@ class DepositForm(forms.Form):
 
 class PersonalTransferForm(forms.Form):
     from_account = forms.ChoiceField(
-        choices=[("None", "You have no accounts")])
+        choices=[])
     to_account_no = forms.ChoiceField(
-        choices=[("None", "You have no accounts")])
+        choices=[])
     amount = forms.DecimalField(label="Amount", decimal_places=2, validators=[MinValueValidator(0)])
 
     def __init__(self, *args, **kwargs):
@@ -80,9 +86,13 @@ class PersonalTransferForm(forms.Form):
 
 class TransferForm(forms.Form):
     from_account = forms.ChoiceField(
-        choices=[("None", "You have no accounts")])
-    to_routing_no = forms.IntegerField(label="To Routing Number", validators=[MaxValueValidator(999_999_999), MinValueValidator(0)])
-    to_account_no = forms.IntegerField(label="To Account Number", validators=[MaxValueValidator(9999_9999_9999), MinValueValidator(0)])
+        choices=[])
+    #to_routing_no = forms.IntegerField(label="To Routing Number", validators=[MaxValueValidator(999_999_999), MinValueValidator(0)])
+    to_routing_no = forms.CharField(max_length=9, min_length=9, label="To Routing Number",
+                                    validators=[RegexValidator(regex=r'^[0-9]*$')])
+    #to_account_no = forms.IntegerField(label="To Account Number", validators=[MaxValueValidator(9999_9999_9999), MinValueValidator(0)])
+    to_account_no = forms.CharField(max_length=12, min_length=10, label="To Account Number",
+                                    validators=[RegexValidator(regex=r'^[0-9]*$')])
     amount = forms.DecimalField(label="Amount", decimal_places=2, validators=[MinValueValidator(0)])
 
     def __init__(self, *args, **kwargs):
@@ -142,6 +152,9 @@ class TransferView(View):
     def get(self, request, type=None):
         if request.user.is_authenticated:
             from_accounts = api_get_accounts(request)
+            if not from_accounts:
+                return render(request, 'feature_access_message.html', {"title": "Setup Transfer",
+                                                                       "message": "You cannot transfer money without bank accounts"})
             form = PersonalTransferForm(from_accounts=from_accounts)
             if type == "/external":
                 form = TransferForm(from_accounts=from_accounts)
@@ -183,6 +196,9 @@ class DepositView(View):
     def get(self, request):
         if request.user.is_authenticated:
             from_accounts = api_get_accounts(request)
+            if not from_accounts:
+                return render(request, 'feature_access_message.html', {"title": "Setup Deposit",
+                                                                       "message": "You cannot deposit money without accounts"})
             form = DepositForm(from_accounts=from_accounts)
             if not from_accounts:
                 from_accounts = []
