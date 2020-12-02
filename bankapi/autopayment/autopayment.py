@@ -155,7 +155,8 @@ class AutopaymentBuilder:
             payment_schedule_id = entry["payment_schedule"]
             payment_schedule = PaymentSchedules.objects.filter(pk=payment_schedule_id)
             entry["payment_schedule"] = json.loads(serializers.serialize("json", payment_schedule))[0]["fields"]
-
+            entry["to_account_no"] = str(entry["to_account_no"]).zfill(12)
+            entry["to_routing_no"] = str(entry["to_routing_no"]).zfill(9)
         return json_arr
 
 

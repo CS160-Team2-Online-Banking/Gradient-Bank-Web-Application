@@ -241,6 +241,11 @@ class ExchangeProcessor:
                 int(record["from_routing_no"]) == settings.BANK_ROUTING_NUMBER):
                     record["amount"] = str(-Decimal(record["amount"]))
 
+                record["to_account_no"] = str(record["to_account_no"]).zfill(12)
+                record["from_account_no"] = str(record["from_account_no"]).zfill(12)
+                record["to_routing_no"] = str(record["to_routing_no"]).zfill(9)
+                record["from_routing_no"] = str(record["from_routing_no"]).zfill(9)
+
             return {"success": True, "data": serialized_records}
 
         else:
