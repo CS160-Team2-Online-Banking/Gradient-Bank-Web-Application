@@ -164,7 +164,7 @@ class CustomerManager(CustomUserManager):
         last_name = changes.pop('last_name', None)
         if first_name and last_name:
             if middle_initial:
-                customer_name = "{first_name} {middle_initial}{last_name}".format(first_name=first_name,
+                customer_name = "{first_name} {middle_initial} {last_name}".format(first_name=first_name,
                                                                                   middle_initial=middle_initial,
                                                                                   last_name=last_name)
             else:

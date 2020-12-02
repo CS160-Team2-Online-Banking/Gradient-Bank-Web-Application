@@ -50,6 +50,9 @@ class ViewAccountDetails(View):
                     else:
                         exchange["amount"] = "$"+exchange["amount"]
 
+                exchange["posted"] = datetime.fromisoformat(exchange["posted"]).strftime("%b %d, %Y")
+
+
             return render(request, 'bankaccounts/details.html', {"account": result[0]})
         else:
             messages.info(request, "Please Login before viewing this account")

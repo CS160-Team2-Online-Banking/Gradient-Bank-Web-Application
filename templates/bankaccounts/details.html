@@ -5,6 +5,15 @@
 
 <head>
     <title>Account Details</title>
+    <script>
+        function toggle_row(id) {
+            element = document.getElementById(id);
+            if (element.classList.contains('expand-row-toggle'))
+                element.classList.remove('expand-row-toggle');
+            else
+                element.classList.add('expand-row-toggle');
+        }
+    </script>
 </head>
 
 <div>
@@ -34,19 +43,37 @@
         </thead>
         <tbody>
             {% for exchange in account.exchange_history %}
-            <tr>
+            <tr id="exch-{{exchange.pk}}" class="expand-row" onclick="toggle_row('exch-{{exchange.pk}}')">
                 <td>{{exchange.type}}</td>
                 <td>{{exchange.amount}}</td>
                 <td>{{exchange.status}}</td>
                 <td>{{exchange.posted}}</td>
             </tr>
-            {% if exchange.image %}
-            <tr>
-                <td colspan="4">
+            <tr class="expandable-row">
+                {% if exchange.image %}
+                <td colspan="2">
+                    <p>
+                        From Account: {{exchange.from_account_no}}<br>
+                        From Routing: {{exchange.from_routing_no}}<br>
+                        To Account: {{exchange.to_account_no}}<br>
+                        To Routing: {{exchange.to_routing_no}}
+                    </p>
+                </td>
+                <td colspan="2">
                     <img src="data:img/jpeg;base64, {{exchange.image}}" alt="Check Image" width="400"/>
                 </td>
+                {% else %}
+                <td colspan="4">
+                    <p>
+                        From Account: {{exchange.from_account_no}}<br>
+                        From Routing: {{exchange.from_routing_no}}<br>
+                        To Account: {{exchange.to_account_no}}<br>
+                        To Routing: {{exchange.to_routing_no}}
+                    </p>
+                </td>
+                {% endif %}
             </tr>
-            {% endif %}
+
             {% endfor %}
         </tbody>
     </table>
