@@ -12,79 +12,15 @@
 <div>
     <h1> ATM Locator</h1>
     <p>Look for an ATM nearest to you with the map below</p>
+    <input id="inp_address" type="text" placeholder="Address" /><button type="button" id="inp_srch" class="btn btn-primary">Go</button>
 </div>
 
 <div id="map"></div>
 <div id="dir_box"></div>
 <!-- Replace the value of the key parameter with your own API key. -->
-<script async defer
-    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAqLzAMqgeVjFb9sf1LLL2heFhLjy8NEYY&callback=initMap&libraries=places">
-    </script>
 
 <script>
     var map, infoWindow, service, directionsServ, directionsRend, userMarker, atmLocations, userPos;
-
-    function initMap(listener) {
-        directionsServ = new google.maps.DirectionsService();
-        directionsRend = new google.maps.DirectionsRenderer();
-        map = new google.maps.Map(document.getElementById('map'), {
-            center: {
-                lat: 37.335,
-                lng: -121.893
-            },
-            zoom: 14
-        });
-        google.maps.event.trigger(map, 'resize');
-        infoWindow = new google.maps.InfoWindow;
-
-        directionsRend.setMap(map); // tell the direction renderer to draw on our map
-
-        // Try HTML5 geolocation.
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(function (position) {
-                var pos = {
-                    lat: position.coords.latitude,
-                    lng: position.coords.longitude
-                };
-                userPos = pos;
-
-
-                map.setCenter(pos);
-                //Put marker of the Geolocated user location
-                userMarker = new google.maps.Marker({
-                    map: map,
-                    position: pos
-                });
-
-                google.maps.event.addListener(userMarker, 'click', function () {
-                    infoWindow.setContent('Your location');
-                    infoWindow.open(map, this);
-                });
-
-                //Put request in here there are 3 requests since nearbysearch only has one type to be specified
-
-                var requestAtm = {
-                    location: pos,
-                    radius: '8000',
-                    name: "Chase ATM",
-                    //type: ['atm']
-                };
-
-
-                //Make Places Service requests here
-                service = new google.maps.places.PlacesService(map);
-                //service.nearbySearch(requestHosp, callback);
-                service.nearbySearch(requestAtm, callback);
-                //service.nearbySearch(requestPolice, callback);
-
-            }, function () {
-                handleLocationError(true, infoWindow, map.getCenter());
-            });
-        } else {
-            // Browser doesn't support Geolocation
-            handleLocationError(false, infoWindow, map.getCenter());
-        }
-    }
 
     function handleLocationError(browserHasGeolocation, infoWindow, pos) {
         infoWindow.setPosition(pos);
@@ -155,7 +91,6 @@
             }
 
             getClosestATM(results, (fastest_route, closest_atm) => {
-                console.log("CLOSEST LOCATION FOUND");
                 directionsRend.setDirections(fastest_route);
                 directionsRend.setPanel(document.getElementById('dir_box'));
             });
@@ -163,6 +98,35 @@
         }
     }
 
+    function searchAddress() {
+        input_text = document.getElementById("inp_address").value
+        let loc_request = {
+            query: input_text,
+            fields: ["geometry"]
+        }
+
+        service.findPlaceFromQuery(loc_request, (result, status)=>{
+            if (status === google.maps.PlacesServiceStatus.OK &&
+                results.length) {
+                pos = results[0].geometry.location;
+                map.setCenter(pos);
+                //Put marker of the Geolocated user location
+                userMarker = new google.maps.Marker({
+                    map: map,
+                    position: pos
+                });
+                requestAtm = {
+                    location: pos,
+                    radius: '8000',
+                    name: "Chase ATM",
+                };
+                service.nearbySearch(requestAtm, callback);
+            } else {
+                alert("No location with that address was found");
+            }
+        });
+
+    }
 
     function createMarker(place) {
         var type = place.types;
@@ -207,8 +171,74 @@
             });
         });
     }
-</script>
 
+
+    function initMap(listener) {
+        directionsServ = new google.maps.DirectionsService();
+        directionsRend = new google.maps.DirectionsRenderer();
+        map = new google.maps.Map(document.getElementById('map'), {
+            center: {
+                lat: 37.335,
+                lng: -121.893
+            },
+            zoom: 14
+        });
+        google.maps.event.trigger(map, 'resize');
+        infoWindow = new google.maps.InfoWindow;
+
+        directionsRend.setMap(map); // tell the direction renderer to draw on our map
+
+        // Try HTML5 geolocation.
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(function (position) {
+                var pos = {
+                    lat: position.coords.latitude,
+                    lng: position.coords.longitude
+                };
+                userPos = pos;
+
+
+                map.setCenter(pos);
+                //Put marker of the Geolocated user location
+                userMarker = new google.maps.Marker({
+                    map: map,
+                    position: pos
+                });
+
+                google.maps.event.addListener(userMarker, 'click', function () {
+                    infoWindow.setContent('Your location');
+                    infoWindow.open(map, this);
+                });
+
+                //Put request in here there are 3 requests since nearbysearch only has one type to be specified
+
+                var requestAtm = {
+                    location: pos,
+                    radius: '8000',
+                    name: "Chase ATM",
+                    //type: ['atm']
+                };
+
+
+                //Make Places Service requests here
+                service = new google.maps.places.PlacesService(map);
+                //service.nearbySearch(requestHosp, callback);
+                service.nearbySearch(requestAtm, callback);
+                //service.nearbySearch(requestPolice, callback);
+
+            }, function () {
+                handleLocationError(true, infoWindow, map.getCenter());
+            });
+        } else {
+            // Browser doesn't support Geolocation
+            handleLocationError(false, infoWindow, map.getCenter());
+        }
+        document.getElementById("inp_srch").addEventListener("click", searchAddress);
+    }
+</script>
+<script async defer
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAqLzAMqgeVjFb9sf1LLL2heFhLjy8NEYY&callback=initMap&libraries=places">
+</script>
 <style>
     /* Always set the map height explicitly to define the size of the div
  * element that contains the map. */
