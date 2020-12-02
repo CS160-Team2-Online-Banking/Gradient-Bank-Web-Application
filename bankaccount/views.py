@@ -5,7 +5,7 @@ from django.shortcuts import redirect
 from django import forms
 from check_image_management import get_check_image
 from django.contrib import messages
-
+import dateutil.parser
 
 class OpenAccountForm(forms.Form):
     account_type = forms.ChoiceField(choices=[("SAVING", "Savings Account"), ("CHECKING", "Checking Account")])
@@ -50,7 +50,7 @@ class ViewAccountDetails(View):
                     else:
                         exchange["amount"] = "$"+exchange["amount"]
 
-                exchange["posted"] = datetime.fromisoformat(exchange["posted"]).strftime("%b %d, %Y")
+                exchange["posted"] = dateutil.parser.isoparse(exchange["posted"]).strftime("%b %d, %Y")
 
 
             return render(request, 'bankaccounts/details.html', {"account": result[0]})
