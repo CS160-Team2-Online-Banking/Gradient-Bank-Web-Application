@@ -20,7 +20,14 @@
 <!-- Replace the value of the key parameter with your own API key. -->
 
 <script>
-    var map, infoWindow, service, directionsServ, directionsRend, userMarker, atmLocations, userPos;
+    var map, infoWindow, service, directionsServ, directionsRend, userMarker, atmLocations, userPos, markers;
+    markers = [];
+    function clearMarkers() {
+        for (let i = 0; i < markers.length; i++) {
+            markers[i].setMap(null);
+        }
+        markers = [];
+    }
 
     function handleLocationError(browserHasGeolocation, infoWindow, pos) {
         infoWindow.setPosition(pos);
@@ -36,10 +43,11 @@
         for (const leg of to_route.legs) {
             route_cost = route_cost + leg.duration.value;
         }
+        console.log(route_cost);
         return route_cost;
     }
 
-    function getClosestATM(places, callback) {
+    function getClosestATM(places, loc_callback) {
         /*
             I've yet to find a convenient API method for this: we should use an API method if one exists
             instead because right now we're making multiple queries to the API.
@@ -55,7 +63,7 @@
         var place = places_stack.pop();
         function next(response, status) {
             if (status === "OK") {
-                directionsRend.setDirections(response);
+                //directionsRend.setDirections(response);
                 if (fastest_route == null || getRouteCost(fastest_route) > getRouteCost(response)) {
                     fastest_route = response;
                     closest_atm = place;
@@ -68,11 +76,11 @@
                             travelMode: google.maps.TravelMode.DRIVING,
                         }, next);
                     } else {
-                        callback(fastest_route, closest_atm);
+                        loc_callback(fastest_route, closest_atm);
                     }
                     return;
                 }
-                callback(fastest_route, closest_atm);
+                loc_callback(fastest_route, closest_atm);
             }
         }
         directionsServ.route({
@@ -83,6 +91,7 @@
     }
 
     function callback(results, status) {
+        console.log("callback called");
         if (status == google.maps.places.PlacesServiceStatus.OK) {
             atmLocations = results;
             for (var i = 0; i < results.length; i++) {
@@ -91,6 +100,7 @@
             }
 
             getClosestATM(results, (fastest_route, closest_atm) => {
+                console.log("new route found");
                 directionsRend.setDirections(fastest_route);
                 directionsRend.setPanel(document.getElementById('dir_box'));
             });
@@ -106,18 +116,23 @@
         }
 
         service.findPlaceFromQuery(loc_request, (result, status)=>{
-            if (status === google.maps.PlacesServiceStatus.OK &&
-                results.length) {
-                pos = results[0].geometry.location;
-                map.setCenter(pos);
+            if (status === "OK" &&
+                result.length) {
+                clearMarkers();
+                pos = result[0].geometry.location;
+                userPos = pos;
+                map.setCenter(userPos);
                 //Put marker of the Geolocated user location
+
                 userMarker = new google.maps.Marker({
                     map: map,
-                    position: pos
+                    position: userPos
                 });
+
+                markers.push(userMarker);
                 requestAtm = {
-                    location: pos,
-                    radius: '8000',
+                    location: userPos,
+                    rankBy: google.maps.places.RankBy.DISTANCE,
                     name: "Chase ATM",
                 };
                 service.nearbySearch(requestAtm, callback);
@@ -151,7 +166,7 @@
             icon: iconStyle,
             position: place.geometry.location
         });
-
+        markers.push(marker);
         google.maps.event.addListener(marker, 'click', function () {
             infoWindow.setContent(place.name);
             console.log(place);
@@ -174,6 +189,7 @@
 
 
     function initMap(listener) {
+        console.log("init called");
         directionsServ = new google.maps.DirectionsService();
         directionsRend = new google.maps.DirectionsRenderer();
         map = new google.maps.Map(document.getElementById('map'), {
@@ -204,7 +220,7 @@
                     map: map,
                     position: pos
                 });
-
+                markers.push(userMarker);
                 google.maps.event.addListener(userMarker, 'click', function () {
                     infoWindow.setContent('Your location');
                     infoWindow.open(map, this);
@@ -214,7 +230,8 @@
 
                 var requestAtm = {
                     location: pos,
-                    radius: '8000',
+                    //radius: '8000',
+                    rankBy: google.maps.places.RankBy.DISTANCE,
                     name: "Chase ATM",
                     //type: ['atm']
                 };
