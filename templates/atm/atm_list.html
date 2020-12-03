@@ -20,7 +20,7 @@
 <!-- Replace the value of the key parameter with your own API key. -->
 
 <script>
-    var map, infoWindow, service, directionsServ, directionsRend, userMarker, atmLocations, userPos, markers;
+var map, infoWindow, service, dstmatservice, directionsServ, directionsRend, userMarker, atmLocations, userPos, markers;
     markers = [];
     function clearMarkers() {
         for (let i = 0; i < markers.length; i++) {
@@ -48,46 +48,38 @@
     }
 
     function getClosestATM(places, loc_callback) {
-        /*
-            I've yet to find a convenient API method for this: we should use an API method if one exists
-            instead because right now we're making multiple queries to the API.
-
-            Anyway, the way this method works is that it searches each place starting from the location
-            with the closest distance as the crow flies (straight line) and determines which one has the
-            shortest "cost" (trip duration) associated with it. It exits either when a route is found
-            with a cost that is greater than the previous place or when it exhausts all places.
-        */
-        var fastest_route = null;
-        var closest_atm;
-        var places_stack = places.reverse();
-        var place = places_stack.pop();
-        function next(response, status) {
-            if (status === "OK") {
-                //directionsRend.setDirections(response);
-                if (fastest_route == null || getRouteCost(fastest_route) > getRouteCost(response)) {
-                    fastest_route = response;
-                    closest_atm = place;
-
-                    place = places_stack.pop()
-                    if (places_stack.length > 1) {
-                        directionsServ.route({
-                            origin: userPos,
-                            destination: { placeId: place.place_id },
-                            travelMode: google.maps.TravelMode.DRIVING,
-                        }, next);
-                    } else {
-                        loc_callback(fastest_route, closest_atm);
-                    }
-                    return;
-                }
-                loc_callback(fastest_route, closest_atm);
+        var dstmatreq = {
+            origins: [userPos],
+            destinations: places.map((x)=>x.geometry.location),
+            travelMode: 'DRIVING',
+            drivingOptions: {
+                departureTime: new Date(),
             }
-        }
-        directionsServ.route({
-            origin: userPos,
-            destination: { placeId: place.place_id },
-            travelMode: google.maps.TravelMode.DRIVING,
-        }, next);
+        };
+
+        dstmatservice.getDistanceMatrix(dstmatreq, (response, status) => {
+            if (status === "OK") {
+                let locations = response.rows[0].elements;
+                let best_index = 0;
+                console.log(response);
+                if (locations.length > 1) {
+                    for (let i = 1; i < locations.length; i++) {
+                        if (locations[best_index].duration_in_traffic.value >
+                            locations[i].duration_in_traffic.value)
+                            best_index = i;
+                    }
+                }
+                let best_place = places[best_index];
+
+                directionsServ.route({
+                            origin: userPos,
+                            destination: { placeId: best_place.place_id },
+                            travelMode: google.maps.TravelMode.DRIVING,
+                        }, (response, status)=>{
+                        if (status === "OK")
+                            loc_callback(response, null);});
+            }
+        });
     }
 
     function callback(results, status) {
@@ -239,6 +231,7 @@
 
                 //Make Places Service requests here
                 service = new google.maps.places.PlacesService(map);
+                dstmatservice = new google.maps.DistanceMatrixService();
                 //service.nearbySearch(requestHosp, callback);
                 service.nearbySearch(requestAtm, callback);
                 //service.nearbySearch(requestPolice, callback);
