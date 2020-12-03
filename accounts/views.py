@@ -9,6 +9,8 @@ from django.contrib.auth import login, logout
 from django.contrib import messages
 from .forms import *
 from .models import *
+from .auth_helpers import *
+from django.utils.decorators import method_decorator
 
 
 class LogOut(View):
@@ -18,6 +20,7 @@ class LogOut(View):
 
 
 class SignInView(View):
+    @method_decorator(user_loggedout_required)
     def get(self, request):
         return render(request, "accounts/login_redirect.html")
 
