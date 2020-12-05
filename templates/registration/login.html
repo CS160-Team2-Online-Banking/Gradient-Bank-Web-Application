@@ -16,8 +16,10 @@
         <form class="signin" id="signin_form" method="post">
             {% csrf_token %}
 
+            {% if error %}
+            <p class="text-danger">{{error}}</p>
+            {% endif %}
             {% for field in form %}
-
 
             <div class="form-group field">
                 {{field.label}} {{ field }}
@@ -30,9 +32,6 @@
 
             {% endfor %}
             <button type="submit" class="btn-block btn btn-lg btn-primary">Sign In</button>
-            {% if error %}
-                <p>{{error}}</p>
-            {% endif %}
         </form>
     </div>
 </div>

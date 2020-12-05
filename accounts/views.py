@@ -27,6 +27,10 @@ class SignInView(View):
 
 @method_decorator(user_loggedout_required, name='dispatch')
 class EmployerSignIn(LoginView):
+    def form_invalid(self, form):
+        return render(self.request, "registration/login.html",
+                      {"form": form, "error": "The Username or Password you entered is incorrect"})
+
     def form_valid(self, form):
         user = form.get_user()
 
@@ -84,6 +88,10 @@ class CustomerCloseView(View):
 
 @method_decorator(user_loggedout_required, name='dispatch')
 class CustomerSignIn(LoginView):
+    def form_invalid(self, form):
+        return render(self.request, "registration/login.html",
+                      {"form": form, "error": "The Username or Password you entered is incorrect"})
+
     def form_valid(self, form):
         user = form.get_user()
         if CustomerUser.objects.filter(pk=user.pk).exists():
