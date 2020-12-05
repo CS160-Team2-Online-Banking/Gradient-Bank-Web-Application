@@ -9,7 +9,9 @@ from django.http import HttpResponseForbidden
 from django.core.validators import MaxValueValidator, MinValueValidator
 from datetime import datetime
 from accounts.auth_helpers import *
+from accounts.forms import to_phone_number, get_phone_number, phone_regex
 from django.utils.decorators import method_decorator
+import re
 
 
 class OpenAccountForm(forms.Form):
@@ -67,6 +69,11 @@ class LandingView(View):
 
     @staticmethod
     def prepare_customer_report(request, manager, customer_id):
+        customer_info = api_get_data(request, manager, 'get_customers', {"pk": customer_id})
+        if customer_info and 'users' in customer_info and len(customer_info['users']) > 0:
+            customer_info = customer_info['users'][0]
+            customer_info['customer_name'] = customer_info['customer_name'].replace('$', ' ').replace('@', ' ')
+            customer_info['customer_phone'] = '' if not customer_info['customer_phone'] else to_phone_number(int(customer_info['customer_phone']))
         customer_accounts = api_get_data(request, manager, "get_customer_account_info", {"customer_id":customer_id})
         if customer_accounts:
             for account in customer_accounts:
@@ -81,7 +88,8 @@ class LandingView(View):
             "customer_accounts": customer_accounts if customer_accounts else [],
             "customer_activity": customer_activity if customer_activity else [],
             "income_history": income_history if income_history else [],
-            "spending_history": spending_history if spending_history else []
+            "spending_history": spending_history if spending_history else [],
+            "customer_info": customer_info if customer_info else {}
         }
 
     @staticmethod
@@ -92,10 +100,16 @@ class LandingView(View):
             if data[key]:
                 params[key+"__icontains"] = data[key]
 
+        def add_name_search(key):
+            if data[key]:
+                tokens = map(lambda x: re.escape(x), data[key].split(" "))
+                regex = r'(\$|\@)'.join(tokens)
+                params[key+"__regex"] = regex
+
         def add_param(key):
             if data[key]:
                 params[key] = data[key]
-        add_contains_search('customer_name')
+        add_name_search('customer_name')
         add_contains_search('customer_phone')
         add_contains_search('customer_ssn')
         add_contains_search('customer_email')
@@ -117,6 +131,9 @@ class LandingView(View):
 
         headline = self.get_headline(request, manager)
         result = api_get_data(request, manager, "get_customers", {})
+        if result and 'users' in result:
+            for user in result['users']:
+                user['customer_name'] = user['customer_name'].replace('$', ' ').replace('@', ' ')
         start_form = CustomersSearchForm(initial={"page_count": result["page_count"]})
         return render(request, "managerportal/landing.html", {"manager": manager, "headline": headline,
                                                               "customers_table": result,
@@ -139,6 +156,9 @@ class LandingView(View):
             data = form.cleaned_data
             params = self.prep_post_params(data)
             result = api_get_data(request, manager, "get_customers", params)
+            if result and 'users' in result:
+                for user in result['users']:
+                    user['customer_name'] = user['customer_name'].replace('$', ' ').replace('@', ' ')
             if data["selected_customer_id"] > 0:
                 customer_details = self.prepare_customer_report(request, manager, data["selected_customer_id"])
             if not result:
