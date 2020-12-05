@@ -103,13 +103,17 @@ class CustomerManager(CustomUserManager):
         print(extra_fields)
         # from extra fields, we need to extract the
         middle_initial = extra_fields.get("middle_initial", None)
+        suffix = extra_fields.get("suffix", None)
+        last_name = extra_fields["last_name"]
+        if suffix:
+            last_name += "@"+suffix
         if middle_initial is None:
-            middle_initial = "{middle_initial}. "
+            middle_initial = "{middle_initial}$"
         else:
             middle_initial = ""
-        customer_name = "{first_name} {middle_initial}{last_name}".format(first_name=extra_fields["first_name"],
-                                                                         middle_initial=middle_initial,
-                                                                         last_name=extra_fields["last_name"])
+        customer_name = "{first_name}${middle_initial}{last_name}".format(first_name=extra_fields["first_name"],
+                                                                          middle_initial=middle_initial,
+                                                                          last_name=last_name)
         customer_phone = extra_fields["phone"]
         customer_ssn = extra_fields["ssn"]
         customer_address = extra_fields["address"]
@@ -122,6 +126,7 @@ class CustomerManager(CustomUserManager):
         extra_fields.pop('first_name', None)
         extra_fields.pop('middle_initial', None)
         extra_fields.pop('last_name', None)
+        extra_fields.pop('suffix', None)
         extra_fields.pop('phone', None)
         extra_fields.pop('zip', None)
         extra_fields.pop('city', None)
@@ -162,13 +167,16 @@ class CustomerManager(CustomUserManager):
         first_name = changes.pop('first_name', None)
         middle_initial = changes.pop('middle_initial', None)
         last_name = changes.pop('last_name', None)
+        suffix = changes.pop('suffix', None)
+        if suffix:
+            last_name += "@"+suffix
         if first_name and last_name:
             if middle_initial:
-                customer_name = "{first_name} {middle_initial} {last_name}".format(first_name=first_name,
-                                                                                  middle_initial=middle_initial,
-                                                                                  last_name=last_name)
+                customer_name = "{first_name}${middle_initial}${last_name}".format(first_name=first_name,
+                                                                                   middle_initial=middle_initial,
+                                                                                   last_name=last_name)
             else:
-                customer_name = "{first_name} {last_name}".format(first_name=first_name,
+                customer_name = "{first_name}${last_name}".format(first_name=first_name,
                                                                   last_name=last_name)
             bank_customer.customer_name = customer_name
 

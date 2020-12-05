@@ -33,17 +33,27 @@ def to_phone_number(number):
 
 
 class CustomerUserCreationForm(UserCreationForm):
-    first_name = forms.CharField(max_length=50, label="First Name")
-    middle_initial = forms.CharField(max_length=1, label="Middle Initial (Optional)", required=False)
-    last_name = forms.CharField(max_length=50, label="Last Name")
+    first_name = forms.CharField(max_length=50, label="First Name",
+                                 validators=[RegexValidator(regex=r'^[A-Za-z, \\\'\\\-]+$')])
+    middle_initial = forms.CharField(max_length=1, label="Middle Initial (Optional)", required=False,
+                                     validators=[RegexValidator(regex=r'^[A-Za-z]$')])
+    last_name = forms.CharField(max_length=50, label="Last Name",
+                                validators=[RegexValidator(regex=r'^[A-Za-z, \\\'\\\-]+$')])
+    suffix = forms.CharField(max_length=4, required=False, label="Suffix (Optional)",
+                             validators=[RegexValidator(regex=r'^[A-Za-z.]+$')])
     address = forms.CharField(max_length=50, label="Mailing Address")
-    ssn = forms.CharField(label="Social Security Number", validators=[RegexValidator(regex=r'^[0-9]*$'), MinLengthValidator(9)])
+    ssn = forms.CharField(label="Social Security Number",
+                          validators=[RegexValidator(regex=r'^[0-9]*$'), MinLengthValidator(9)],
+                          widget=forms.PasswordInput(render_value=True))
     phone = forms.CharField(label="Phone Number", validators=[RegexValidator(regex=phone_regex)])
     username = forms.CharField(max_length=50, label="Username")
-    zip = forms.CharField(max_length=5, label="Zip Code", validators=[RegexValidator(regex=r'^[0-9]*$'), MinLengthValidator(5)])
+    zip = forms.CharField(max_length=5, label="Zip Code",
+                          validators=[RegexValidator(regex=r'^[0-9]*$'), MinLengthValidator(5)])
     city = forms.CharField(max_length=45, label="City")
     state = forms.ChoiceField(choices=STATE_CHOICES, label="State")
-    pin = forms.CharField(label="PIN", max_length=4, validators=[RegexValidator(regex=r'^[0-9]*$'), MinLengthValidator(4)])
+    pin = forms.CharField(label="PIN", max_length=4,
+                          validators=[RegexValidator(regex=r'^[0-9]*$'), MinLengthValidator(4)],
+                          widget=forms.PasswordInput(render_value=True))
     email = forms.EmailField()
 
     def register_user(self):
@@ -61,22 +71,31 @@ class CustomerUserCreationForm(UserCreationForm):
 
     class Meta(UserCreationForm):
         model = CustomerUser
-        fields = ('first_name', 'middle_initial', 'last_name', 'username', 'email', 'address', "zip", "city", "state", 'ssn', "pin", 'phone')
+        fields = ('first_name', 'middle_initial', 'last_name', 'suffix', 'username', 'email', 'address', "zip", "city", "state", 'ssn', "pin", 'phone')
 
 
 class CustomerUserChangeForm(UserChangeForm):
-    first_name = forms.CharField(max_length=50, label="First Name")
-    middle_initial = forms.CharField(max_length=1, label="Middle Initial (Optional)", required=False)
-    last_name = forms.CharField(max_length=50, label="Last Name")
+    first_name = forms.CharField(max_length=50, label="First Name",
+                                 validators=[RegexValidator(regex=r'^[A-Za-z, \\\'\\\-]+$')])
+    middle_initial = forms.CharField(max_length=1, label="Middle Initial (Optional)", required=False,
+                                     validators=[RegexValidator(regex=r'^[A-Za-z]$')])
+    last_name = forms.CharField(max_length=50, label="Last Name",
+                                validators=[RegexValidator(regex=r'^[A-Za-z, \\\'\\\-]+$')])
+    suffix = forms.CharField(max_length=4, required=False, label="Suffix (Optional)",
+                             validators=[RegexValidator(regex=r'^[A-Za-z.]+$')])
     address = forms.CharField(max_length=50, label="Mailing Address")
     ssn = forms.CharField(label="Social Security Number",
-                          validators=[RegexValidator(regex=r'^[0-9]*$'), MinLengthValidator(9)])
+                          validators=[RegexValidator(regex=r'^[0-9]*$'), MinLengthValidator(9)],
+                          widget=forms.PasswordInput(render_value=True))
     phone = forms.CharField(label="Phone Number", validators=[RegexValidator(regex=phone_regex)])
     username = forms.CharField(max_length=50, label="Username")
-    zip = forms.CharField(max_length=5, label="Zip Code", validators=[RegexValidator(regex=r'^[0-9]*$'), MinLengthValidator(5)])
+    zip = forms.CharField(max_length=5, label="Zip Code",
+                          validators=[RegexValidator(regex=r'^[0-9]*$'), MinLengthValidator(5)])
     city = forms.CharField(max_length=45, label="City")
     state = forms.ChoiceField(choices=STATE_CHOICES, label="State")
-    pin = forms.CharField(label="PIN", max_length=4, validators=[RegexValidator(regex=r'^[0-9]*$'), MinLengthValidator(4)])
+    pin = forms.CharField(label="PIN", max_length=4,
+                          validators=[RegexValidator(regex=r'^[0-9]*$'), MinLengthValidator(4)],
+                          widget=forms.PasswordInput(render_value=True))
     email = forms.EmailField()
 
     def __init__(self, *args, **kwargs):
@@ -85,14 +104,19 @@ class CustomerUserChangeForm(UserChangeForm):
             user = self.instance
             customer_data = Customer.objects.filter(pk=user.pk).first()
             if customer_data:
-                namebits = customer_data.customer_name.split(" ")
+                namebits = customer_data.customer_name.split("$")
+                last_name = namebits[-1]
+                last_name_bits = last_name.split("@")
+
+                if len(last_name_bits) > 1:
+                    self.initial["suffix"] = last_name_bits[1]
+                self.initial["last_name"] = last_name_bits[0]
                 if len(namebits)==3:
                     self.initial["first_name"] = namebits[0]
                     self.initial["middle_initial"] = namebits[1]
-                    self.initial["last_name"] = namebits[2]
                 elif len(namebits)==2:
                     self.initial["first_name"] = namebits[0]
-                    self.initial["last_name"] = namebits[1]
+
                 self.initial["address"]=customer_data.customer_address
                 self.initial["ssn"]=customer_data.customer_ssn
                 self.initial["phone"]=to_phone_number(customer_data.customer_phone)
@@ -114,7 +138,7 @@ class CustomerUserChangeForm(UserChangeForm):
 
     class Meta(UserCreationForm):
         model = CustomerUser
-        fields = ('first_name', 'middle_initial', 'last_name', 'username', 'email', 'address', "zip", "city", "state", 'ssn', "pin", 'phone')
+        fields = ('first_name', 'middle_initial', 'last_name', 'suffix', 'username', 'email', 'address', "zip", "city", "state", 'ssn', "pin", 'phone')
 
 class BankManagerUserCreationForm(UserCreationForm):
     def register_user(self):
