@@ -25,6 +25,7 @@ class SignInView(View):
         return render(request, "accounts/login_redirect.html")
 
 
+@method_decorator(user_loggedout_required, name='dispatch')
 class EmployerSignIn(LoginView):
     def form_valid(self, form):
         user = form.get_user()
@@ -36,6 +37,7 @@ class EmployerSignIn(LoginView):
                       {"form": form, "error": "The Username or Password you entered is incorrect"})
 
 
+@method_decorator(customer_login_required, name='dispatch')
 class CustomerUpdateView(LoginRequiredMixin, UpdateView):
     model = CustomerUser
     form_class = CustomerUserChangeForm
@@ -62,6 +64,7 @@ class CustomerUpdateView(LoginRequiredMixin, UpdateView):
         return redirect(to="/landing")
 
 
+@method_decorator(customer_login_required, name='dispatch')
 class CustomerCloseView(View):
     def post(self, request):
         user = request.user
@@ -79,6 +82,7 @@ class CustomerCloseView(View):
         return HttpResponseForbidden()
 
 
+@method_decorator(user_loggedout_required, name='dispatch')
 class CustomerSignIn(LoginView):
     def form_valid(self, form):
         user = form.get_user()
@@ -102,6 +106,7 @@ class ManagerSignUp(CreateView):
         return redirect('/managerportal/landing')
 
 
+@method_decorator(user_loggedout_required, name='dispatch')
 class CustomerSignUp(CreateView):
     model = CustomerUser
     form_class = CustomerUserCreationForm
@@ -113,6 +118,7 @@ class CustomerSignUp(CreateView):
         user = form.register_user()
         login(self.request, user)
         return redirect('/landing')
+
 
 class EditCustomerInfo(View):
     def get(self, request):

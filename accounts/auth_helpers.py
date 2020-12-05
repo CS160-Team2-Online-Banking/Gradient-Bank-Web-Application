@@ -1,7 +1,7 @@
 from django.contrib.auth.decorators import login_required, user_passes_test
 from .models import CustomUser
-mngr_login_required = user_passes_test(lambda u: u.is_active and u.type == CustomUser.UserTypes.TYPE_MANAGER, login_url="/employee/login")
-cstmr_login_required = user_passes_test(lambda u: u.is_active and u.type == CustomUser.UserTypes.TYPE_CUSTOMER, login_url="/customer/login")
+mngr_login_required = user_passes_test(lambda u: u.is_active and u.type == CustomUser.UserTypes.TYPE_MANAGER, login_url="/accounts/employee/login")
+cstmr_login_required = user_passes_test(lambda u: u.is_active and u.type == CustomUser.UserTypes.TYPE_CUSTOMER, login_url="/accounts/customer/login")
 usr_loggedout_required = user_passes_test(lambda u: not u.is_active, login_url="/")
 
 

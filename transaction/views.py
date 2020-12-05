@@ -7,6 +7,8 @@ from django.conf import settings
 from django.contrib import messages
 from django.core.validators import *
 from check_image_management import save_check_image
+from accounts.auth_helpers import *
+from django.utils.decorators import method_decorator
 from decimal import *
 
 FREQUENCY_CHOICES = [
@@ -106,6 +108,7 @@ class TransferForm(forms.Form):
             self.fields['from_account'].choices = from_accounts
 
 
+@method_decorator(customer_login_required, name='dispatch')
 class Transaction(View):
     def get(self, request, *args, **kwargs):
         if request.user.is_authenticated:
@@ -148,6 +151,7 @@ class Transaction(View):
                                                   "action": "/transaction/autopayments"})
 
 
+@method_decorator(customer_login_required, name='dispatch')
 class TransferView(View):
     def get(self, request, type=None):
         if request.user.is_authenticated:
@@ -192,6 +196,7 @@ class TransferView(View):
                                                                    "message": "Please Login before transferring money"})
 
 
+@method_decorator(customer_login_required, name='dispatch')
 class DepositView(View):
     def get(self, request):
         if request.user.is_authenticated:

@@ -2,9 +2,12 @@ from django.shortcuts import render
 from django.views import View
 from api_requests.api_requests import *
 from django.shortcuts import redirect
-from django import forms
+from accounts.auth_helpers import *
+from django.utils.decorators import method_decorator
 from django.contrib import messages
 
+
+@method_decorator(customer_login_required, name='dispatch')
 class ViewAutopaymentDetails(View):
     def get(self, request, autopayment_id):
         if request.user.is_authenticated:
@@ -18,6 +21,9 @@ class ViewAutopaymentDetails(View):
         else:
             return render(request, 'feature_access_message.html', {"title": "Auopayment Details",
                                                                    "message": "Please Login before viewing this payment"})
+
+
+@method_decorator(customer_login_required, name='dispatch')
 class AutopaymentDelete(View):
     def post(self, request, autopayment_id):
         if request.user.is_authenticated:

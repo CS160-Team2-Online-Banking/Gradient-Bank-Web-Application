@@ -8,6 +8,8 @@ from .requests import api_get_data
 from django.http import HttpResponseForbidden
 from django.core.validators import MaxValueValidator, MinValueValidator
 from datetime import datetime
+from accounts.auth_helpers import *
+from django.utils.decorators import method_decorator
 
 
 class OpenAccountForm(forms.Form):
@@ -46,6 +48,7 @@ def set_or_message(result, key, dict, mapper=lambda x: x):
         dict[key] = "#ERROR"
 
 
+@method_decorator(manager_login_required, name='dispatch')
 class LandingView(View):
     @staticmethod
     def get_headline(request, manager):

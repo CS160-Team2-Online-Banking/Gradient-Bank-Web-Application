@@ -5,12 +5,15 @@ from django.shortcuts import redirect
 from django import forms
 from check_image_management import get_check_image
 from django.contrib import messages
+from accounts.auth_helpers import *
+from django.utils.decorators import method_decorator
 import dateutil.parser
 
 class OpenAccountForm(forms.Form):
     account_type = forms.ChoiceField(choices=[("SAVING", "Savings Account"), ("CHECKING", "Checking Account")])
 
 
+@method_decorator(customer_login_required, name='dispatch')
 class OpenAccountView(View):
     def get(self, request, *args, **kwargs):
         if request.user.is_authenticated:
@@ -30,6 +33,7 @@ class OpenAccountView(View):
         return redirect(to="/landing/")
 
 
+@method_decorator(customer_login_required, name='dispatch')
 class ViewAccountDetails(View):
     def get(self, request, account_no):
         if request.user.is_authenticated:

@@ -1,6 +1,9 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.views import View
 from api_requests.api_requests import *
+from accounts.auth_helpers import *
+from django.utils.decorators import method_decorator
+
 from messenger import utils
 
 class Landing(View):
@@ -8,7 +11,7 @@ class Landing(View):
         username = ""
         result = []
         auto_pay_list = []
-        if request.user.is_authenticated:
+        if request.user.is_authenticated and request.user.type == CustomUser.UserTypes.TYPE_CUSTOMER:
             username = request.user.username
             result = api_get_accounts(request)
             # auto payment list
@@ -23,6 +26,8 @@ class Landing(View):
                 auto_pay_list = []
             if not result:
                 result = []
+        elif request.user.is_authenticated and request.user.type == CustomUser.UserTypes.TYPE_MANAGER:
+            return redirect('/managerportal/landing')
         else:
             username = 'Guest'
         
