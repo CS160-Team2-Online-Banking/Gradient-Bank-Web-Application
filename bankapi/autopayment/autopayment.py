@@ -3,7 +3,9 @@ from django.db import transaction
 from datetime import datetime
 from django.core import serializers
 import json
+from decimal import Decimal
 
+PREVENT_FAILING_TRANSFER = True
 
 # In retrospect, this should have been named Autopayment Manager
 class AutopaymentBuilder:
@@ -25,7 +27,7 @@ class AutopaymentBuilder:
 
         from_account = Accounts.objects.filter(account_number=from_account_no).first()
 
-        if from_account is None:
+        if from_account is None or (PREVENT_FAILING_TRANSFER and from_account.balance < transfer_amount):
             return None  # TODO: handle this, raise an exception or something
 
         # if all accounts associated with this account exist, and the user is authorized to setup transfers
@@ -92,7 +94,8 @@ class AutopaymentBuilder:
             autopay_obj.to_routing_no = payment_data["to_routing_no"]
         if "transfer_amount" in payment_data:
             transfer_amount = payment_data["transfer_amount"]
-            if transfer_amount < 0:
+            if transfer_amount > 0 and not (
+                    PREVENT_FAILING_TRANSFER and autopay_obj.from_account.balance < Decimal(transfer_amount)):
                 autopay_obj.transfer_amount = transfer_amount
 
         if "payment_schedule_data" in payment_data:

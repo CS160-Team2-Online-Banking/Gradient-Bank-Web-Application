@@ -140,7 +140,7 @@ class Transaction(View):
                                            data["end_date"].isoformat(), data["frequency"])
             if not result:
                 # add fail message
-                messages.error(request, 'Fail to schedule auto payment.')
+                messages.error(request, 'Failed to schedule auto payment: make sure there is enough money in the account to make a transfer')
             else:
                 messages.success(
                     request, 'Your auto payment has been scheduled.')
@@ -182,12 +182,18 @@ class TransferView(View):
                 data = form.cleaned_data
                 to_routing_no = data.get(
                     "to_routing_no", settings.BANK_ROUTING_NUMBER)
+
+                if to_routing_no == settings.BANK_ROUTING_NUMBER and data["from_account"] == data["to_account_no"]:
+                    messages.error(request, "You cannot transfer between the same account")
+                    return render(request, 'base_form.html', {"form": form, "form_title": "Transfer Money",
+                                  "action": "/transaction/transfers{type}".format(type=type)})
+
                 result = api_post_transfer(request, data["to_account_no"], to_routing_no,
                                            data["from_account"], str(data["amount"]))
                 if not result:
                     print("Request Failed")
 
-                return redirect(reverse('bankaccount:accountdetails', kwargs={"account_no": data["to_account_no"]}))
+                return redirect(reverse('bankaccount:accountdetails', kwargs={"account_no": data["from_account"]}))
             else:
                 return render(request, 'base_form.html', {"form": form, "form_title": "Transfer Money",
                                                           "action": "/transaction/transfers{type}".format(type=type)})
