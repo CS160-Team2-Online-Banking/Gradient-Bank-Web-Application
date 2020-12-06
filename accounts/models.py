@@ -107,7 +107,7 @@ class CustomerManager(CustomUserManager):
         last_name = extra_fields["last_name"]
         if suffix:
             last_name += "@"+suffix
-        if middle_initial is None:
+        if middle_initial is not None:
             middle_initial = "{middle_initial}$"
         else:
             middle_initial = ""

@@ -43,6 +43,8 @@ class CustomerUserCreationForm(UserCreationForm):
                              validators=[RegexValidator(regex=r'^[A-Za-z.]+$')])
     address = forms.CharField(max_length=50, label="Mailing Address")
     ssn = forms.CharField(label="Social Security Number",
+                          max_length=9,
+                          min_length=9,
                           validators=[RegexValidator(regex=r'^[0-9]*$'), MinLengthValidator(9)],
                           widget=forms.PasswordInput(render_value=True))
     phone = forms.CharField(label="Phone Number", validators=[RegexValidator(regex=phone_regex)])
@@ -85,6 +87,8 @@ class CustomerUserChangeForm(UserChangeForm):
                              validators=[RegexValidator(regex=r'^[A-Za-z.]+$')])
     address = forms.CharField(max_length=50, label="Mailing Address")
     ssn = forms.CharField(label="Social Security Number",
+                          max_length=9,
+                          min_length=9,
                           validators=[RegexValidator(regex=r'^[0-9]*$'), MinLengthValidator(9)],
                           widget=forms.PasswordInput(render_value=True))
     phone = forms.CharField(label="Phone Number", validators=[RegexValidator(regex=phone_regex)])
