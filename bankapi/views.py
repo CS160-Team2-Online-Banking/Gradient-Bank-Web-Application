@@ -416,6 +416,11 @@ class ATMProcessorView(View):
                 ex.save()
                 account.save()
                 return redirect(to="/landing")
+
+            else:
+                messages.error(request, "Insufficient funds, please select a different account")
+                return render(request, 'base_form.html', {"form": form, "form_title": "ATM Withdraw",
+                                                          "action": "/api/atm"})
         else:
             messages.info(request, "Username or Pin is Invalid")
             return render(request, 'base_form.html', {"form": form, "form_title": "ATM Withdraw",
