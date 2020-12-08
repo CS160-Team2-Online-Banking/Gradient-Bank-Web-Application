@@ -32,8 +32,8 @@ a {
 }
 
 label {
-	text-transform: uppercase;
-	color: #bdc7d4;
+	/*text-transform: uppercase;
+	color: #bdc7d4;*/
 }
 
 
@@ -51,9 +51,9 @@ label {
     box-shadow: none;
 }
 
-div.field {
+/*div.field {
     margin-top: 30px;
-}
+}*/
 
 div.field > span.helptext {
     font-size: 14px;

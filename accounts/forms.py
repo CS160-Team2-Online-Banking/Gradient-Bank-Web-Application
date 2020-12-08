@@ -48,7 +48,7 @@ class CustomerUserCreationForm(UserCreationForm):
                           validators=[RegexValidator(regex=r'^[0-9]*$'), MinLengthValidator(9)],
                           widget=forms.PasswordInput(render_value=True))
     phone = forms.CharField(label="Phone Number", validators=[RegexValidator(regex=phone_regex)])
-    username = forms.CharField(max_length=50, label="Username")
+    username = forms.CharField(max_length=50, label="Username", validators=[RegexValidator(regex=r'^[A-Za-z0-9 ]+$')])
     zip = forms.CharField(max_length=5, label="Zip Code",
                           validators=[RegexValidator(regex=r'^[0-9]*$'), MinLengthValidator(5)])
     city = forms.CharField(max_length=45, label="City")
@@ -66,8 +66,7 @@ class CustomerUserCreationForm(UserCreationForm):
             cleaned_data['password'] = cleaned_data['password1']
         else:
             return None
-        print("User Registration")
-        print(data_dict)
+
         user = CustomerUser.objects.create_user(**data_dict)
         return user
 
@@ -92,7 +91,7 @@ class CustomerUserChangeForm(UserChangeForm):
                           validators=[RegexValidator(regex=r'^[0-9]*$'), MinLengthValidator(9)],
                           widget=forms.PasswordInput(render_value=True))
     phone = forms.CharField(label="Phone Number", validators=[RegexValidator(regex=phone_regex)])
-    username = forms.CharField(max_length=50, label="Username")
+    username = forms.CharField(max_length=50, label="Username", validators=[RegexValidator(regex=r'^[A-Za-z0-9 ]+$')])
     zip = forms.CharField(max_length=5, label="Zip Code",
                           validators=[RegexValidator(regex=r'^[0-9]*$'), MinLengthValidator(5)])
     city = forms.CharField(max_length=45, label="City")

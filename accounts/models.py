@@ -14,8 +14,6 @@ class CustomUserManager(UserManager):
     use_in_migrations = True
 
     def _create_user(self, email, password, commit=True, **extra_fields):
-        print("CUSTOM CUSTOM USER CALLED")
-        print(extra_fields)
         if not email:
             raise ValueError('The given email must be set')
 
@@ -30,8 +28,6 @@ class CustomUserManager(UserManager):
 
     def create_user(self, email, password, commit=True, **extra_fields):
         # TODO: see above, i think you need to add extra_fields for all the stuff needed to create a bank customer
-        print("CUSTOM USER CALLED")
-        print(extra_fields)
         extra_fields.setdefault('is_staff', False)
         extra_fields.setdefault('is_superuser', False)
         return self._create_user(email, password, **extra_fields)
@@ -99,8 +95,6 @@ class CustomerManager(CustomUserManager):
     #TODO: Check this
     @atomic
     def create_user(self, email, password, **extra_fields):
-        print("CUSTOMER USER WAS CALLED")
-        print(extra_fields)
         # from extra fields, we need to extract the
         middle_initial = extra_fields.get("middle_initial", None)
         suffix = extra_fields.get("suffix", None)
@@ -108,7 +102,7 @@ class CustomerManager(CustomUserManager):
         if suffix:
             last_name += "@"+suffix
         if middle_initial is not None:
-            middle_initial = "{middle_initial}$"
+            middle_initial = "{middle_initial}$".format(middle_initial=middle_initial)
         else:
             middle_initial = ""
         customer_name = "{first_name}${middle_initial}{last_name}".format(first_name=extra_fields["first_name"],

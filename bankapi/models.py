@@ -25,7 +25,7 @@ class Customer(models.Model):
     customer_id = models.IntegerField(primary_key=True)
     event_id = models.IntegerField(blank=True, null=True)
     autopayment_id = models.IntegerField(blank=True, null=True)
-    customer_name = models.CharField(max_length=50)
+    customer_name = models.CharField(max_length=255)
     customer_phone = models.BigIntegerField()
     customer_email = models.CharField(max_length=50)
     # Field name made lowercase.
