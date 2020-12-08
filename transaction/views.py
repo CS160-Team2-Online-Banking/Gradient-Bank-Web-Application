@@ -9,6 +9,7 @@ from django.core.validators import *
 from check_image_management import save_check_image
 from accounts.auth_helpers import *
 from django.utils.decorators import method_decorator
+from datetime import date
 from decimal import *
 
 FREQUENCY_CHOICES = [
@@ -42,6 +43,20 @@ class AutopaymentForm(forms.Form):
                                                     account_number=x["account_number"])), from_accounts))
         if from_accounts:
             self.fields['from_account'].choices = from_accounts
+
+    def is_valid(self):
+        if super().is_valid():
+            start_date = self.cleaned_data["start_date"]
+            end_date = self.clean()["end_date"]
+            if date.today() < start_date < end_date:
+                return True
+            else:
+                if date.today() > start_date:
+                    self.add_error('start_date', 'Invalid start date, please ensure the start date is some time in the future')
+                if start_date > end_date:
+                    self.add_error('end_date', 'Invalid end date, please ensure teh end date is after the start date')
+            return False
+
 
 
 class DepositForm(forms.Form):
@@ -144,6 +159,7 @@ class Transaction(View):
             else:
                 messages.success(
                     request, 'Your auto payment has been scheduled.')
+                return redirect(to="/")
         else:
             print("Invalid form data")
         return render(request, 'base_form.html', {"form": form,
