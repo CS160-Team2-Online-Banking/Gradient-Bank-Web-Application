@@ -531,26 +531,3 @@ class ReportView(View):
         return JsonResponse(result, status=200)
 
         # select our query parameter
-
-"""
-# This class is depricated and should be deleted
-@method_decorator(csrf_exempt, name='dispatch')  # django requires all post requests to include a CSRF token by default
-class AuthView(View):
-    def post(self, request):  # grant authentication if the user entered the correct password and email
-        try:
-            json_data = json.loads(request.body)
-        except json.decoder.JSONDecodeError:
-            return JsonResponse({"success": False, "msg": "Error: JSON could not be parsed"}, status=400)
-
-        if "password" in json_data and "username" in json_data:
-            # this is NOT  meant to be a production ready security token provider, this is a debug provider
-
-            encrpyted_token = encrpyt_auth_token(1, 2)
-
-            json_data = {"success": True}
-            response = JsonResponse(json_data)
-            response.set_cookie(key='auth_token', value=encrpyted_token)
-            return response
-        else:
-            return JsonResponse({"success": False, "msg": "Error: No password or username provided"}, status=400)
-"""
