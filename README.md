@@ -1,6 +1,23 @@
-# Online-Banking-App
+# Gradient Bank
+Gradient bank is an online banking application which was developed over the course of 3 months as a class project. Gradient Bank was built using the Django Framework, and uses MySQL and Google Maps to support the features it provides.
 
-## `How to set up`
+## Description
+### Customer Features
+* External and Internal Transfers
+* Check Deposit using Image
+* Chase Bank ATM Searched - powered by google maps
+### Employee Features
+* Manager Dashboard
+## Gallery 
+<h3>Landing Page</h3>
+<img src = "media/Screenshot - Landing.png"/>
+<h3>User Dashboard</h3>
+<img src = "media/Screenshot - Login Dashboard.png"/>
+<h3>Account View</h3>
+<img src = "media/Screenshot - Account View.png"/>
+<h3>ATM Search Page</h3>
+<img src = "media/Screenshot - ATM Lookup.png"/>
+<h2>Setup Instructions</h2>
 
 1. Set up Virtual Environment
 
