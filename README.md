@@ -5,6 +5,7 @@ Gradient bank is an online banking application which was developed over the cour
 ### Customer Features
 * External and Internal Transfers
 * Check Deposit using Image
+* Setup Autopayments
 * Chase Bank ATM Searched - powered by google maps
 ### Employee Features
 * Manager Dashboard
