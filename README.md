@@ -1,5 +1,5 @@
 # Gradient Bank
-Gradient bank is an online banking application which was developed over the course of 3 months as a class project. Gradient Bank was built using the Django Framework, and uses MySQL and Google Maps to support the features it provides.
+Gradient Bank is an online banking application which was developed over the course of 3 months as a class project. Gradient Bank was built using the Django Framework, and uses MySQL and Google Maps to support the features it provides.
 
 ## Description
 ### Customer Features
